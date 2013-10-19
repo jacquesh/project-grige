@@ -6,18 +6,12 @@ public class Drawable {
 	
 	private Texture texture;
 	
-	protected float x;
-	protected float y;
-	protected float depth;
+	public float x;
+	public float y;
+	public float depth;
 	
-	protected float scale;
-	protected float rotation;
-	
-	public float x(){ return x; }
-	public float y(){ return y; }
-	public float depth() { return depth; }
-	public float scale() { return scale; }
-	public float rotation() { return rotation; }
+	public float scale;
+	public float rotation;
 	
 	public Drawable()
 	{
@@ -25,7 +19,6 @@ public class Drawable {
 		y = 160;
 		scale = 1;
 		depth = 0;
-		rotation = 45;
 	}
 	
 	public void setTexture(Texture newTexture)

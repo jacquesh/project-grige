@@ -8,4 +8,9 @@ public abstract class GameObject extends Drawable {
 	}
 	
 	public abstract void update(float deltaTime);
+	
+	public boolean collidesWith(GameObject other)
+	{
+		return false;
+	}
 }

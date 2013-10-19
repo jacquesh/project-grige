@@ -154,13 +154,13 @@ public class Camera {
 		
 		float objWidth = object.getTexture().getWidth()*object.scale;
 		float objHeight = object.getTexture().getHeight()*object.scale;
-		float rotationRadians = object.rotation()*FloatUtil.PI/180;
+		float rotationRadians = object.rotation*FloatUtil.PI/180;
 		
 		float[] objectTransformMatrix = new float[]{
 				objWidth*FloatUtil.cos(rotationRadians),-objHeight*FloatUtil.sin(rotationRadians),0,0,
 				objWidth*FloatUtil.sin(rotationRadians), objHeight*FloatUtil.cos(rotationRadians),0,0,
 				0,0,1,0,
-				object.x(), object.y(), -object.depth(), 1};
+				object.x, object.y, -object.depth, 1};
 		
 		int objTransformIndex = gl.glGetUniformLocation(shaderProg.program(), "objectTransform");
 		gl.glUniformMatrix4fv(objTransformIndex, 1, false, objectTransformMatrix, 0);
