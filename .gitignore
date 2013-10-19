@@ -1,0 +1,9 @@
+#Eclipse Project files
+.project
+.settings
+.classpath
+*.log
+bin/
+
+#Git data files
+.git*
