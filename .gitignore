@@ -4,6 +4,7 @@
 .classpath
 *.log
 bin/
+textures/
 
 #Git data files
 .git*
