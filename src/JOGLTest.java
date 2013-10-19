@@ -15,16 +15,20 @@ public class JOGLTest extends GameBase
 	@Override
 	public void initialize()
 	{
-		go = new GameObject();
+		go = new SampleObject();
 		go.setTexture(ResourceLoader.loadImage("textures/sampletex.png"));
-		
-		addObject(go);
 	}
 	
 	@Override
 	public void update(float deltaTime)
 	{
-		
+		go.update(deltaTime);
+	}
+	
+	@Override
+	public void display()
+	{
+		camera.draw(go);
 	}
 	
 	public static void main(String[] args)

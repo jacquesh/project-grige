@@ -22,7 +22,6 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	
 	//Game State Data
 	private boolean running;
-	private ArrayList<GameObject> objects;
 	
 	//Game Managers
 	protected Camera camera;
@@ -35,6 +34,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	
 	protected abstract void initialize();
 	protected abstract void update(float deltaTime);
+	protected abstract void display();
 	
 	public GameBase()
 	{
@@ -58,9 +58,6 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		//Create the various managers for the game
 		input = new InputManager();
 		camera = new Camera(gameWindow.getWidth(),gameWindow.getHeight(),10);
-		
-		//Create the data structures for holding game data
-		objects = new ArrayList<GameObject>();
 	}
 	
 	public final void start()
@@ -71,28 +68,19 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		running = true;
 		while(running)
 		{
-			internalUpdate();
+			internalUpdate(0);
 			
-			update(0);
 			gameWindow.display();
 		}
 		cleanup();
 	}
 	
-	public void addObject(GameObject newObj)
-	{
-		objects.add(newObj);
-	}
-	
-	private void internalUpdate()
+	private void internalUpdate(float deltaTime)
 	{
 		//Update input data
 		input.update();
 		
-		for(int i=0; i<objects.size(); i++)
-		{
-			objects.get(i).update();
-		}
+		update(deltaTime);
 	}
 	
 	protected void cleanup()
@@ -118,11 +106,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		//Clear the screen
 		camera.clear();
 		
-		//Draw all game objects
-		for(int i=0; i<objects.size(); i++)
-		{
-			camera.draw(objects.get(i));
-		}
+		display();
 	}
 	
 	public void reshape(GLAutoDrawable glad, int x, int y, int width, int height)

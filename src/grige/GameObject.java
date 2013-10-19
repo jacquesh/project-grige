@@ -1,14 +1,11 @@
 package grige;
 
-public class GameObject extends Drawable {
+public abstract class GameObject extends Drawable {
 	
 	public GameObject()
 	{
 		super();
 	}
 	
-	protected void update()
-	{
-		rotation += 1;
-	}
+	public abstract void update(float deltaTime);
 }
