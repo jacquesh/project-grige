@@ -34,22 +34,25 @@ public class Camera {
 			0, 1, 2, 3,
 	};
 	
+	private final float[] fanVertices = generateTriangleFanVertices(32);
+	private final float[] fanColours = generateTriangleFanColours(fanVertices.length);
+	
 	//Camera attributes
 	private float x;
 	private float y;
 	private float width;
 	private float height;
 	private float depth;
+	private boolean isDrawing;
 	
 	//Current transformation matrices
 	private float[] projectionMatrix;
 	private float[] viewingMatrix;
 	
 	//Buffers
-	private int[] vertex_array_objects = new int[1];
-	private int vao;
-	
-	private int[] vertex_data_buffers = new int[3];
+	private int[] vertex_array_objects = new int[2];
+	private int geometryVAO;
+	private int lightingVAO;
 	
 	//Shader Data
 	private ShaderProgram shaderProg;
@@ -96,16 +99,30 @@ public class Camera {
 		setSize(width,height,depth);
 		setPosition(0,0);
 		
+		//Set rendering properties
+		gl.glDisable(GL.GL_CULL_FACE);
+		gl.glEnable(GL.GL_BLEND);
+		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
+		
 		//Create our Vertex Array Object
-		gl.glGenVertexArrays(1, vertex_array_objects, 0);
-		vao = vertex_array_objects[0];
-		gl.glBindVertexArray(vao);
+		gl.glGenVertexArrays(2, vertex_array_objects, 0);
+		geometryVAO = vertex_array_objects[0];
+		lightingVAO = vertex_array_objects[1];
+		
+		initializeGeometryData();
+		initializeLightingData();
+	}
+
+	private void initializeGeometryData()
+	{
+		gl.glBindVertexArray(geometryVAO);
 		
 		//Generate and store the required buffers
-		gl.glGenBuffers(3, vertex_data_buffers,0); //Indices, VertexLocations, TextureCoordinates
-		int indexBuffer = vertex_data_buffers[0];
-		int vertexBuffer = vertex_data_buffers[1];
-		int texCoordBuffer = vertex_data_buffers[2];
+		int[] buffers = new int[3];
+		gl.glGenBuffers(3, buffers,0); //Indices, VertexLocations, TextureCoordinates
+		int indexBuffer = buffers[0];
+		int vertexBuffer = buffers[1];
+		int texCoordBuffer = buffers[2];
 		
 		//Buffer the vertex indices
 		gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
@@ -137,20 +154,69 @@ public class Camera {
 		int textureSamplerIndex = gl.glGetUniformLocation(shaderProg.program(), "textureUnit");
 		gl.glUniform1f(textureSamplerIndex, 0);
 	}
-
+	
+	private void initializeLightingData()
+	{
+		gl.glBindVertexArray(lightingVAO);
+		
+		int[] buffers = new int[3];
+		gl.glGenBuffers(1, buffers ,0);
+		int vertexBuffer = buffers[0];
+		int colourBuffer = buffers[1];
+		
+		int positionIndex = gl.glGetAttribLocation(shaderProg.program(), "position");
+		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, vertexBuffer);
+		gl.glBufferData(GL.GL_ARRAY_BUFFER, fanVertices.length*(Float.SIZE/8), FloatBuffer.wrap(fanVertices),GL.GL_STATIC_DRAW);
+		gl.glEnableVertexAttribArray(positionIndex);
+		gl.glVertexAttribPointer(positionIndex, 3, GL.GL_FLOAT, false, 0, 0);
+		
+		int colourIndex = gl.glGetAttribLocation(shaderProg.program(), "vertColour");
+		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, colourBuffer);
+		gl.glBufferData(GL.GL_ARRAY_BUFFER, fanColours.length*(Float.SIZE/8), FloatBuffer.wrap(fanColours), GL.GL_STATIC_DRAW);
+		gl.glEnableVertexAttribArray(colourIndex);
+		gl.glVertexAttribPointer(colourIndex, 4, GL.GL_FLOAT, false, 0, 0);
+	}
+	
 	protected void clear()
 	{	
 		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
 	}
 	
+	public void beginDraw()
+	{
+		isDrawing = true;
+	}
+	
+	public void endDraw()
+	{
+		isDrawing = false;
+	}
+	
 	public void draw(Drawable object)
 	{
-		if(object.getTexture() == null)
+		
+		gl.glBindVertexArray(lightingVAO);
+		
+		float objWidth = object.getTexture().getWidth()*object.scale;
+		float objHeight = object.getTexture().getHeight()*object.scale;
+		float rotationRadians = object.rotation*FloatUtil.PI/180;
+		
+		float[] objectTransformMatrix = new float[]{
+				objWidth*FloatUtil.cos(rotationRadians),-objHeight*FloatUtil.sin(rotationRadians),0,0,
+				objWidth*FloatUtil.sin(rotationRadians), objHeight*FloatUtil.cos(rotationRadians),0,0,
+				0,0,1,0,
+				object.x, object.y, -object.depth, 1};
+		
+		int objTransformIndex = gl.glGetUniformLocation(shaderProg.program(), "objectTransform");
+		gl.glUniformMatrix4fv(objTransformIndex, 1, false, objectTransformMatrix, 0);
+		
+		gl.glDrawArrays(GL.GL_TRIANGLE_FAN, 0, fanVertices.length);
+		
+		/*if(object.getTexture() == null)
 			return;
 		
 		gl.glActiveTexture(GL.GL_TEXTURE0);
-		gl.glEnable(vao);
-		gl.glBindVertexArray(vao);
+		gl.glBindVertexArray(geometryVAO);
 		
 		float objWidth = object.getTexture().getWidth()*object.scale;
 		float objHeight = object.getTexture().getHeight()*object.scale;
@@ -171,7 +237,7 @@ public class Camera {
 		
 		gl.glDrawElements(GL.GL_TRIANGLE_STRIP, quadIndices.length, GL.GL_UNSIGNED_INT, 0);
 		
-		objTex.disable(gl);
+		objTex.disable(gl);*/
 	}
 	
 	private void loadShader()
@@ -195,5 +261,52 @@ public class Camera {
 		fragShader.destroy(gl);
 		
 		shaderProg.useProgram(gl, true);
+	}
+	
+	private float[] generateTriangleFanVertices(int edgeVertexCount)
+	{
+		float angleIncrement = 2*FloatUtil.PI/edgeVertexCount;
+		float[] resultVerts = new float[3*(edgeVertexCount+1+1)];
+		
+		//Define the origin of the fan
+		resultVerts[0] = 0f;
+		resultVerts[1] = 0f;
+		resultVerts[2] = 0f;
+		
+		//Define all the edge vertices of the fan
+		for(int i=0; i<=edgeVertexCount; i++)
+		{
+			int startIndex = (i+1)*3;
+			
+			resultVerts[startIndex]   = FloatUtil.cos(i*angleIncrement);// - FloatUtil.sin(i*angleIncrement); //X-value
+			resultVerts[startIndex+1] = FloatUtil.sin(i*angleIncrement);// + FloatUtil.cos(i*angleIncrement); //Y-value
+			resultVerts[startIndex+2] = 0; //Z-value
+		}
+		
+		return resultVerts;
+	}
+	
+	private float[] generateTriangleFanColours(int edgeVertexCount)
+	{
+		float[] resultColours = new float[4*(edgeVertexCount+1+1)];
+		
+		//Set the colour at the centre
+		resultColours[0] = 1;
+		resultColours[1] = 1;
+		resultColours[2] = 1;
+		resultColours[3] = 1;
+		
+		//Set the colour at the edge
+		for(int i=0; i<=edgeVertexCount; i++)
+		{
+			int startIndex = (i+1)*4;
+			
+			resultColours[startIndex]   = 1;
+			resultColours[startIndex+1] = 1;
+			resultColours[startIndex+2] = 1;
+			resultColours[startIndex+3] = 0;
+		}
+		
+		return resultColours;
 	}
 }
