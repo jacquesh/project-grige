@@ -55,7 +55,8 @@ public class Camera {
 	private int lightingVAO;
 	
 	//Shader Data
-	private ShaderProgram shaderProg;
+	private ShaderProgram geometryShader;
+	private ShaderProgram lightingShader;
 	
 	//GL context
 	private GL2 gl;
@@ -94,7 +95,9 @@ public class Camera {
 	protected void initialize(GL glContext)
 	{
 		gl = glContext.getGL2();
-		loadShader();
+		geometryShader = loadShader("SimpleVertexShader.vsh", "SimpleFragmentShader.fsh");
+		lightingShader = loadShader("LightVertexShader.vsh", "LightFragmentShader.fsh");
+		geometryShader.useProgram(gl, true);
 		
 		setSize(width,height,depth);
 		setPosition(0,0);
@@ -129,29 +132,29 @@ public class Camera {
 		gl.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, quadIndices.length*(Integer.SIZE/8), IntBuffer.wrap(quadIndices), GL.GL_STATIC_DRAW);
 		
 		//Buffer the vertex locations
-		int positionIndex = gl.glGetAttribLocation(shaderProg.program(), "position");
+		int positionIndex = gl.glGetAttribLocation(geometryShader.program(), "position");
 		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, vertexBuffer);
 		gl.glBufferData(GL.GL_ARRAY_BUFFER, quadVertices.length*(Float.SIZE/8), FloatBuffer.wrap(quadVertices), GL.GL_STATIC_DRAW);
 		gl.glEnableVertexAttribArray(positionIndex);
 		gl.glVertexAttribPointer(positionIndex, 3, GL.GL_FLOAT, false, 0, 0);
 		
 		//Buffer the vertex texture coordinates
-		int texCoordIndex = gl.glGetAttribLocation(shaderProg.program(), "texCoord");
+		int texCoordIndex = gl.glGetAttribLocation(geometryShader.program(), "texCoord");
 		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, texCoordBuffer);
 		gl.glBufferData(GL.GL_ARRAY_BUFFER, quadTextureCoords.length*(Float.SIZE/8), FloatBuffer.wrap(quadTextureCoords), GL.GL_STATIC_DRAW);
 		gl.glEnableVertexAttribArray(texCoordIndex);
 		gl.glVertexAttribPointer(texCoordIndex, 2, GL.GL_FLOAT, false, 0, 0);
 		
 		//Buffer the projection matrix (done every time the it changes)
-		int projMatrixIndex = gl.glGetUniformLocation(shaderProg.program(), "projectionMatrix");
+		int projMatrixIndex = gl.glGetUniformLocation(geometryShader.program(), "projectionMatrix");
 		gl.glUniformMatrix4fv(projMatrixIndex, 1, false, projectionMatrix, 0);
 		
 		//Buffer the viewing matrix (done every time the it changes)
-		int viewMatrixIndex = gl.glGetUniformLocation(shaderProg.program(), "viewingMatrix");
+		int viewMatrixIndex = gl.glGetUniformLocation(geometryShader.program(), "viewingMatrix");
 		gl.glUniformMatrix4fv(viewMatrixIndex, 1, false, viewingMatrix, 0);
 		
 		//Tell the shader which texture to use
-		int textureSamplerIndex = gl.glGetUniformLocation(shaderProg.program(), "textureUnit");
+		int textureSamplerIndex = gl.glGetUniformLocation(geometryShader.program(), "textureUnit");
 		gl.glUniform1f(textureSamplerIndex, 0);
 	}
 	
@@ -164,13 +167,13 @@ public class Camera {
 		int vertexBuffer = buffers[0];
 		int colourBuffer = buffers[1];
 		
-		int positionIndex = gl.glGetAttribLocation(shaderProg.program(), "position");
+		int positionIndex = gl.glGetAttribLocation(lightingShader.program(), "position");
 		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, vertexBuffer);
 		gl.glBufferData(GL.GL_ARRAY_BUFFER, fanVertices.length*(Float.SIZE/8), FloatBuffer.wrap(fanVertices),GL.GL_STATIC_DRAW);
 		gl.glEnableVertexAttribArray(positionIndex);
 		gl.glVertexAttribPointer(positionIndex, 3, GL.GL_FLOAT, false, 0, 0);
 		
-		int colourIndex = gl.glGetAttribLocation(shaderProg.program(), "vertColour");
+		int colourIndex = gl.glGetAttribLocation(lightingShader.program(), "vertColour");
 		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, colourBuffer);
 		gl.glBufferData(GL.GL_ARRAY_BUFFER, fanColours.length*(Float.SIZE/8), FloatBuffer.wrap(fanColours), GL.GL_STATIC_DRAW);
 		gl.glEnableVertexAttribArray(colourIndex);
@@ -194,8 +197,7 @@ public class Camera {
 	
 	public void draw(Drawable object)
 	{
-		
-		gl.glBindVertexArray(lightingVAO);
+		/*gl.glBindVertexArray(lightingVAO);
 		
 		float objWidth = object.getTexture().getWidth()*object.scale;
 		float objHeight = object.getTexture().getHeight()*object.scale;
@@ -210,9 +212,9 @@ public class Camera {
 		int objTransformIndex = gl.glGetUniformLocation(shaderProg.program(), "objectTransform");
 		gl.glUniformMatrix4fv(objTransformIndex, 1, false, objectTransformMatrix, 0);
 		
-		gl.glDrawArrays(GL.GL_TRIANGLE_FAN, 0, fanVertices.length);
+		gl.glDrawArrays(GL.GL_TRIANGLE_FAN, 0, fanVertices.length);*/
 		
-		/*if(object.getTexture() == null)
+		if(object.getTexture() == null)
 			return;
 		
 		gl.glActiveTexture(GL.GL_TEXTURE0);
@@ -228,7 +230,7 @@ public class Camera {
 				0,0,1,0,
 				object.x, object.y, -object.depth, 1};
 		
-		int objTransformIndex = gl.glGetUniformLocation(shaderProg.program(), "objectTransform");
+		int objTransformIndex = gl.glGetUniformLocation(geometryShader.program(), "objectTransform");
 		gl.glUniformMatrix4fv(objTransformIndex, 1, false, objectTransformMatrix, 0);
 		
 		Texture objTex = object.getTexture();
@@ -237,30 +239,30 @@ public class Camera {
 		
 		gl.glDrawElements(GL.GL_TRIANGLE_STRIP, quadIndices.length, GL.GL_UNSIGNED_INT, 0);
 		
-		objTex.disable(gl);*/
+		objTex.disable(gl);
 	}
 	
-	private void loadShader()
+	private ShaderProgram loadShader(String vertexShader, String fragmentShader)
 	{
 		GL2ES2 gl = this.gl.getGL2ES2();
 		
-		ShaderCode vertShader = ShaderCode.create(gl, GL2ES2.GL_VERTEX_SHADER, 1, getClass(), new String[]{"/shaders/SimpleVertexShader.vsh"},false);
+		ShaderCode vertShader = ShaderCode.create(gl, GL2ES2.GL_VERTEX_SHADER, 1, getClass(), new String[]{"/shaders/"+vertexShader},false);
 		vertShader.compile(gl);
 		
-		ShaderCode fragShader = ShaderCode.create(gl, GL2ES2.GL_FRAGMENT_SHADER, 1, getClass(), new String[]{"/shaders/SimpleFragmentShader.fsh"},false);
+		ShaderCode fragShader = ShaderCode.create(gl, GL2ES2.GL_FRAGMENT_SHADER, 1, getClass(), new String[]{"/shaders/"+fragmentShader},false);
 		fragShader.compile(gl);
 		
-		shaderProg = new ShaderProgram();
-		shaderProg.init(gl);
-		shaderProg.add(vertShader);
-		shaderProg.add(fragShader);
+		ShaderProgram newShader = new ShaderProgram();
+		newShader.init(gl);
+		newShader.add(vertShader);
+		newShader.add(fragShader);
 		
-		shaderProg.link(gl, System.out);
+		newShader.link(gl, System.out);
 		
 		vertShader.destroy(gl);
 		fragShader.destroy(gl);
-		
-		shaderProg.useProgram(gl, true);
+
+		return newShader;
 	}
 	
 	private float[] generateTriangleFanVertices(int edgeVertexCount)
