@@ -30,6 +30,13 @@ public class Camera {
 			1.0f, 1.0f,
 	};
 	
+	private final float[] quadTintColours = {
+			1f, 1f, 1f, 1f,
+			1f, 1f, 1f, 1f,
+			1f, 1f, 1f, 0f,
+			1f, 1f, 1f, 0f,
+	};
+	
 	private final int[] quadIndices = {
 			0, 1, 2, 3,
 	};
@@ -97,7 +104,6 @@ public class Camera {
 		gl = glContext.getGL2();
 		geometryShader = loadShader("SimpleVertexShader.vsh", "SimpleFragmentShader.fsh");
 		lightingShader = loadShader("LightVertexShader.vsh", "LightFragmentShader.fsh");
-		geometryShader.useProgram(gl, true);
 		
 		setSize(width,height,depth);
 		setPosition(0,0);
@@ -118,14 +124,16 @@ public class Camera {
 
 	private void initializeGeometryData()
 	{
+		geometryShader.useProgram(gl, true);
 		gl.glBindVertexArray(geometryVAO);
 		
 		//Generate and store the required buffers
-		int[] buffers = new int[3];
-		gl.glGenBuffers(3, buffers,0); //Indices, VertexLocations, TextureCoordinates
+		int[] buffers = new int[4];
+		gl.glGenBuffers(4, buffers,0); //Indices, VertexLocations, TextureCoordinates
 		int indexBuffer = buffers[0];
 		int vertexBuffer = buffers[1];
 		int texCoordBuffer = buffers[2];
+		int colourBuffer = buffers[3];
 		
 		//Buffer the vertex indices
 		gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
@@ -145,25 +153,28 @@ public class Camera {
 		gl.glEnableVertexAttribArray(texCoordIndex);
 		gl.glVertexAttribPointer(texCoordIndex, 2, GL.GL_FLOAT, false, 0, 0);
 		
-		//Buffer the projection matrix (done every time the it changes)
+		//Buffer the tint colour
+		int colourIndex = gl.glGetAttribLocation(geometryShader.program(), "tintColour");
+		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, colourBuffer);
+		gl.glBufferData(GL.GL_ARRAY_BUFFER, quadTintColours.length*(Float.SIZE/8), FloatBuffer.wrap(quadTintColours), GL.GL_STATIC_DRAW);
+		gl.glEnableVertexAttribArray(colourIndex);
+		gl.glVertexAttribPointer(colourIndex, 4, GL.GL_FLOAT, false, 0, 0);
+		
+		//Projection matrices
 		int projMatrixIndex = gl.glGetUniformLocation(geometryShader.program(), "projectionMatrix");
 		gl.glUniformMatrix4fv(projMatrixIndex, 1, false, projectionMatrix, 0);
 		
-		//Buffer the viewing matrix (done every time the it changes)
 		int viewMatrixIndex = gl.glGetUniformLocation(geometryShader.program(), "viewingMatrix");
 		gl.glUniformMatrix4fv(viewMatrixIndex, 1, false, viewingMatrix, 0);
-		
-		//Tell the shader which texture to use
-		int textureSamplerIndex = gl.glGetUniformLocation(geometryShader.program(), "textureUnit");
-		gl.glUniform1f(textureSamplerIndex, 0);
 	}
 	
 	private void initializeLightingData()
 	{
+		lightingShader.useProgram(gl, true);
 		gl.glBindVertexArray(lightingVAO);
 		
-		int[] buffers = new int[3];
-		gl.glGenBuffers(1, buffers ,0);
+		int[] buffers = new int[2];
+		gl.glGenBuffers(2, buffers ,0);
 		int vertexBuffer = buffers[0];
 		int colourBuffer = buffers[1];
 		
@@ -178,6 +189,13 @@ public class Camera {
 		gl.glBufferData(GL.GL_ARRAY_BUFFER, fanColours.length*(Float.SIZE/8), FloatBuffer.wrap(fanColours), GL.GL_STATIC_DRAW);
 		gl.glEnableVertexAttribArray(colourIndex);
 		gl.glVertexAttribPointer(colourIndex, 4, GL.GL_FLOAT, false, 0, 0);
+		
+		//Projection matrices
+		int projMatrixIndex = gl.glGetUniformLocation(lightingShader.program(), "projectionMatrix");
+		gl.glUniformMatrix4fv(projMatrixIndex, 1, false, projectionMatrix, 0);
+		
+		int viewMatrixIndex = gl.glGetUniformLocation(lightingShader.program(), "viewingMatrix");
+		gl.glUniformMatrix4fv(viewMatrixIndex, 1, false, viewingMatrix, 0);
 	}
 	
 	protected void clear()
@@ -197,8 +215,7 @@ public class Camera {
 	
 	public void draw(Drawable object)
 	{
-		/*gl.glBindVertexArray(lightingVAO);
-		
+		//Compute the object transform matrix
 		float objWidth = object.getTexture().getWidth()*object.scale;
 		float objHeight = object.getTexture().getHeight()*object.scale;
 		float rotationRadians = object.rotation*FloatUtil.PI/180;
@@ -207,31 +224,32 @@ public class Camera {
 				objWidth*FloatUtil.cos(rotationRadians),-objHeight*FloatUtil.sin(rotationRadians),0,0,
 				objWidth*FloatUtil.sin(rotationRadians), objHeight*FloatUtil.cos(rotationRadians),0,0,
 				0,0,1,0,
-				object.x, object.y, -object.depth, 1};
+				object.x, object.y, -object.depth, 1
+		};
 		
-		int objTransformIndex = gl.glGetUniformLocation(shaderProg.program(), "objectTransform");
-		gl.glUniformMatrix4fv(objTransformIndex, 1, false, objectTransformMatrix, 0);
+		//Draw lights
+		lightingShader.useProgram(gl, true);
+		gl.glBindVertexArray(lightingVAO);
 		
-		gl.glDrawArrays(GL.GL_TRIANGLE_FAN, 0, fanVertices.length);*/
+		int lightObjTransformIndex = gl.glGetUniformLocation(lightingShader.program(), "objectTransform");
+		gl.glUniformMatrix4fv(lightObjTransformIndex, 1, false, objectTransformMatrix, 0);
 		
+		gl.glDrawArrays(GL.GL_TRIANGLE_FAN, 0, fanVertices.length);
+		
+		//Draw geometry
 		if(object.getTexture() == null)
 			return;
 		
+		geometryShader.useProgram(gl, true);
 		gl.glActiveTexture(GL.GL_TEXTURE0);
 		gl.glBindVertexArray(geometryVAO);
 		
-		float objWidth = object.getTexture().getWidth()*object.scale;
-		float objHeight = object.getTexture().getHeight()*object.scale;
-		float rotationRadians = object.rotation*FloatUtil.PI/180;
+		//Texture specification
+		int textureSamplerIndex = gl.glGetUniformLocation(geometryShader.program(), "textureUnit");
+		gl.glUniform1f(textureSamplerIndex, 0);
 		
-		float[] objectTransformMatrix = new float[]{
-				objWidth*FloatUtil.cos(rotationRadians),-objHeight*FloatUtil.sin(rotationRadians),0,0,
-				objWidth*FloatUtil.sin(rotationRadians), objHeight*FloatUtil.cos(rotationRadians),0,0,
-				0,0,1,0,
-				object.x, object.y, -object.depth, 1};
-		
-		int objTransformIndex = gl.glGetUniformLocation(geometryShader.program(), "objectTransform");
-		gl.glUniformMatrix4fv(objTransformIndex, 1, false, objectTransformMatrix, 0);
+		int geometryObjTransformIndex = gl.glGetUniformLocation(geometryShader.program(), "objectTransform");
+		gl.glUniformMatrix4fv(geometryObjTransformIndex, 1, false, objectTransformMatrix, 0);
 		
 		Texture objTex = object.getTexture();
 		objTex.enable(gl);
