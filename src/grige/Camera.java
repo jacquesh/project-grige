@@ -166,6 +166,8 @@ public class Camera {
 		
 		int viewMatrixIndex = gl.glGetUniformLocation(geometryShader.program(), "viewingMatrix");
 		gl.glUniformMatrix4fv(viewMatrixIndex, 1, false, viewingMatrix, 0);
+		
+		geometryShader.useProgram(gl, false);
 	}
 	
 	private void initializeLightingData()
@@ -196,6 +198,8 @@ public class Camera {
 		
 		int viewMatrixIndex = gl.glGetUniformLocation(lightingShader.program(), "viewingMatrix");
 		gl.glUniformMatrix4fv(viewMatrixIndex, 1, false, viewingMatrix, 0);
+		
+		lightingShader.useProgram(gl, false);
 	}
 	
 	protected void clear()
@@ -215,6 +219,7 @@ public class Camera {
 	
 	public void draw(Drawable object)
 	{
+		
 		//Compute the object transform matrix
 		float objWidth = object.getTexture().getWidth()*object.scale;
 		float objHeight = object.getTexture().getHeight()*object.scale;
@@ -235,6 +240,7 @@ public class Camera {
 		gl.glUniformMatrix4fv(lightObjTransformIndex, 1, false, objectTransformMatrix, 0);
 		
 		gl.glDrawArrays(GL.GL_TRIANGLE_FAN, 0, fanVertices.length);
+		lightingShader.useProgram(gl, false);
 		
 		//Draw geometry
 		if(object.getTexture() == null)
@@ -258,6 +264,7 @@ public class Camera {
 		gl.glDrawElements(GL.GL_TRIANGLE_STRIP, quadIndices.length, GL.GL_UNSIGNED_INT, 0);
 		
 		objTex.disable(gl);
+		geometryShader.useProgram(gl, false);
 	}
 	
 	private ShaderProgram loadShader(String vertexShader, String fragmentShader)
