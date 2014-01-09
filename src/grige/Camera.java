@@ -3,13 +3,15 @@ package grige;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
-import com.jogamp.opengl.util.texture.Texture;
-
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 import javax.media.opengl.GL2ES2;
 
+import com.jogamp.opengl.FBObject;
+
 import com.jogamp.opengl.math.FloatUtil;
+
+import com.jogamp.opengl.util.texture.Texture;
 
 import com.jogamp.opengl.util.glsl.ShaderCode;
 import com.jogamp.opengl.util.glsl.ShaderProgram;
@@ -45,20 +47,24 @@ public class Camera {
 	private final float[] fanColours = generateTriangleFanColours(fanVertices.length);
 	
 	//Camera attributes
-	private float x;
-	private float y;
-	private float width;
-	private float height;
-	private float depth;
+	private int x;
+	private int y;
+	private int width;
+	private int height;
+	private int depth;
 	
 	//Current transformation matrices
 	private float[] projectionMatrix;
 	private float[] viewingMatrix;
 	
-	//Buffers
+	//Vertex Buffers
 	private int[] vertex_array_objects = new int[2];
 	private int geometryVAO;
 	private int lightingVAO;
+	
+	//Frame Buffers
+	private FBObject geometryFBO;
+	private FBObject lightingFBO;
 	
 	//Shader Data
 	private ShaderProgram geometryShader;
@@ -67,28 +73,27 @@ public class Camera {
 	//GL context
 	private GL2 gl;
 	
-	public Camera(float startWidth, float startHeight, float startDepth)
+	public Camera(int startWidth, int startHeight, int startDepth)
 	{
-		width = startWidth;
-		height = startHeight;
-		depth = startDepth;
+		setSize(startWidth,startHeight,startDepth);
+		setPosition(0,0);
 	}
 	
-	public void setPosition(float newX, float newY)
+	public void setPosition(int newX, int newY)
 	{
 		x = newX;
 		y = newY;
 		
-		viewingMatrix = new float[]{1,0,0,0, 0,1,0,0, 0,0,1,0, -x-width/2,-y-height/2,0,1f};
+		viewingMatrix = new float[]{1,0,0,0, 0,1,0,0, 0,0,1,0, -x-width/2f,-y-height/2f,0,1f};
 	}
 	
-	public void setSize(float newWidth, float newHeight, float newDepth)
+	public void setSize(int newWidth, int newHeight, int newDepth)
 	{
 		width = newWidth;
 		height = newHeight;
 		depth = newDepth;
 		
-		projectionMatrix = new float[]{2/width,0,0,0, 0,2/height,0,0, 0,0,-2f/depth,0, 0,0,-1,1};
+		projectionMatrix = new float[]{2f/width,0,0,0, 0,2f/height,0,0, 0,0,-2f/depth,0, 0,0,-1,1};
 		setPosition(x,y); //Update the viewing matrix as well, because the size has changed (so we need to translate (0,0) differently)
 	}
 	
@@ -101,21 +106,11 @@ public class Camera {
 	protected void initialize(GL glContext)
 	{
 		gl = glContext.getGL2();
-		geometryShader = loadShader("SimpleVertexShader.vsh", "SimpleFragmentShader.fsh");
-		lightingShader = loadShader("LightVertexShader.vsh", "LightFragmentShader.fsh");
-		
-		setSize(width,height,depth);
-		setPosition(0,0);
 		
 		//Set rendering properties
 		gl.glDisable(GL.GL_CULL_FACE);
 		//gl.glEnable(GL.GL_BLEND);
 		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
-		
-		//Create our Vertex Array Object
-		gl.glGenVertexArrays(2, vertex_array_objects, 0);
-		geometryVAO = vertex_array_objects[0];
-		lightingVAO = vertex_array_objects[1];
 		
 		initializeGeometryData();
 		initializeLightingData();
@@ -123,11 +118,21 @@ public class Camera {
 
 	private void initializeGeometryData()
 	{
+		//Create the framebuffer
+		geometryFBO = new FBObject();
+		geometryFBO.reset(gl, width, height);
+		
+		//Load the shader
+		geometryShader = loadShader("SimpleVertexShader.vsh", "SimpleFragmentShader.fsh");
 		geometryShader.useProgram(gl, true);
+		
+		int[] buffers = new int[4];
+		//Create the vertex array
+		gl.glGenVertexArrays(1, buffers, 0);
+		geometryVAO = buffers[0];
 		gl.glBindVertexArray(geometryVAO);
 		
 		//Generate and store the required buffers
-		int[] buffers = new int[4];
 		gl.glGenBuffers(4, buffers,0); //Indices, VertexLocations, TextureCoordinates
 		int indexBuffer = buffers[0];
 		int vertexBuffer = buffers[1];
@@ -171,10 +176,16 @@ public class Camera {
 	
 	private void initializeLightingData()
 	{
+		//Load and bind the shader
+		lightingShader = loadShader("LightVertexShader.vsh", "LightFragmentShader.fsh");
 		lightingShader.useProgram(gl, true);
-		gl.glBindVertexArray(lightingVAO);
 		
 		int[] buffers = new int[2];
+		//Create the vertex array
+		gl.glGenVertexArrays(1, buffers, 0);
+		lightingVAO = vertex_array_objects[0];
+		gl.glBindVertexArray(lightingVAO);
+		
 		gl.glGenBuffers(2, buffers ,0);
 		int vertexBuffer = buffers[0];
 		int colourBuffer = buffers[1];
@@ -201,6 +212,15 @@ public class Camera {
 		lightingShader.useProgram(gl, false);
 	}
 
+	public void refresh()
+	{
+		//Clear the screen
+		//gl.glDepthMask(true);
+		//gl.glClearDepth(1);
+		gl.glClearColor(1, 0f, 0, 1);
+		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
+	}
+	
 	public void drawLight(Light light)
 	{
 		//Compute the object transform matrix
@@ -261,6 +281,11 @@ public class Camera {
 		
 		objTex.disable(gl);
 		geometryShader.useProgram(gl, false);
+	}
+	
+	public void commitDraw()
+	{
+		
 	}
 	
 	//Initialization utility functions

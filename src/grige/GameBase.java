@@ -128,11 +128,8 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	{
 		GL gl = glad.getGL();
 		
-		//Clear the screen
-		//gl.glDepthMask(true);
-		//gl.glClearDepth(1);
-		gl.glClearColor(1, 0f, 0, 1);
-		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
+		//Reset the camera for this draw call
+		camera.refresh();
 		
 		//Just draw all the things
 		//gl.glEnable(GL.GL_BLEND);
@@ -187,6 +184,9 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		
 		//Call child-class rendering
 		display();
+		
+		//Commit all drawing thats happened, combining them via their respective framebuffers as needed
+		camera.commitDraw();
 	}
 	
 	public void reshape(GLAutoDrawable glad, int x, int y, int width, int height)
