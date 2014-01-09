@@ -198,6 +198,7 @@ public class Camera {
 		int viewMatrixIndex = gl.glGetUniformLocation(geometryShader.program(), "viewingMatrix");
 		gl.glUniformMatrix4fv(viewMatrixIndex, 1, false, viewingMatrix, 0);
 		
+		gl.glBindVertexArray(0);
 		geometryShader.useProgram(gl, false);
 	}
 	
@@ -242,6 +243,7 @@ public class Camera {
 		int viewMatrixIndex = gl.glGetUniformLocation(lightingShader.program(), "viewingMatrix");
 		gl.glUniformMatrix4fv(viewMatrixIndex, 1, false, viewingMatrix, 0);
 		
+		gl.glBindVertexArray(0);
 		lightingShader.useProgram(gl, false);
 	}
 
@@ -294,6 +296,7 @@ public class Camera {
 		int lightingTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader.program(), "lightingTextureUnit");
 		gl.glUniform1f(lightingTextureSamplerIndex, 1);
 		
+		gl.glBindVertexArray(0);
 		screenCanvasShader.useProgram(gl, false);
 	}
 	
@@ -302,8 +305,17 @@ public class Camera {
 		//Clear the screen
 		//gl.glDepthMask(true);
 		//gl.glClearDepth(1);
-		gl.glClearColor(1, 0f, 0, 1);
+		gl.glClearColor(0, 0f, 0, 1);
 		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
+		
+		//Clear the geometry buffer
+		geometryFBO.bind(gl);
+		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
+		geometryFBO.unbind(gl);
+		
+		lightingFBO.bind(gl);
+		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
+		lightingFBO.unbind(gl);
 	}
 	
 	public void drawLight(Light light)
@@ -373,14 +385,16 @@ public class Camera {
 	public void commitDraw()
 	{
 		screenCanvasShader.useProgram(gl, true);
-		
 		gl.glBindVertexArray(screenCanvasVAO);
 		
-		/*gl.glActiveTexture(GL.GL_TEXTURE0);
-		gl.glBindTexture(GL.GL_TEXTURE_2D, geometryFBOTexture);
+		//Bind the different buffer textures to the relevant GL textures so we can use it in our canvas shader
+		TextureAttachment geometryTexture = (TextureAttachment)geometryFBO.getColorbuffer(0);
+		gl.glActiveTexture(GL.GL_TEXTURE0);
+		gl.glBindTexture(GL.GL_TEXTURE_2D, geometryTexture.getName());
 		
+		TextureAttachment lightingTexture = (TextureAttachment)lightingFBO.getColorbuffer(0);
 		gl.glActiveTexture(GL.GL_TEXTURE1);
-		gl.glBindTexture(GL.GL_TEXTURE_2D, lightingFBOTexture);*/
+		gl.glBindTexture(GL.GL_TEXTURE_2D, lightingTexture.getName());
 		
 		gl.glDrawElements(GL.GL_TRIANGLE_STRIP, screenCanvasIndices.length, GL.GL_UNSIGNED_INT, 0);
 		
