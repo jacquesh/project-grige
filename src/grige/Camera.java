@@ -9,6 +9,7 @@ import javax.media.opengl.GL2ES2;
 
 import com.jogamp.opengl.FBObject;
 
+import com.jogamp.opengl.FBObject.TextureAttachment;
 import com.jogamp.opengl.math.FloatUtil;
 
 import com.jogamp.opengl.util.texture.Texture;
@@ -17,6 +18,24 @@ import com.jogamp.opengl.util.glsl.ShaderCode;
 import com.jogamp.opengl.util.glsl.ShaderProgram;
 
 public class Camera {	
+	
+	private final float[] screenCanvasVertices = {
+			-1.0f, -1.0f, 0.0f,
+			-1.0f, 1.0f, 0.0f,
+			1.0f, -1.0f, 0.0f,
+			1.0f,  1.0f, 0.0f,
+	};
+	
+	private final float[] screenCanvasTextureCoords = {
+			0.0f, 0.0f,
+			0.0f, 1.0f,
+			1.0f, 0.0f,
+			1.0f, 1.0f,
+	};
+	
+	private final int[] screenCanvasIndices = {
+			0, 1, 2, 3,
+	};
 	
 	private final float[] quadVertices = {
 			-0.5f, -0.5f, 0.0f,
@@ -58,15 +77,19 @@ public class Camera {
 	private float[] viewingMatrix;
 	
 	//Vertex Buffers
-	private int[] vertex_array_objects = new int[2];
+	private int screenCanvasVAO;
 	private int geometryVAO;
 	private int lightingVAO;
 	
 	//Frame Buffers
 	private FBObject geometryFBO;
+	private int geometryFBOTexture;
+	
 	private FBObject lightingFBO;
+	private int lightingFBOTexture;
 	
 	//Shader Data
+	private ShaderProgram screenCanvasShader;
 	private ShaderProgram geometryShader;
 	private ShaderProgram lightingShader;
 	
@@ -97,11 +120,11 @@ public class Camera {
 		setPosition(x,y); //Update the viewing matrix as well, because the size has changed (so we need to translate (0,0) differently)
 	}
 	
-	public float getX() { return x; }
-	public float getY() { return y; }
-	public float getWidth() { return width; }
-	public float getHeight() { return height; }
-	public float getDepth() { return depth; }
+	public int getX() { return x; }
+	public int getY() { return y; }
+	public int getWidth() { return width; }
+	public int getHeight() { return height; }
+	public int getDepth() { return depth; }
 	
 	protected void initialize(GL glContext)
 	{
@@ -114,6 +137,7 @@ public class Camera {
 		
 		initializeGeometryData();
 		initializeLightingData();
+		initializeScreenCanvas();
 	}
 
 	private void initializeGeometryData()
@@ -121,12 +145,15 @@ public class Camera {
 		//Create the framebuffer
 		geometryFBO = new FBObject();
 		geometryFBO.reset(gl, width, height);
+		geometryFBO.attachTexture2D(gl, 0, true);
+		geometryFBO.unbind(gl);
 		
 		//Load the shader
 		geometryShader = loadShader("SimpleVertexShader.vsh", "SimpleFragmentShader.fsh");
 		geometryShader.useProgram(gl, true);
 		
 		int[] buffers = new int[4];
+		
 		//Create the vertex array
 		gl.glGenVertexArrays(1, buffers, 0);
 		geometryVAO = buffers[0];
@@ -176,6 +203,12 @@ public class Camera {
 	
 	private void initializeLightingData()
 	{
+		//Create the framebuffer
+		lightingFBO = new FBObject();
+		lightingFBO.reset(gl, width, height);
+		lightingFBO.attachTexture2D(gl, 0, true);
+		lightingFBO.unbind(gl);
+		
 		//Load and bind the shader
 		lightingShader = loadShader("LightVertexShader.vsh", "LightFragmentShader.fsh");
 		lightingShader.useProgram(gl, true);
@@ -183,7 +216,7 @@ public class Camera {
 		int[] buffers = new int[2];
 		//Create the vertex array
 		gl.glGenVertexArrays(1, buffers, 0);
-		lightingVAO = vertex_array_objects[0];
+		lightingVAO = buffers[0];
 		gl.glBindVertexArray(lightingVAO);
 		
 		gl.glGenBuffers(2, buffers ,0);
@@ -212,6 +245,58 @@ public class Camera {
 		lightingShader.useProgram(gl, false);
 	}
 
+	private void initializeScreenCanvas()
+	{
+		//Load the shader
+		screenCanvasShader = loadShader("Canvas.vsh", "Canvas.fsh");
+		screenCanvasShader.useProgram(gl, true);
+		
+		int[] buffers = new int[4];
+		
+		//Create the vertex array
+		gl.glGenVertexArrays(1, buffers, 0);
+		screenCanvasVAO = buffers[0];
+		gl.glBindVertexArray(screenCanvasVAO);
+		
+		//Generate and store the required buffers
+		gl.glGenBuffers(4, buffers,0); //Indices, VertexLocations, TextureCoordinates
+		int indexBuffer = buffers[0];
+		int vertexBuffer = buffers[1];
+		int texCoordBuffer = buffers[2];
+		
+		//Buffer the vertex indices
+		gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+		gl.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, screenCanvasIndices.length*(Integer.SIZE/8), IntBuffer.wrap(screenCanvasIndices), GL.GL_STATIC_DRAW);
+		
+		//Buffer the vertex locations
+		int positionIndex = gl.glGetAttribLocation(screenCanvasShader.program(), "position");
+		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, vertexBuffer);
+		gl.glBufferData(GL.GL_ARRAY_BUFFER, screenCanvasVertices.length*(Float.SIZE/8), FloatBuffer.wrap(screenCanvasVertices), GL.GL_STATIC_DRAW);
+		gl.glEnableVertexAttribArray(positionIndex);
+		gl.glVertexAttribPointer(positionIndex, 3, GL.GL_FLOAT, false, 0, 0);
+		
+		//Buffer the vertex texture coordinates
+		int texCoordIndex = gl.glGetAttribLocation(screenCanvasShader.program(), "texCoord");
+		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, texCoordBuffer);
+		gl.glBufferData(GL.GL_ARRAY_BUFFER, screenCanvasTextureCoords.length*(Float.SIZE/8), FloatBuffer.wrap(screenCanvasTextureCoords), GL.GL_STATIC_DRAW);
+		gl.glEnableVertexAttribArray(texCoordIndex);
+		gl.glVertexAttribPointer(texCoordIndex, 2, GL.GL_FLOAT, false, 0, 0);
+		
+		//Get the textures used by the geometry and lighting individually
+		TextureAttachment geometryTexture = (TextureAttachment) geometryFBO.getColorbuffer(0);
+		geometryFBOTexture = geometryTexture.getName();
+		
+		TextureAttachment lightingTexture = (TextureAttachment) lightingFBO.getColorbuffer(0);
+		geometryFBOTexture = lightingTexture.getName();
+		
+        int geometryTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader.program(), "geometryTextureUnit");
+		gl.glUniform1f(geometryTextureSamplerIndex, 0);
+		int lightingTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader.program(), "lightingTextureUnit");
+		gl.glUniform1f(lightingTextureSamplerIndex, 1);
+		
+		screenCanvasShader.useProgram(gl, false);
+	}
+	
 	public void refresh()
 	{
 		//Clear the screen
@@ -262,6 +347,7 @@ public class Camera {
 		if(object.getTexture() == null)
 			return;
 		
+		geometryFBO.bind(gl);
 		geometryShader.useProgram(gl, true);
 		gl.glActiveTexture(GL.GL_TEXTURE0);
 		gl.glBindVertexArray(geometryVAO);
@@ -281,11 +367,24 @@ public class Camera {
 		
 		objTex.disable(gl);
 		geometryShader.useProgram(gl, false);
+		geometryFBO.unbind(gl);
 	}
 	
 	public void commitDraw()
 	{
+		screenCanvasShader.useProgram(gl, true);
 		
+		gl.glBindVertexArray(screenCanvasVAO);
+		
+		/*gl.glActiveTexture(GL.GL_TEXTURE0);
+		gl.glBindTexture(GL.GL_TEXTURE_2D, geometryFBOTexture);
+		
+		gl.glActiveTexture(GL.GL_TEXTURE1);
+		gl.glBindTexture(GL.GL_TEXTURE_2D, lightingFBOTexture);*/
+		
+		gl.glDrawElements(GL.GL_TRIANGLE_STRIP, screenCanvasIndices.length, GL.GL_UNSIGNED_INT, 0);
+		
+		screenCanvasShader.useProgram(gl, false);
 	}
 	
 	//Initialization utility functions
