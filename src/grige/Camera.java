@@ -50,7 +50,6 @@ public class Camera {
 	private float width;
 	private float height;
 	private float depth;
-	private boolean isDrawing;
 	
 	//Current transformation matrices
 	private float[] projectionMatrix;
@@ -110,7 +109,7 @@ public class Camera {
 		
 		//Set rendering properties
 		gl.glDisable(GL.GL_CULL_FACE);
-		gl.glEnable(GL.GL_BLEND);
+		//gl.glEnable(GL.GL_BLEND);
 		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
 		
 		//Create our Vertex Array Object
@@ -201,25 +200,32 @@ public class Camera {
 		
 		lightingShader.useProgram(gl, false);
 	}
-	
-	protected void clear()
-	{	
-		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
-	}
-	
-	public void beginDraw()
+
+	public void drawLight(Light light)
 	{
-		isDrawing = true;
-	}
-	
-	public void endDraw()
-	{
-		isDrawing = false;
-	}
-	
-	public void draw(Drawable object)
-	{
+		//Compute the object transform matrix
+		float lightSize = 32*light.scale;
 		
+		float[] objectTransformMatrix = new float[]{
+				lightSize,0,0,0,
+				0,lightSize,0,0,
+				0,0,1,0,
+				light.x, light.y, -light.depth, 1
+		};
+		
+		//Draw the light
+		//lightingShader.useProgram(gl, true);
+		gl.glBindVertexArray(lightingVAO);
+		
+		int lightObjTransformIndex = gl.glGetUniformLocation(lightingShader.program(), "objectTransform");
+		gl.glUniformMatrix4fv(lightObjTransformIndex, 1, false, objectTransformMatrix, 0);
+		
+		gl.glDrawArrays(GL.GL_TRIANGLE_FAN, 0, fanVertices.length);
+		//lightingShader.useProgram(gl, false);
+	}
+	
+	public void drawObject(Drawable object)
+	{
 		//Compute the object transform matrix
 		float objWidth = object.getTexture().getWidth()*object.scale;
 		float objHeight = object.getTexture().getHeight()*object.scale;
@@ -231,16 +237,6 @@ public class Camera {
 				0,0,1,0,
 				object.x, object.y, -object.depth, 1
 		};
-		
-		//Draw lights
-		lightingShader.useProgram(gl, true);
-		gl.glBindVertexArray(lightingVAO);
-		
-		int lightObjTransformIndex = gl.glGetUniformLocation(lightingShader.program(), "objectTransform");
-		gl.glUniformMatrix4fv(lightObjTransformIndex, 1, false, objectTransformMatrix, 0);
-		
-		gl.glDrawArrays(GL.GL_TRIANGLE_FAN, 0, fanVertices.length);
-		lightingShader.useProgram(gl, false);
 		
 		//Draw geometry
 		if(object.getTexture() == null)
@@ -267,6 +263,7 @@ public class Camera {
 		geometryShader.useProgram(gl, false);
 	}
 	
+	//Initialization utility functions
 	private ShaderProgram loadShader(String vertexShader, String fragmentShader)
 	{
 		GL2ES2 gl = this.gl.getGL2ES2();
@@ -305,8 +302,8 @@ public class Camera {
 		{
 			int startIndex = (i+1)*3;
 			
-			resultVerts[startIndex]   = FloatUtil.cos(i*angleIncrement);// - FloatUtil.sin(i*angleIncrement); //X-value
-			resultVerts[startIndex+1] = FloatUtil.sin(i*angleIncrement);// + FloatUtil.cos(i*angleIncrement); //Y-value
+			resultVerts[startIndex]   = 0.6f*FloatUtil.cos(i*angleIncrement);// - FloatUtil.sin(i*angleIncrement); //X-value
+			resultVerts[startIndex+1] = 0.6f*FloatUtil.sin(i*angleIncrement);// + FloatUtil.cos(i*angleIncrement); //Y-value
 			resultVerts[startIndex+2] = 0; //Z-value
 		}
 		

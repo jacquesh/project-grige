@@ -1,8 +1,6 @@
 package grige;
 
-public class Light
+public abstract class Light extends Drawable
 {
-	
-	
 	
 }

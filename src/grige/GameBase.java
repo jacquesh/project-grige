@@ -10,6 +10,7 @@ import com.jogamp.newt.event.WindowUpdateEvent;
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
 
+import javax.media.opengl.GL;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GL2;
@@ -22,6 +23,8 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	
 	//Game State Data
 	private boolean running;
+	private ArrayList<GameObject> worldObjects;
+	private ArrayList<Light> worldLights;
 	
 	//Game Managers
 	protected Camera camera;
@@ -41,6 +44,21 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		GameBase.instance = this;
 	}
 	
+	public final void start()
+	{
+		internalSetup();
+		gameWindow.display(); //Initial draw to initalize the screen
+		
+		running = true;
+		while(running)
+		{
+			internalUpdate(0);
+			
+			gameWindow.display();
+		}
+		cleanup();
+	}
+	
 	protected void internalSetup()
 	{
 		//Initialize the OpenGL profile that the game will use
@@ -58,21 +76,20 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		//Create the various managers for the game
 		input = new InputManager();
 		camera = new Camera(gameWindow.getWidth(),gameWindow.getHeight(),10);
+		
+		//Instantiate other structures
+		worldObjects = new ArrayList<GameObject>();
+		worldLights = new ArrayList<Light>();
 	}
 	
-	public final void start()
+	public void addObject(GameObject obj)
 	{
-		internalSetup();
-		gameWindow.display(); //Initial draw to initalize the screen
-		
-		running = true;
-		while(running)
-		{
-			internalUpdate(0);
-			
-			gameWindow.display();
-		}
-		cleanup();
+		worldObjects.add(obj);
+	}
+	
+	public void addLight(Light l)
+	{
+		worldLights.add(l);
 	}
 	
 	private void internalUpdate(float deltaTime)
@@ -80,6 +97,12 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		//Update input data
 		input.update();
 		
+		for(GameObject obj : worldObjects)
+		{
+			obj.update(deltaTime);
+		}
+		
+		//Call the user-defined update
 		update(deltaTime);
 	}
 	
@@ -103,9 +126,66 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	
 	public final void display(GLAutoDrawable glad)
 	{
-		//Clear the screen
-		camera.clear();
+		GL gl = glad.getGL();
 		
+		//Clear the screen
+		//gl.glDepthMask(true);
+		//gl.glClearDepth(1);
+		gl.glClearColor(1, 0f, 0, 1);
+		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
+		
+		//Just draw all the things
+		//gl.glEnable(GL.GL_BLEND);
+		//gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
+		//gl.glColorMask(true,true,true,false);
+		for(GameObject obj : worldObjects)
+		{
+			camera.drawObject(obj);
+		}
+		/*gl.glColorMask(false,false,false,true);
+		for(Light l : worldLights)
+		{
+			camera.drawLight(l);
+		}*/
+		
+		//Fill the depth buffer
+		/*gl.glDepthMask(true);
+		gl.glColorMask(false,false,false,false);
+		gl.glDisable(GL.GL_BLEND);
+		
+		for(GameObject obj : worldObjects)
+			camera.drawObject(obj);*/
+		
+		
+		//Run a render pass for each light in the scene
+		/*for(Light l : worldLights)
+		{
+			//Clear the alpha buffer
+			///gl.glDepthMask(false);
+			gl.glColorMask(false,false,false,true);
+			gl.glClearColor(0, 0, 0, 0);
+			gl.glClear(GL.GL_COLOR_BUFFER_BIT);
+			
+			//Draw the new alpha from the light
+			//gl.glEnable(GL.GL_DEPTH_TEST);
+			//gl.glDepthMask(true);
+			//gl.glDepthFunc(GL.GL_LEQUAL);
+			camera.drawLight(l);
+			
+			//Draw all the geometry
+			//gl.glDisable(GL.GL_DEPTH_TEST);
+			//gl.glDepthMask(false);
+			gl.glColorMask(true,true,true,false);
+			gl.glEnable(GL.GL_BLEND);
+			gl.glBlendFunc(GL.GL_DST_ALPHA, GL.GL_ONE);
+			
+			for(GameObject obj : worldObjects)
+			{
+				camera.drawObject(obj);
+			}
+		}*/
+		
+		//Call child-class rendering
 		display();
 	}
 	
