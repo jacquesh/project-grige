@@ -54,8 +54,8 @@ public class Camera {
 	private final float[] quadTintColours = {
 			1f, 1f, 1f, 1f,
 			1f, 1f, 1f, 1f,
-			1f, 1f, 1f, 0f,
-			1f, 1f, 1f, 0f,
+			1f, 1f, 1f, 1f,
+			1f, 1f, 1f, 1f,
 	};
 	
 	private final int[] quadIndices = {
@@ -281,11 +281,11 @@ public class Camera {
 		gl.glEnableVertexAttribArray(texCoordIndex);
 		gl.glVertexAttribPointer(texCoordIndex, 2, GL.GL_FLOAT, false, 0, 0);
 		
-		//Get the textures used by the geometry and lighting individually		
-        int geometryTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader.program(), "geometryTextureUnit");
-		gl.glUniform1f(geometryTextureSamplerIndex, 0);
+		//Assign to the samplers, the textures used by the geometry and lighting respectively
+		int geometryTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader.program(), "geometryTextureUnit");
+		gl.glUniform1i(geometryTextureSamplerIndex, 0);
 		int lightingTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader.program(), "lightingTextureUnit");
-		gl.glUniform1f(lightingTextureSamplerIndex, 1);
+		gl.glUniform1i(lightingTextureSamplerIndex, 1);
 		
 		gl.glBindVertexArray(0);
 		screenCanvasShader.useProgram(gl, false);
@@ -322,14 +322,18 @@ public class Camera {
 		};
 		
 		//Draw the light
-		//lightingShader.useProgram(gl, true);
+		lightingFBO.bind(gl);
+		lightingShader.useProgram(gl, true);;
 		gl.glBindVertexArray(lightingVAO);
 		
 		int lightObjTransformIndex = gl.glGetUniformLocation(lightingShader.program(), "objectTransform");
 		gl.glUniformMatrix4fv(lightObjTransformIndex, 1, false, objectTransformMatrix, 0);
 		
 		gl.glDrawArrays(GL.GL_TRIANGLE_FAN, 0, fanVertices.length);
-		//lightingShader.useProgram(gl, false);
+		
+		gl.glBindVertexArray(0);
+		lightingShader.useProgram(gl, false);
+		lightingFBO.unbind(gl);
 	}
 	
 	public void drawObject(Drawable object)
@@ -369,6 +373,8 @@ public class Camera {
 		gl.glDrawElements(GL.GL_TRIANGLE_STRIP, quadIndices.length, GL.GL_UNSIGNED_INT, 0);
 		
 		objTex.disable(gl);
+		
+		gl.glBindVertexArray(0);
 		geometryShader.useProgram(gl, false);
 		geometryFBO.unbind(gl);
 	}
@@ -389,6 +395,7 @@ public class Camera {
 		
 		gl.glDrawElements(GL.GL_TRIANGLE_STRIP, screenCanvasIndices.length, GL.GL_UNSIGNED_INT, 0);
 		
+		gl.glBindVertexArray(0);
 		screenCanvasShader.useProgram(gl, false);
 	}
 	

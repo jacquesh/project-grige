@@ -139,11 +139,11 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		{
 			camera.drawObject(obj);
 		}
-		/*gl.glColorMask(false,false,false,true);
+		//gl.glColorMask(false,false,false,true);
 		for(Light l : worldLights)
 		{
 			camera.drawLight(l);
-		}*/
+		}
 		
 		//Fill the depth buffer
 		/*gl.glDepthMask(true);
