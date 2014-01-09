@@ -83,10 +83,7 @@ public class Camera {
 	
 	//Frame Buffers
 	private FBObject geometryFBO;
-	private int geometryFBOTexture;
-	
 	private FBObject lightingFBO;
-	private int lightingFBOTexture;
 	
 	//Shader Data
 	private ShaderProgram screenCanvasShader;
@@ -284,13 +281,7 @@ public class Camera {
 		gl.glEnableVertexAttribArray(texCoordIndex);
 		gl.glVertexAttribPointer(texCoordIndex, 2, GL.GL_FLOAT, false, 0, 0);
 		
-		//Get the textures used by the geometry and lighting individually
-		TextureAttachment geometryTexture = (TextureAttachment) geometryFBO.getColorbuffer(0);
-		geometryFBOTexture = geometryTexture.getName();
-		
-		TextureAttachment lightingTexture = (TextureAttachment) lightingFBO.getColorbuffer(0);
-		geometryFBOTexture = lightingTexture.getName();
-		
+		//Get the textures used by the geometry and lighting individually		
         int geometryTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader.program(), "geometryTextureUnit");
 		gl.glUniform1f(geometryTextureSamplerIndex, 0);
 		int lightingTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader.program(), "lightingTextureUnit");
