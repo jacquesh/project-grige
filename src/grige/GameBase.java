@@ -132,8 +132,6 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		camera.refresh();
 		
 		//Just draw all the things
-		//gl.glEnable(GL.GL_BLEND);
-		//gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
 		//gl.glColorMask(true,true,true,false);
 		for(GameObject obj : worldObjects)
 		{

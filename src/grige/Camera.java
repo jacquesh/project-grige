@@ -129,7 +129,7 @@ public class Camera {
 		
 		//Set rendering properties
 		gl.glDisable(GL.GL_CULL_FACE);
-		//gl.glEnable(GL.GL_BLEND);
+		gl.glEnable(GL.GL_BLEND);
 		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
 		
 		initializeGeometryData();
