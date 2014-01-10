@@ -131,13 +131,11 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		//Reset the camera for this draw call
 		camera.refresh();
 		
-		//Just draw all the things
-		//gl.glColorMask(true,true,true,false);
+		//Just draw all the things for testing
 		for(GameObject obj : worldObjects)
 		{
 			camera.drawObject(obj);
 		}
-		//gl.glColorMask(false,false,false,true);
 		for(Light l : worldLights)
 		{
 			camera.drawLight(l);

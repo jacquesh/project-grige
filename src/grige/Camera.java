@@ -89,6 +89,7 @@ public class Camera {
 	private ShaderProgram screenCanvasShader;
 	private ShaderProgram geometryShader;
 	private ShaderProgram lightingShader;
+	private ShaderProgram alphaClearShader;
 	
 	//GL context
 	private GL2 gl;
@@ -130,7 +131,6 @@ public class Camera {
 		//Set rendering properties
 		gl.glDisable(GL.GL_CULL_FACE);
 		gl.glEnable(GL.GL_BLEND);
-		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
 		
 		initializeGeometryData();
 		initializeLightingData();
@@ -247,6 +247,7 @@ public class Camera {
 	private void initializeScreenCanvas()
 	{
 		//Load the shader
+		alphaClearShader = loadShader("AlphaClearance.vsh", "AlphaClearance.fsh");
 		screenCanvasShader = loadShader("Canvas.vsh", "Canvas.fsh");
 		screenCanvasShader.useProgram(gl, true);
 		
@@ -306,8 +307,23 @@ public class Camera {
 		geometryFBO.unbind(gl);
 		
 		lightingFBO.bind(gl);
-		gl.glClearColor(0, 0, 0, 0);
+		gl.glClearColor(0, 0, 0, 0.2f);
 		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
+		lightingFBO.unbind(gl);
+	}
+	
+	public void clearLightingAlpha()
+	{
+		lightingFBO.bind(gl);
+		alphaClearShader.useProgram(gl, true);
+		gl.glBindVertexArray(screenCanvasVAO);
+		
+		gl.glColorMask(false, false, false, true);
+		gl.glDepthMask(false);
+		gl.glDrawElements(GL.GL_TRIANGLE_STRIP, screenCanvasIndices.length, GL.GL_UNSIGNED_INT, 0);
+		
+		gl.glBindVertexArray(0);
+		alphaClearShader.useProgram(gl, false);
 		lightingFBO.unbind(gl);
 	}
 	
@@ -327,6 +343,8 @@ public class Camera {
 		lightingFBO.bind(gl);
 		lightingShader.useProgram(gl, true);;
 		gl.glBindVertexArray(lightingVAO);
+		
+		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE);
 		
 		int lightObjTransformIndex = gl.glGetUniformLocation(lightingShader.program(), "objectTransform");
 		gl.glUniformMatrix4fv(lightObjTransformIndex, 1, false, objectTransformMatrix, 0);
@@ -360,6 +378,8 @@ public class Camera {
 		geometryShader.useProgram(gl, true);
 		gl.glActiveTexture(GL.GL_TEXTURE0);
 		gl.glBindVertexArray(geometryVAO);
+		
+		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
 		
 		//Texture specification
 		int textureSamplerIndex = gl.glGetUniformLocation(geometryShader.program(), "textureUnit");

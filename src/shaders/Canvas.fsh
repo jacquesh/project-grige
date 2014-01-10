@@ -7,5 +7,10 @@ uniform sampler2D lightingTextureUnit;
 in vec2 texCoordV;
 
 void main(){
-    colour = texture(geometryTextureUnit, texCoordV) + texture(lightingTextureUnit, texCoordV);
+	vec4 geometryColour = texture(geometryTextureUnit, texCoordV);
+	vec4 lightingColour = texture(lightingTextureUnit, texCoordV);
+    
+    //colour = geometryColour + lightingColour;
+    
+    colour = geometryColour * lightingColour.a; //vec4(geometryColour.rgb, lightingColour.a);
 }
