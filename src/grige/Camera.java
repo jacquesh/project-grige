@@ -301,6 +301,7 @@ public class Camera {
 		
 		//Clear the geometry buffer
 		geometryFBO.bind(gl);
+		gl.glClearColor(1, 1, 1, 1);
 		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
 		geometryFBO.unbind(gl);
 		
