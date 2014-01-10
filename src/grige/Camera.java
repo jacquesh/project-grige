@@ -305,6 +305,7 @@ public class Camera {
 		geometryFBO.unbind(gl);
 		
 		lightingFBO.bind(gl);
+		gl.glClearColor(0, 0, 0, 0);
 		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
 		lightingFBO.unbind(gl);
 	}
