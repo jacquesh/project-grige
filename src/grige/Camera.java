@@ -456,7 +456,7 @@ public class Camera {
 		int geometryObjTransformIndex = gl.glGetUniformLocation(shadowTestShader.program(), "objectTransform");
 		gl.glUniformMatrix4fv(geometryObjTransformIndex, 1, false, objectTransformMatrix, 0);
 		
-		gl.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, shadowVerts.length);
+		gl.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, shadowVerts.length/3);
 		
 		shadowTestShader.useProgram(gl, false);
 		geometryFBO.unbind(gl);
