@@ -47,7 +47,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	public final void start()
 	{
 		internalSetup();
-		gameWindow.display(); //Initial draw to initalize the screen
+		gameWindow.display(); //Draw once before looping to initalize the screen/opengl
 		
 		running = true;
 		while(running)
@@ -138,7 +138,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		}
 		for(Light l : worldLights)
 		{
-			//camera.drawLight(l);
+			camera.drawLight(l);
 		}
 		
 		//Create shadow geometry
@@ -189,7 +189,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 							vertexList.add(currentVertexIndex+2, 0f); //We need a z-value so we can just cast it to an array and immediately use it in a vertex buffer
 							
 							lightProjectionLoc.set(previousLightOffsetDir);
-							lightProjectionLoc.multiply(-100); //lightOffset is the vector: "vertex -> light", we use (-) because we need to offset "light vertex ->"
+							lightProjectionLoc.multiply(-1000); //lightOffset is the vector: "vertex -> light", we use (-) because we need to offset "light vertex ->"
 							lightProjectionLoc.add(previousLoc);
 							
 							vertexList.add(currentVertexIndex+3, lightProjectionLoc.x);
@@ -203,7 +203,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 						vertexList.add(currentVertexIndex+2, 0f); //We need a z-value so we can just cast it to an array and immediately use it in a vertex buffer
 						
 						lightProjectionLoc.set(lightOffsetDir);
-						lightProjectionLoc.multiply(-100); //lightOffset is the vector: "vertex -> light", we use (-) because we need to offset "light vertex ->"
+						lightProjectionLoc.multiply(-1000); //lightOffset is the vector: "vertex -> light", we use (-) because we need to offset "light vertex ->"
 						lightProjectionLoc.add(currentLoc);
 						
 						vertexList.add(currentVertexIndex+3, lightProjectionLoc.x);

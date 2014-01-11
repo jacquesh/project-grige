@@ -79,7 +79,6 @@ public class Camera {
 	private int geometryVAO;
 	private int lightingVAO;
 	
-	private int shadowVAO;
 	private int shadowVertexBuffer;
 	
 	//Frame Buffers
@@ -91,6 +90,7 @@ public class Camera {
 	private ShaderProgram geometryShader;
 	private ShaderProgram lightingShader;
 	private ShaderProgram alphaClearShader;
+	private ShaderProgram shadowGeometryShader;
 	
 	//GL context
 	private GL2 gl;
@@ -98,10 +98,8 @@ public class Camera {
 	public Camera(int startWidth, int startHeight, int startDepth)
 	{
 		position = new Vector2(0, 0);
-		size = new Vector2I(0, 0);
-		
-		setSize(startWidth,startHeight,startDepth);
-		setPosition(0,0);
+		size = new Vector2I(startWidth, startHeight);
+		depth = startDepth;
 	}
 	
 	public void setPosition(float newX, float newY)
@@ -110,6 +108,7 @@ public class Camera {
 		position.y = newY;
 		
 		viewingMatrix = new float[]{1,0,0,0, 0,1,0,0, 0,0,1,0, -position.x-size.x/2f,-position.y-size.y/2f,0,1f};
+		rebufferViewingMatrix();
 	}
 	
 	public void setPosition(Vector2 newPosition)
@@ -124,6 +123,8 @@ public class Camera {
 		depth = newDepth;
 		
 		projectionMatrix = new float[]{2f/size.x,0,0,0, 0,2f/size.y,0,0, 0,0,-2f/depth,0, 0,0,-1,1};
+		rebufferProjectionMatrix();
+		
 		setPosition(position.x,position.y); //Update the viewing matrix as well, because the size has changed (so we need to translate (0,0) differently)
 	}
 	
@@ -141,14 +142,15 @@ public class Camera {
 		gl.glDisable(GL.GL_CULL_FACE);
 		gl.glEnable(GL.GL_BLEND);
 		
+		//Initialize the various components and data stores
 		initializeGeometryData();
 		initializeLightingData();
 		initializeShadowData();
 		initializeScreenCanvas();
 		
-		shadowTestShader = loadShader("sts.vsh", "sts.fsh");
+		//Initialize and buffer the projection and viewing matrices
+		setSize(size.x, size.y, depth);
 	}
-	private ShaderProgram shadowTestShader;
 
 	private void initializeGeometryData()
 	{
@@ -201,13 +203,6 @@ public class Camera {
 		gl.glEnableVertexAttribArray(colourIndex);
 		gl.glVertexAttribPointer(colourIndex, 4, GL.GL_FLOAT, false, 0, 0);
 		
-		//Projection matrices
-		int projMatrixIndex = gl.glGetUniformLocation(geometryShader.program(), "projectionMatrix");
-		gl.glUniformMatrix4fv(projMatrixIndex, 1, false, projectionMatrix, 0);
-		
-		int viewMatrixIndex = gl.glGetUniformLocation(geometryShader.program(), "viewingMatrix");
-		gl.glUniformMatrix4fv(viewMatrixIndex, 1, false, viewingMatrix, 0);
-		
 		gl.glBindVertexArray(0);
 		geometryShader.useProgram(gl, false);
 	}
@@ -246,35 +241,25 @@ public class Camera {
 		gl.glEnableVertexAttribArray(colourIndex);
 		gl.glVertexAttribPointer(colourIndex, 4, GL.GL_FLOAT, false, 0, 0);
 		
-		//Projection matrices
-		int projMatrixIndex = gl.glGetUniformLocation(lightingShader.program(), "projectionMatrix");
-		gl.glUniformMatrix4fv(projMatrixIndex, 1, false, projectionMatrix, 0);
-		
-		int viewMatrixIndex = gl.glGetUniformLocation(lightingShader.program(), "viewingMatrix");
-		gl.glUniformMatrix4fv(viewMatrixIndex, 1, false, viewingMatrix, 0);
-		
 		gl.glBindVertexArray(0);
 		lightingShader.useProgram(gl, false);
 	}
 
 	private void initializeShadowData()
 	{
-		int[] buffers = new int[1];
+		//Load the shaders
+		alphaClearShader = loadShader("AlphaClearance.vsh", "AlphaClearance.fsh");
+		shadowGeometryShader = loadShader("ShadowGeometry.vsh", "ShadowGeometry.fsh");
 		
-		gl.glGenVertexArrays(1, buffers, 0);
-		shadowVAO = buffers[0];
-		//gl.glBindVertexArray(shadowVAO);
+		int[] buffers = new int[1];
 		
 		gl.glGenBuffers(1, buffers, 0);
 		shadowVertexBuffer = buffers[0];
-		
-		
 	}
 	
 	private void initializeScreenCanvas()
 	{
 		//Load the shader
-		alphaClearShader = loadShader("AlphaClearance.vsh", "AlphaClearance.fsh");
 		screenCanvasShader = loadShader("Canvas.vsh", "Canvas.fsh");
 		screenCanvasShader.useProgram(gl, true);
 		
@@ -319,6 +304,52 @@ public class Camera {
 		screenCanvasShader.useProgram(gl, false);
 	}
 	
+	protected void rebufferViewingMatrix()
+	{
+		int viewMatrixIndex;
+		
+		//Geometry shader
+		geometryShader.useProgram(gl, true);
+		viewMatrixIndex = gl.glGetUniformLocation(geometryShader.program(), "viewingMatrix");
+		gl.glUniformMatrix4fv(viewMatrixIndex, 1, false, viewingMatrix, 0);		
+		geometryShader.useProgram(gl, false);
+		
+		//Lighting shader
+		lightingShader.useProgram(gl, true);
+		viewMatrixIndex = gl.glGetUniformLocation(lightingShader.program(), "viewingMatrix");
+		gl.glUniformMatrix4fv(viewMatrixIndex, 1, false, viewingMatrix, 0);		
+		lightingShader.useProgram(gl, false);
+		
+		//Shadow Geometry Shader
+		shadowGeometryShader.useProgram(gl, true);
+		viewMatrixIndex = gl.glGetUniformLocation(shadowGeometryShader.program(), "viewingMatrix");
+		gl.glUniformMatrix4fv(viewMatrixIndex, 1, false, viewingMatrix, 0);
+		shadowGeometryShader.useProgram(gl, false);
+	}
+	
+	protected void rebufferProjectionMatrix()
+	{
+		int projMatrixIndex;
+		
+		//Geometry shader
+		geometryShader.useProgram(gl, true);
+		projMatrixIndex = gl.glGetUniformLocation(geometryShader.program(), "projectionMatrix");
+		gl.glUniformMatrix4fv(projMatrixIndex, 1, false, projectionMatrix, 0);
+		geometryShader.useProgram(gl, false);
+		
+		//Lighting shader
+		lightingShader.useProgram(gl, true);
+		projMatrixIndex = gl.glGetUniformLocation(lightingShader.program(), "projectionMatrix");
+		gl.glUniformMatrix4fv(projMatrixIndex, 1, false, projectionMatrix, 0);
+		lightingShader.useProgram(gl, false);
+		
+		//Shadow Geometry shader
+		shadowGeometryShader.useProgram(gl, true);
+		projMatrixIndex = gl.glGetUniformLocation(shadowGeometryShader.program(), "projectionMatrix");
+		gl.glUniformMatrix4fv(projMatrixIndex, 1, false, projectionMatrix, 0);
+		shadowGeometryShader.useProgram(gl, false);
+	}
+	
 	public void refresh()
 	{
 		//Clear the screen
@@ -334,12 +365,12 @@ public class Camera {
 		geometryFBO.unbind(gl);
 		
 		lightingFBO.bind(gl);
-		gl.glClearColor(0, 0, 0, 0.2f);
+		gl.glClearColor(0, 0, 0, 0f);
 		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
 		lightingFBO.unbind(gl);
 	}
 	
-	public void clearLightingAlpha()
+	protected void clearLightingAlpha()
 	{
 		lightingFBO.bind(gl);
 		alphaClearShader.useProgram(gl, true);
@@ -354,7 +385,7 @@ public class Camera {
 		lightingFBO.unbind(gl);
 	}
 	
-	public void drawLight(Light light)
+	protected void drawLight(Light light)
 	{
 		//Compute the object transform matrix
 		float lightSize = 32*light.scale();
@@ -383,7 +414,7 @@ public class Camera {
 		lightingFBO.unbind(gl);
 	}
 	
-	public void drawObject(Drawable object)
+	protected void drawObject(Drawable object)
 	{
 		//Compute the object transform matrix
 		float objWidth = object.width();
@@ -428,41 +459,26 @@ public class Camera {
 		geometryFBO.unbind(gl);
 	}
 	
-	public void drawShadow(float[] shadowVerts)
+	protected void drawShadow(float[] shadowVerts)
 	{
-		float[] objectTransformMatrix = new float[]{
-				1,0,0,0,
-				0,1,0,0,
-				0,0,1,0,
-				0,0,0,1
-		};
+		lightingFBO.bind(gl);
+		shadowGeometryShader.useProgram(gl, true);
 		
-		geometryFBO.bind(gl);
-		shadowTestShader.useProgram(gl, true);
+		gl.glBlendFunc(GL.GL_ONE, GL.GL_ZERO);
 		
-		int positionIndex = gl.glGetAttribLocation(shadowTestShader.program(), "position");
+		int positionIndex = gl.glGetAttribLocation(shadowGeometryShader.program(), "position");
 		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, shadowVertexBuffer);
-		gl.glBufferData(GL.GL_ARRAY_BUFFER, shadowVerts.length*(Float.SIZE/8), FloatBuffer.wrap(shadowVerts), GL.GL_STATIC_DRAW);
+		gl.glBufferData(GL.GL_ARRAY_BUFFER, shadowVerts.length*(Float.SIZE/8), FloatBuffer.wrap(shadowVerts), GL.GL_DYNAMIC_DRAW);
 		gl.glEnableVertexAttribArray(positionIndex);
 		gl.glVertexAttribPointer(positionIndex, 3, GL.GL_FLOAT, false, 0, 0);
 		
-		//Projection matrices
-		int projMatrixIndex = gl.glGetUniformLocation(shadowTestShader.program(), "projectionMatrix");
-		gl.glUniformMatrix4fv(projMatrixIndex, 1, false, projectionMatrix, 0);
-		
-		int viewMatrixIndex = gl.glGetUniformLocation(shadowTestShader.program(), "viewingMatrix");
-		gl.glUniformMatrix4fv(viewMatrixIndex, 1, false, viewingMatrix, 0);
-		
-		int geometryObjTransformIndex = gl.glGetUniformLocation(shadowTestShader.program(), "objectTransform");
-		gl.glUniformMatrix4fv(geometryObjTransformIndex, 1, false, objectTransformMatrix, 0);
-		
 		gl.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, shadowVerts.length/3);
 		
-		shadowTestShader.useProgram(gl, false);
-		geometryFBO.unbind(gl);
+		shadowGeometryShader.useProgram(gl, false);
+		lightingFBO.unbind(gl);
 	}
 	
-	public void commitDraw()
+	protected void commitDraw()
 	{
 		screenCanvasShader.useProgram(gl, true);
 		gl.glBindVertexArray(screenCanvasVAO);
