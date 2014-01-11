@@ -11,6 +11,17 @@ public class Vector2
 		this.y = y;
 	}
 	
+	public void set(Vector2 other)
+	{
+		set(other.x, other.y);
+	}
+	
+	public void set(float newX, float newY)
+	{
+		x = newX;
+		y = newY;
+	}
+	
 	public void add(Vector2 other)
 	{
 		x += other.x;
