@@ -359,8 +359,8 @@ public class Camera {
 	public void drawObject(Drawable object)
 	{
 		//Compute the object transform matrix
-		float objWidth = object.getTexture().getWidth()*object.scale;
-		float objHeight = object.getTexture().getHeight()*object.scale;
+		float objWidth = object.getWidth();
+		float objHeight = object.getHeight();
 		float rotationRadians = object.rotation*FloatUtil.PI/180;
 		
 		float[] objectTransformMatrix = new float[]{

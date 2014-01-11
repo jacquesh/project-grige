@@ -141,42 +141,30 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 			camera.drawLight(l);
 		}
 		
-		//Fill the depth buffer
-		/*gl.glDepthMask(true);
-		gl.glColorMask(false,false,false,false);
-		gl.glDisable(GL.GL_BLEND);
-		
-		for(GameObject obj : worldObjects)
-			camera.drawObject(obj);*/
-		
-		
-		//Run a render pass for each light in the scene
-		/*for(Light l : worldLights)
+		//Create shadow geometry
+		for(Light l : worldLights)
 		{
-			//Clear the alpha buffer
-			///gl.glDepthMask(false);
-			gl.glColorMask(false,false,false,true);
-			gl.glClearColor(0, 0, 0, 0);
-			gl.glClear(GL.GL_COLOR_BUFFER_BIT);
-			
-			//Draw the new alpha from the light
-			//gl.glEnable(GL.GL_DEPTH_TEST);
-			//gl.glDepthMask(true);
-			//gl.glDepthFunc(GL.GL_LEQUAL);
-			camera.drawLight(l);
-			
-			//Draw all the geometry
-			//gl.glDisable(GL.GL_DEPTH_TEST);
-			//gl.glDepthMask(false);
-			gl.glColorMask(true,true,true,false);
-			gl.glEnable(GL.GL_BLEND);
-			gl.glBlendFunc(GL.GL_DST_ALPHA, GL.GL_ONE);
-			
 			for(GameObject obj : worldObjects)
 			{
-				camera.drawObject(obj);
+				float[] vertices = obj.getVertices();
+				float previousX = vertices[6];
+				float previousY = vertices[7];
+				float currentX = 0;
+				float currentY = 0;
+				float offsetX = 0;
+				float offsetY = 0;
+				for(int index=0; index<8; index+=2)
+				{
+					currentX = vertices[index];
+					currentY = vertices[index+1];
+					
+					offsetX = currentX - previousX;
+					offsetY = currentY - previousY;
+					
+					
+				}
 			}
-		}*/
+		}
 		
 		//Call child-class rendering
 		display();
