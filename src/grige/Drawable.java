@@ -6,17 +6,15 @@ public class Drawable
 {
 	private Texture texture;
 	
-	public float x;
-	public float y;
-	public float depth;
+	private Vector2 position;
+	private float depth;
 	
-	public float scale;
-	public float rotation;
+	private float scale;
+	private float rotation;
 	
 	public Drawable()
 	{
-		x = 160;
-		y = 160;
+		position = new Vector2(160, 160);
 		scale = 1;
 		depth = 0;
 	}
@@ -31,7 +29,35 @@ public class Drawable
 		return texture;
 	}
 	
-	public float getWidth()
+	public float x() { return position.x; }
+	public float y() { return position.y; }
+	public float depth() { return depth; }
+	public float scale() { return scale; }
+	public float rotation() { return rotation; }
+	
+	public void setX(float newX) { position.x = newX; }
+	public void setY(float newY) { position.y = newY; }
+	public void setDepth(float newDepth) { depth = newDepth; }
+	public void setScale(float newScale) { scale = newScale; }
+	public void setRotation(float newRotation) { rotation = newRotation; }
+	
+	public void incX(float extraX) { position.x += extraX; }
+	public void incY(float extraY) { position.y += extraY; }
+	public void incDepth(float extraDepth) { depth += extraDepth; }
+	public void incScale(float extraScale) { scale += extraScale; }
+	public void incRotation(float extraRotation) { rotation += extraRotation; }
+	
+	public Vector2 position()
+	{
+		return new Vector2(position.x, position.y);
+	}
+	public void setPosition(Vector2 newPosition)
+	{
+		position.x = newPosition.x;
+		position.y = newPosition.y;
+	}
+	
+	public float width()
 	{
 		if(texture == null)
 			return 0;
@@ -39,7 +65,7 @@ public class Drawable
 		return texture.getWidth() * scale;
 	}
 	
-	public float getHeight()
+	public float height()
 	{
 		if(texture == null)
 			return 0;
@@ -47,28 +73,28 @@ public class Drawable
 		return texture.getHeight() * scale;
 	}
 	
-	public float[] getVertices()
+	float[] getVertices()
 	{
 		float[] result = new float[8];
-		float halfWidth = getWidth()/2f;
-		float halfHeight = getHeight()/2f;
+		float halfWidth = width()/2f;
+		float halfHeight = height()/2f;
 		float rotationSin = (float)Math.sin(rotation);
 		float rotationCos = (float)Math.cos(rotation);
 		
 		float axisAlignedWidth = halfWidth*rotationCos - halfHeight*rotationSin;
 		float axisAlignedHeight = halfHeight*rotationSin + halfHeight*rotationSin;
 		
-		result[0] = x - axisAlignedWidth;
-		result[1] = y - axisAlignedHeight;
+		result[0] = position.x - axisAlignedWidth;
+		result[1] = position.y - axisAlignedHeight;
 		
-		result[2] = x - axisAlignedWidth;
-		result[3] = y + axisAlignedHeight;
+		result[2] = position.x - axisAlignedWidth;
+		result[3] = position.y + axisAlignedHeight;
 		
-		result[4] = x + axisAlignedWidth;
-		result[5] = y + axisAlignedHeight;
+		result[4] = position.x + axisAlignedWidth;
+		result[5] = position.y + axisAlignedHeight;
 		
-		result[6] = x + axisAlignedWidth;
-		result[7] = y - axisAlignedHeight;
+		result[6] = position.x + axisAlignedWidth;
+		result[7] = position.y - axisAlignedHeight;
 		
 		return result;
 	}

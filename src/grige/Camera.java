@@ -66,11 +66,9 @@ public class Camera {
 	private final float[] fanColours = generateTriangleFanColours(fanVertices.length);
 	
 	//Camera attributes
-	private int x;
-	private int y;
-	private int width;
-	private int height;
-	private int depth;
+	private Vector2 position;
+	private Vector2I size;
+	private float depth;
 	
 	//Current transformation matrices
 	private float[] projectionMatrix;
@@ -96,33 +94,41 @@ public class Camera {
 	
 	public Camera(int startWidth, int startHeight, int startDepth)
 	{
+		position = new Vector2(0, 0);
+		size = new Vector2I(0, 0);
+		
 		setSize(startWidth,startHeight,startDepth);
 		setPosition(0,0);
 	}
 	
-	public void setPosition(int newX, int newY)
+	public void setPosition(float newX, float newY)
 	{
-		x = newX;
-		y = newY;
+		position.x = newX;
+		position.y = newY;
 		
-		viewingMatrix = new float[]{1,0,0,0, 0,1,0,0, 0,0,1,0, -x-width/2f,-y-height/2f,0,1f};
+		viewingMatrix = new float[]{1,0,0,0, 0,1,0,0, 0,0,1,0, -position.x-size.x/2f,-position.y-size.y/2f,0,1f};
 	}
 	
-	public void setSize(int newWidth, int newHeight, int newDepth)
+	public void setPosition(Vector2 newPosition)
 	{
-		width = newWidth;
-		height = newHeight;
+		setPosition(newPosition.x, newPosition.y);
+	}
+	
+	public void setSize(int newWidth, int newHeight, float newDepth)
+	{
+		size.x = newWidth;
+		size.y = newHeight;
 		depth = newDepth;
 		
-		projectionMatrix = new float[]{2f/width,0,0,0, 0,2f/height,0,0, 0,0,-2f/depth,0, 0,0,-1,1};
-		setPosition(x,y); //Update the viewing matrix as well, because the size has changed (so we need to translate (0,0) differently)
+		projectionMatrix = new float[]{2f/size.x,0,0,0, 0,2f/size.y,0,0, 0,0,-2f/depth,0, 0,0,-1,1};
+		setPosition(position.x,position.y); //Update the viewing matrix as well, because the size has changed (so we need to translate (0,0) differently)
 	}
 	
-	public int getX() { return x; }
-	public int getY() { return y; }
-	public int getWidth() { return width; }
-	public int getHeight() { return height; }
-	public int getDepth() { return depth; }
+	public float getX() { return position.x; }
+	public float getY() { return position.y; }
+	public float getWidth() { return size.x; }
+	public float getHeight() { return size.y; }
+	public float getDepth() { return depth; }
 	
 	protected void initialize(GL glContext)
 	{
@@ -141,7 +147,7 @@ public class Camera {
 	{
 		//Create the framebuffer
 		geometryFBO = new FBObject();
-		geometryFBO.reset(gl, width, height);
+		geometryFBO.reset(gl, size.x, size.y);
 		geometryFBO.attachTexture2D(gl, 0, true);
 		geometryFBO.unbind(gl);
 		
@@ -203,7 +209,7 @@ public class Camera {
 	{
 		//Create the framebuffer
 		lightingFBO = new FBObject();
-		lightingFBO.reset(gl, width, height);
+		lightingFBO.reset(gl, size.x, size.y);
 		lightingFBO.attachTexture2D(gl, 0, true);
 		lightingFBO.unbind(gl);
 		
@@ -330,13 +336,13 @@ public class Camera {
 	public void drawLight(Light light)
 	{
 		//Compute the object transform matrix
-		float lightSize = 32*light.scale;
+		float lightSize = 32*light.scale();
 		
 		float[] objectTransformMatrix = new float[]{
 				lightSize,0,0,0,
 				0,lightSize,0,0,
 				0,0,1,0,
-				light.x, light.y, -light.depth, 1
+				light.x(), light.y(), -light.depth(), 1
 		};
 		
 		//Draw the light
@@ -359,15 +365,15 @@ public class Camera {
 	public void drawObject(Drawable object)
 	{
 		//Compute the object transform matrix
-		float objWidth = object.getWidth();
-		float objHeight = object.getHeight();
-		float rotationRadians = object.rotation*FloatUtil.PI/180;
+		float objWidth = object.width();
+		float objHeight = object.height();
+		float rotationRadians = object.rotation()*FloatUtil.PI/180;
 		
 		float[] objectTransformMatrix = new float[]{
 				objWidth*FloatUtil.cos(rotationRadians),-objHeight*FloatUtil.sin(rotationRadians),0,0,
 				objWidth*FloatUtil.sin(rotationRadians), objHeight*FloatUtil.cos(rotationRadians),0,0,
 				0,0,1,0,
-				object.x, object.y, -object.depth, 1
+				object.x(), object.y(), -object.depth(), 1
 		};
 		
 		//Draw geometry
