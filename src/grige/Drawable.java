@@ -51,11 +51,12 @@ public class Drawable
 	{
 		return new Vector2(position.x, position.y);
 	}
-	public void setPosition(Vector2 newPosition)
+	public void setPosition(float x, float y)
 	{
-		position.x = newPosition.x;
-		position.y = newPosition.y;
+		position.x = x;
+		position.y = y;
 	}
+	public void setPosition(Vector2 newPosition) { setPosition(newPosition.x, newPosition.y); }
 	
 	public float width()
 	{
@@ -73,6 +74,12 @@ public class Drawable
 		return texture.getHeight() * scale;
 	}
 	
+	/*
+	 * Return the co-ordinates of the vertices of this drawable object in Counterclockwise order;
+	 * The order is important as it lets us construct geometry from these vertices without re-arranging anything
+	 * 
+	 * Primarily used for generating shadow geometry
+	 */
 	float[] getVertices()
 	{
 		float[] result = new float[8];
@@ -82,19 +89,19 @@ public class Drawable
 		float rotationCos = (float)Math.cos(rotation);
 		
 		float axisAlignedWidth = halfWidth*rotationCos - halfHeight*rotationSin;
-		float axisAlignedHeight = halfHeight*rotationSin + halfHeight*rotationSin;
+		float axisAlignedHeight = halfWidth*rotationSin + halfHeight*rotationCos;
 		
 		result[0] = position.x - axisAlignedWidth;
 		result[1] = position.y - axisAlignedHeight;
 		
-		result[2] = position.x - axisAlignedWidth;
-		result[3] = position.y + axisAlignedHeight;
+		result[2] = position.x + axisAlignedWidth;
+		result[3] = position.y - axisAlignedHeight;
 		
 		result[4] = position.x + axisAlignedWidth;
 		result[5] = position.y + axisAlignedHeight;
 		
-		result[6] = position.x + axisAlignedWidth;
-		result[7] = position.y - axisAlignedHeight;
+		result[6] = position.x - axisAlignedWidth;
+		result[7] = position.y + axisAlignedHeight;
 		
 		return result;
 	}
