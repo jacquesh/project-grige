@@ -142,88 +142,13 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		}
 		
 		//Create shadow geometry
-		float[] vertices;
-		Vector2 previousLoc = new Vector2(0,0);
-		Vector2 currentLoc = new Vector2(0,0);
-		Vector2 vertexNormal = new Vector2(0,0);
-		Vector2 lightOffsetDir = new Vector2(0,0);
-		Vector2 lightProjectionLoc = new Vector2(0, 0);
-		float dotProduct;
 		for(Light l : worldLights)
 		{
 			for(GameObject obj : worldObjects)
 			{
-				ArrayList<Float> vertexList = new ArrayList<Float>();
-				int currentVertexIndex = 0;
+				float[] vertices = camera.generateShadowVertices(l, obj);
 				
-				vertices = obj.getVertices();
-				previousLoc.x = vertices[6];
-				previousLoc.y = vertices[7];
-				for(int index=0; index<8; index+=2)
-				{
-					currentLoc.x = vertices[index];
-					currentLoc.y = vertices[index+1];
-					
-					lightOffsetDir.x = l.x() - currentLoc.x;
-					lightOffsetDir.y = l.y() - currentLoc.y;
-					lightOffsetDir.normalise(); //We can normalise here because the magnitude has no effect on the sign of any dot products
-					
-					//Because we know we're traversing vertices in a counter-clockwise order, we know that the normal for an edge is
-					//(dy, -dx)
-					vertexNormal.x = currentLoc.y - previousLoc.y;
-					vertexNormal.y = -(currentLoc.x - previousLoc.x);
-					
-					dotProduct = vertexNormal.x*lightOffsetDir.x + vertexNormal.y*lightOffsetDir.y;
-					
-					if(dotProduct <= 0)
-					{
-						if(currentVertexIndex == -1)
-						{ 	//If the current index has been set to -1 then we moved from light into shadow
-							//so we need to add shadow for both the current and previous vertices
-							Vector2 previousLightOffsetDir = new Vector2(l.x()-previousLoc.x, l.y()-previousLoc.y);
-							previousLightOffsetDir.normalise();
-							
-							currentVertexIndex = 0;
-							vertexList.add(currentVertexIndex, previousLoc.x);
-							vertexList.add(currentVertexIndex+1, previousLoc.y);
-							vertexList.add(currentVertexIndex+2, 0f); //We need a z-value so we can just cast it to an array and immediately use it in a vertex buffer
-							
-							lightProjectionLoc.set(previousLightOffsetDir);
-							lightProjectionLoc.multiply(-1000); //lightOffset is the vector: "vertex -> light", we use (-) because we need to offset "light vertex ->"
-							lightProjectionLoc.add(previousLoc);
-							
-							vertexList.add(currentVertexIndex+3, lightProjectionLoc.x);
-							vertexList.add(currentVertexIndex+4, lightProjectionLoc.y);
-							vertexList.add(currentVertexIndex+5, 0f);
-							
-							currentVertexIndex += 6;
-						}
-						vertexList.add(currentVertexIndex, currentLoc.x);
-						vertexList.add(currentVertexIndex+1, currentLoc.y);
-						vertexList.add(currentVertexIndex+2, 0f); //We need a z-value so we can just cast it to an array and immediately use it in a vertex buffer
-						
-						lightProjectionLoc.set(lightOffsetDir);
-						lightProjectionLoc.multiply(-1000); //lightOffset is the vector: "vertex -> light", we use (-) because we need to offset "light vertex ->"
-						lightProjectionLoc.add(currentLoc);
-						
-						vertexList.add(currentVertexIndex+3, lightProjectionLoc.x);
-						vertexList.add(currentVertexIndex+4, lightProjectionLoc.y);
-						vertexList.add(currentVertexIndex+5, 0f);
-						
-						currentVertexIndex += 6;
-					}
-					else
-						currentVertexIndex = -1;
-					
-					previousLoc.x = currentLoc.x;
-					previousLoc.y = currentLoc.y;
-				}
-				
-				float[] vertArray = new float[vertexList.size()];
-				for(int i=0; i<vertArray.length; i++)
-					vertArray[i] = vertexList.get(i);
-				
-				camera.drawShadow(vertArray);
+				camera.drawShadow(vertices);
 			}
 		}
 		
