@@ -79,6 +79,9 @@ public class Camera {
 	private int geometryVAO;
 	private int lightingVAO;
 	
+	private int shadowVAO;
+	private int shadowVertexBuffer;
+	
 	//Frame Buffers
 	private FBObject geometryFBO;
 	private FBObject lightingFBO;
@@ -140,8 +143,12 @@ public class Camera {
 		
 		initializeGeometryData();
 		initializeLightingData();
+		initializeShadowData();
 		initializeScreenCanvas();
+		
+		shadowTestShader = loadShader("sts.vsh", "sts.fsh");
 	}
+	private ShaderProgram shadowTestShader;
 
 	private void initializeGeometryData()
 	{
@@ -250,6 +257,20 @@ public class Camera {
 		lightingShader.useProgram(gl, false);
 	}
 
+	private void initializeShadowData()
+	{
+		int[] buffers = new int[1];
+		
+		gl.glGenVertexArrays(1, buffers, 0);
+		shadowVAO = buffers[0];
+		//gl.glBindVertexArray(shadowVAO);
+		
+		gl.glGenBuffers(1, buffers, 0);
+		shadowVertexBuffer = buffers[0];
+		
+		
+	}
+	
 	private void initializeScreenCanvas()
 	{
 		//Load the shader
@@ -404,6 +425,40 @@ public class Camera {
 		
 		gl.glBindVertexArray(0);
 		geometryShader.useProgram(gl, false);
+		geometryFBO.unbind(gl);
+	}
+	
+	public void drawShadow(float[] shadowVerts)
+	{
+		float[] objectTransformMatrix = new float[]{
+				1,0,0,0,
+				0,1,0,0,
+				0,0,1,0,
+				0,0,0,1
+		};
+		
+		geometryFBO.bind(gl);
+		shadowTestShader.useProgram(gl, true);
+		
+		int positionIndex = gl.glGetAttribLocation(shadowTestShader.program(), "position");
+		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, shadowVertexBuffer);
+		gl.glBufferData(GL.GL_ARRAY_BUFFER, shadowVerts.length*(Float.SIZE/8), FloatBuffer.wrap(shadowVerts), GL.GL_STATIC_DRAW);
+		gl.glEnableVertexAttribArray(positionIndex);
+		gl.glVertexAttribPointer(positionIndex, 3, GL.GL_FLOAT, false, 0, 0);
+		
+		//Projection matrices
+		int projMatrixIndex = gl.glGetUniformLocation(shadowTestShader.program(), "projectionMatrix");
+		gl.glUniformMatrix4fv(projMatrixIndex, 1, false, projectionMatrix, 0);
+		
+		int viewMatrixIndex = gl.glGetUniformLocation(shadowTestShader.program(), "viewingMatrix");
+		gl.glUniformMatrix4fv(viewMatrixIndex, 1, false, viewingMatrix, 0);
+		
+		int geometryObjTransformIndex = gl.glGetUniformLocation(shadowTestShader.program(), "objectTransform");
+		gl.glUniformMatrix4fv(geometryObjTransformIndex, 1, false, objectTransformMatrix, 0);
+		
+		gl.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, shadowVerts.length);
+		
+		shadowTestShader.useProgram(gl, false);
 		geometryFBO.unbind(gl);
 	}
 	
