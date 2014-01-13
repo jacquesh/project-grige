@@ -509,8 +509,8 @@ public class Camera {
 		lightingFBO.bind(gl);
 		shadowGeometryShader.useProgram(gl, true);
 		
-		//gl.glBlendFunc(GL.GL_ONE, GL.GL_ZERO);
-		gl.glBlendFunc(GL.GL_ONE, GL.GL_ONE);
+		gl.glBlendFunc(GL.GL_ONE, GL.GL_ZERO);
+		//gl.glBlendFunc(GL.GL_ONE, GL.GL_ONE);
 		//gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE);
 		
 		int positionIndex = gl.glGetAttribLocation(shadowGeometryShader.program(), "position");
