@@ -135,15 +135,13 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		for(GameObject obj : worldObjects)
 		{
 			camera.drawObject(obj);
+			camera.drawObjectDepthToLighting(obj);
 		}
 		for(Light l : worldLights)
 		{
 			camera.drawLight(l);
-		}
-		
-		//Create shadow geometry
-		for(Light l : worldLights)
-		{
+			
+			//Create shadow geometry
 			for(GameObject obj : worldObjects)
 			{
 				float[] vertices = camera.generateShadowVertices(l, obj);
