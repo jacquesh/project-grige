@@ -1,8 +1,20 @@
 #version 330 core
-layout(location = 0) out vec4 color;
+layout(location = 0) out vec4 colour;
 
-in vec4 vertColourV;
+uniform mat4 projectionMatrix;
+uniform mat4 viewingMatrix;
+
+uniform vec3 lightColour;
+uniform float intensity;
+
+uniform vec2 lightLoc;
+uniform float radius;
 
 void main(){
-    color = vertColourV;
+	float distanceToLight = length(gl_FragCoord.xy - lightLoc);
+	float attenuationMultiplier = distanceToLight/radius;
+
+	float fragIntensity = intensity * (1 - attenuationMultiplier);
+
+	colour = vec4(lightColour, fragIntensity);
 }
