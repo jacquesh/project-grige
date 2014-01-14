@@ -37,7 +37,7 @@ public class Drawable
 	
 	public void setX(float newX) { position.x = newX; }
 	public void setY(float newY) { position.y = newY; }
-	public void setDepth(float newDepth) { depth = newDepth; }
+	public void setDepth(int newDepth) { depth = (float)newDepth; }
 	public void setScale(float newScale) { scale = newScale; }
 	public void setRotation(float newRotation) { rotation = newRotation; }
 	

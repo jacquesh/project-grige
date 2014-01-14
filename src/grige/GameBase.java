@@ -131,26 +131,48 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		//Reset the camera for this draw call
 		camera.refresh();
 		
-		//Just draw all the things for testing
+		//Draw all our objects into the depth buffer so that our lights can get depth-tested correctly
 		for(GameObject obj : worldObjects)
-		{
-			camera.drawObject(obj);
 			camera.drawObjectDepthToLighting(obj);
-		}
+		
+		//Draw *all* the lights
+		gl.glEnable(GL.GL_STENCIL_TEST); //We need to stencil out bits of light, so enable stencil test while we're drawing lights
 		for(Light l : worldLights)
 		{
-			camera.drawLight(l);
-			
-			//Create shadow geometry
+			ArrayList<float[]> vertexArrays = new ArrayList<float[]>();
 			for(GameObject obj : worldObjects)
 			{
+				//Compute/store the vertices of the shadow of this objected, as a result of the current light
 				float[] vertices = camera.generateShadowVertices(l, obj);
-				
-				camera.drawShadow(vertices);
+				vertexArrays.add(vertices);
 			}
+			
+			//Set to draw only to the stencil buffer (no colour/alpha)
+			gl.glColorMask(false, false, false, false);
+			gl.glStencilFunc(GL.GL_ALWAYS, 1, 1);
+			gl.glStencilOp(GL.GL_KEEP, GL.GL_KEEP, GL.GL_REPLACE);
+			
+			//Render all shadows from this light into the stencil buffer
+			//This is so that when we render the actual light, it doesn't light up the shadows
+			for(int i=0; i<vertexArrays.size(); i++)
+				camera.drawShadow(vertexArrays.get(i));
+			
+			//Reset drawing to standard colour/alpha
+			gl.glStencilOp(GL.GL_KEEP, GL.GL_KEEP, GL.GL_KEEP);
+			gl.glStencilFunc(GL.GL_EQUAL, 0, 1);
+			gl.glColorMask(true, true, true, true);
+			
+			//Draw lighting (where the stencil is empty)			
+			camera.drawLight(l);
+			camera.clearShadowStencil();
 		}
+		gl.glDisable(GL.GL_STENCIL_TEST); //We only use stencil test for rendering lights
 		
-		//Call child-class rendering
+		//Draw all the objects now that we've finalized our lighting
+		for(GameObject obj : worldObjects)
+			camera.drawObject(obj);
+		
+		//Child-class drawing
 		display();
 		
 		//Commit all drawing thats happened, combining them via their respective framebuffers as needed

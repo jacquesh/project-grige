@@ -141,7 +141,7 @@ public class Camera {
 		
 		//Set rendering properties
 		gl.glDisable(GL.GL_CULL_FACE);
-		gl.glEnable(GL.GL_BLEND);
+		gl.glEnable(GL.GL_STENCIL_TEST);
 		
 		gl.glEnable(GL.GL_DEPTH_TEST);
 		gl.glDepthFunc(GL.GL_LEQUAL);
@@ -218,7 +218,7 @@ public class Camera {
 		lightingFBO = new FBObject();
 		lightingFBO.reset(gl, size.x, size.y);
 		lightingFBO.attachTexture2D(gl, 0, true);
-		lightingFBO.attachRenderbuffer(gl, FBObject.Attachment.Type.DEPTH, 6);
+		lightingFBO.attachRenderbuffer(gl, FBObject.Attachment.Type.DEPTH_STENCIL, 6);
 		lightingFBO.unbind(gl);
 		
 		//Load and bind the shader
@@ -359,8 +359,6 @@ public class Camera {
 	public void refresh()
 	{
 		//Clear the screen
-		//gl.glDepthMask(true);
-		//gl.glClearDepth(1);
 		gl.glClearColor(0, 0, 0, 1);
 		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
 		
@@ -370,9 +368,10 @@ public class Camera {
 		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
 		geometryFBO.unbind(gl);
 		
+		//Clear the lighting buffer
 		lightingFBO.bind(gl);
 		gl.glClearColor(0, 0, 0, 0);
-		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
+		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT | GL.GL_STENCIL_BUFFER_BIT);
 		lightingFBO.unbind(gl);
 	}
 	
@@ -398,6 +397,7 @@ public class Camera {
 		geometryShader.useProgram(gl, true);
 		gl.glActiveTexture(GL.GL_TEXTURE0);
 		gl.glBindVertexArray(geometryVAO);
+		gl.glDepthMask(true);
 		
 		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
 		
@@ -416,6 +416,7 @@ public class Camera {
 		
 		objTex.disable(gl);
 		
+		gl.glDepthMask(false);
 		gl.glBindVertexArray(0);
 		geometryShader.useProgram(gl, false);
 		geometryFBO.unbind(gl);
@@ -439,39 +440,19 @@ public class Camera {
 		lightingFBO.bind(gl);
 		geometryShader.useProgram(gl, true);
 		gl.glBindVertexArray(geometryVAO);
-		
-		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
-		
+		gl.glDepthMask(true);
+		gl.glColorMask(false, false, false, false);
 		
 		int geometryObjTransformIndex = gl.glGetUniformLocation(geometryShader.program(), "objectTransform");
 		gl.glUniformMatrix4fv(geometryObjTransformIndex, 1, false, objectTransformMatrix, 0);
 
-		gl.glDepthMask(true);
-		gl.glColorMask(false, false, false, false);
+		
 		gl.glDrawElements(GL.GL_TRIANGLE_STRIP, quadIndices.length, GL.GL_UNSIGNED_INT, 0);
+		
 		gl.glColorMask(true, true, true, true);
 		gl.glDepthMask(false);
-		
-		
 		gl.glBindVertexArray(0);
 		geometryShader.useProgram(gl, false);
-		lightingFBO.unbind(gl);
-	}
-	
-	protected void clearLightingAlpha()
-	{
-		lightingFBO.bind(gl);
-		alphaClearShader.useProgram(gl, true);
-		gl.glBindVertexArray(screenCanvasVAO);
-		
-		gl.glColorMask(false, false, false, true);
-		gl.glDepthMask(false);
-		gl.glDrawElements(GL.GL_TRIANGLE_STRIP, screenCanvasIndices.length, GL.GL_UNSIGNED_INT, 0);
-		gl.glDepthMask(true);
-		gl.glColorMask(true, true, true, true);
-		
-		gl.glBindVertexArray(0);
-		alphaClearShader.useProgram(gl, false);
 		lightingFBO.unbind(gl);
 	}
 
@@ -492,15 +473,29 @@ public class Camera {
 		lightingShader.useProgram(gl, true);;
 		gl.glBindVertexArray(lightingVAO);
 		
+		gl.glEnable(GL.GL_BLEND);
 		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE);
+		//gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
+		//gl.glBlendFunc(GL.GL_ONE, GL.GL_ONE);
 		
 		int lightObjTransformIndex = gl.glGetUniformLocation(lightingShader.program(), "objectTransform");
 		gl.glUniformMatrix4fv(lightObjTransformIndex, 1, false, objectTransformMatrix, 0);
 		
 		gl.glDrawArrays(GL.GL_TRIANGLE_FAN, 0, fanVertices.length);
 		
+		gl.glDisable(GL.GL_BLEND);
+		
 		gl.glBindVertexArray(0);
 		lightingShader.useProgram(gl, false);
+		lightingFBO.unbind(gl);
+	}
+	
+	protected void clearShadowStencil()
+	{
+		lightingFBO.bind(gl);
+		
+		gl.glClear(GL.GL_STENCIL_BUFFER_BIT);
+		
 		lightingFBO.unbind(gl);
 	}
 	
@@ -508,10 +503,6 @@ public class Camera {
 	{
 		lightingFBO.bind(gl);
 		shadowGeometryShader.useProgram(gl, true);
-		
-		gl.glBlendFunc(GL.GL_ONE, GL.GL_ZERO);
-		//gl.glBlendFunc(GL.GL_ONE, GL.GL_ONE);
-		//gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE);
 		
 		int positionIndex = gl.glGetAttribLocation(shadowGeometryShader.program(), "position");
 		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, shadowVertexBuffer);
@@ -608,15 +599,15 @@ public class Camera {
 					currentVertexIndex = 0;
 					vertexList.add(currentVertexIndex, previousVert.x);
 					vertexList.add(currentVertexIndex+1, previousVert.y);
-					vertexList.add(currentVertexIndex+2, -obj.depth()); //Z-value for depth testing and for ease of use in vertex buffers, negative because we don't use object transform matrices for shadow geometry
-					
+					vertexList.add(currentVertexIndex+2, -obj.depth()-0.5f); //Z-value for depth testing and for ease of use in vertex buffers, negative because we don't use object transform matrices for shadow geometry
+																			 //We subtract 0.5 so that the shadow lies just below the current depth, this prevents odd effects (e.g when objects overlap) and I guess is more physically accurate
 					projectedLightVertex.set(previousLightOffsetDir);
 					projectedLightVertex.multiply(-1000); //lightOffset is the vector: "vertex -> light", we use (-) because we need to offset "light vertex ->"
 					projectedLightVertex.add(previousVert);
 					
 					vertexList.add(currentVertexIndex+3, projectedLightVertex.x);
 					vertexList.add(currentVertexIndex+4, projectedLightVertex.y);
-					vertexList.add(currentVertexIndex+5, -obj.depth());
+					vertexList.add(currentVertexIndex+5, -obj.depth()-0.5f);
 					
 					currentVertexIndex += 6;
 				}
@@ -624,7 +615,7 @@ public class Camera {
 				//Add the current vertex and its projection away from the light
 				vertexList.add(currentVertexIndex, currentVert.x);
 				vertexList.add(currentVertexIndex+1, currentVert.y);
-				vertexList.add(currentVertexIndex+2, -obj.depth());
+				vertexList.add(currentVertexIndex+2, -obj.depth()-0.5f);
 				
 				projectedLightVertex.set(currentLightOffsetDir);
 				projectedLightVertex.multiply(-1000); //lightOffset is the vector: "vertex -> light", we use (-) because we need to offset "light vertex ->"
@@ -632,7 +623,7 @@ public class Camera {
 				
 				vertexList.add(currentVertexIndex+3, projectedLightVertex.x);
 				vertexList.add(currentVertexIndex+4, projectedLightVertex.y);
-				vertexList.add(currentVertexIndex+5, -obj.depth());
+				vertexList.add(currentVertexIndex+5, -obj.depth()-0.5f);
 				
 				currentVertexIndex += 6;
 			}
