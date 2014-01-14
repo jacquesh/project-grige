@@ -480,8 +480,8 @@ public class Camera {
 		int radiusIndex = gl.glGetUniformLocation(lightingShader.program(), "radius");
 		gl.glUniform1f(radiusIndex, light.radius());
 		
-		int colourIndex = gl.glGetUniformLocation(lightingShader.program(), "colour");
-		gl.glUniform3f(colourIndex, 1f, 1f, 1f);
+		int colourIndex = gl.glGetUniformLocation(lightingShader.program(), "lightColour");
+		gl.glUniform3fv(colourIndex, 1, light.getColour(), 0);
 		
 		int intensityIndex = gl.glGetUniformLocation(lightingShader.program(), "intensity");
 		gl.glUniform1f(intensityIndex, 1f);
