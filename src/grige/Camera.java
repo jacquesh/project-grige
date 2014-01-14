@@ -64,7 +64,6 @@ public class Camera {
 	};
 	
 	private final float[] fanVertices = generateTriangleFanVertices(32);
-	private final float[] fanColours = generateTriangleFanColours(fanVertices.length);
 	
 	//Camera attributes
 	private Vector2 position;
@@ -241,11 +240,8 @@ public class Camera {
 		gl.glEnableVertexAttribArray(positionIndex);
 		gl.glVertexAttribPointer(positionIndex, 3, GL.GL_FLOAT, false, 0, 0);
 		
-		int colourIndex = gl.glGetAttribLocation(lightingShader.program(), "vertColour");
-		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, colourBuffer);
-		gl.glBufferData(GL.GL_ARRAY_BUFFER, fanColours.length*(Float.SIZE/8), FloatBuffer.wrap(fanColours), GL.GL_STATIC_DRAW);
-		gl.glEnableVertexAttribArray(colourIndex);
-		gl.glVertexAttribPointer(colourIndex, 4, GL.GL_FLOAT, false, 0, 0);
+		int screenHeightIndex = gl.glGetAttribLocation(lightingShader.program(), "screenHeight");
+		gl.glUniform1f(screenHeightIndex, 320f);
 		
 		gl.glBindVertexArray(0);
 		lightingShader.useProgram(gl, false);
@@ -443,9 +439,8 @@ public class Camera {
 		gl.glDepthMask(true);
 		gl.glColorMask(false, false, false, false);
 		
-		int geometryObjTransformIndex = gl.glGetUniformLocation(geometryShader.program(), "objectTransform");
-		gl.glUniformMatrix4fv(geometryObjTransformIndex, 1, false, objectTransformMatrix, 0);
-
+		int objTransformIndex = gl.glGetUniformLocation(geometryShader.program(), "objectTransform");
+		gl.glUniformMatrix4fv(objTransformIndex, 1, false, objectTransformMatrix, 0);
 		
 		gl.glDrawElements(GL.GL_TRIANGLE_STRIP, quadIndices.length, GL.GL_UNSIGNED_INT, 0);
 		
@@ -459,11 +454,9 @@ public class Camera {
 	protected void drawLight(Light light)
 	{
 		//Compute the object transform matrix
-		float lightSize = 32*light.scale();
-		
 		float[] objectTransformMatrix = new float[]{
-				lightSize,0,0,0,
-				0,lightSize,0,0,
+				light.radius(),0,0,0,
+				0,light.radius(),0,0,
 				0,0,1,0,
 				light.x(), light.y(), -light.depth(), 1
 		};
@@ -480,6 +473,18 @@ public class Camera {
 		
 		int lightObjTransformIndex = gl.glGetUniformLocation(lightingShader.program(), "objectTransform");
 		gl.glUniformMatrix4fv(lightObjTransformIndex, 1, false, objectTransformMatrix, 0);
+		
+		int lightLocIndex = gl.glGetUniformLocation(lightingShader.program(), "lightLoc");
+		gl.glUniform2f(lightLocIndex, light.x(), light.y());
+		
+		int radiusIndex = gl.glGetUniformLocation(lightingShader.program(), "radius");
+		gl.glUniform1f(radiusIndex, light.radius());
+		
+		int colourIndex = gl.glGetUniformLocation(lightingShader.program(), "colour");
+		gl.glUniform3f(colourIndex, 1f, 1f, 1f);
+		
+		int intensityIndex = gl.glGetUniformLocation(lightingShader.program(), "intensity");
+		gl.glUniform1f(intensityIndex, 1f);
 		
 		gl.glDrawArrays(GL.GL_TRIANGLE_FAN, 0, fanVertices.length);
 		
@@ -642,6 +647,10 @@ public class Camera {
 		return vertArray;
 	}
 	
+	/*
+	 * Generate vertices for a circle of radius 1
+	 * with edgeVertexCount+1 vertices (1 centre, edgeVertexCount at the perimeter)
+	 */
 	private float[] generateTriangleFanVertices(int edgeVertexCount)
 	{
 		float angleIncrement = 2*FloatUtil.PI/edgeVertexCount;
@@ -657,35 +666,11 @@ public class Camera {
 		{
 			int startIndex = (i+1)*3;
 			
-			resultVerts[startIndex]   = 0.6f*FloatUtil.cos(i*angleIncrement);// - FloatUtil.sin(i*angleIncrement); //X-value
-			resultVerts[startIndex+1] = 0.6f*FloatUtil.sin(i*angleIncrement);// + FloatUtil.cos(i*angleIncrement); //Y-value
+			resultVerts[startIndex]   = FloatUtil.cos(i*angleIncrement);//X-value
+			resultVerts[startIndex+1] = FloatUtil.sin(i*angleIncrement);//Y-value
 			resultVerts[startIndex+2] = 0; //Z-value
 		}
 		
 		return resultVerts;
-	}
-	
-	private float[] generateTriangleFanColours(int edgeVertexCount)
-	{
-		float[] resultColours = new float[4*(edgeVertexCount+1+1)];
-		
-		//Set the colour at the centre
-		resultColours[0] = 1;
-		resultColours[1] = 1;
-		resultColours[2] = 1;
-		resultColours[3] = 1;
-		
-		//Set the colour at the edge
-		for(int i=0; i<=edgeVertexCount; i++)
-		{
-			int startIndex = (i+1)*4;
-			
-			resultColours[startIndex]   = 1;
-			resultColours[startIndex+1] = 1;
-			resultColours[startIndex+2] = 1;
-			resultColours[startIndex+3] = 0;
-		}
-		
-		return resultColours;
 	}
 }
