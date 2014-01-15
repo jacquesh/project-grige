@@ -69,6 +69,7 @@ public class Camera {
 	private Vector2 position;
 	private Vector2I size;
 	private float depth;
+	private float ambientLightAlpha;
 	
 	//Current transformation matrices
 	private float[] projectionMatrix;
@@ -127,11 +128,14 @@ public class Camera {
 		setPosition(position.x,position.y); //Update the viewing matrix as well, because the size has changed (so we need to translate (0,0) differently)
 	}
 	
+	public void setAmbientLightAlpha(float newAlpha) { ambientLightAlpha = newAlpha; }
+	
 	public float getX() { return position.x; }
 	public float getY() { return position.y; }
 	public float getWidth() { return size.x; }
 	public float getHeight() { return size.y; }
 	public float getDepth() { return depth; }
+	public float getAmbientLightAlpha() { return ambientLightAlpha; }
 	
 	protected void initialize(GL glContext)
 	{
@@ -349,7 +353,7 @@ public class Camera {
 		shadowGeometryShader.useProgram(gl, false);
 	}
 	
-	protected void refresh(float ambientLightAlpha)
+	protected void refresh()
 	{
 		gl.glDepthMask(true);
 		
