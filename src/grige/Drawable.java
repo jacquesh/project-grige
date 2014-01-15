@@ -1,5 +1,6 @@
 package grige;
 
+import com.jogamp.opengl.math.FloatUtil;
 import com.jogamp.opengl.util.texture.Texture;
 
 public class Drawable
@@ -80,28 +81,29 @@ public class Drawable
 	 * 
 	 * Primarily used for generating shadow geometry
 	 */
-	float[] getVertices()
+	public float[] getVertices()
 	{
 		float[] result = new float[8];
 		float halfWidth = width()/2f;
 		float halfHeight = height()/2f;
-		float rotationSin = (float)Math.sin(rotation);
-		float rotationCos = (float)Math.cos(rotation);
+		float rotationSin = FloatUtil.sin(rotation);
+		float rotationCos = FloatUtil.cos(rotation);
 		
-		float axisAlignedWidth = halfWidth*rotationCos - halfHeight*rotationSin;
-		float axisAlignedHeight = halfWidth*rotationSin + halfHeight*rotationCos;
+		//Bottom Left
+		result[0] = position.x + (-halfWidth*rotationCos + halfHeight*rotationSin);
+		result[1] = position.y + (-halfWidth*rotationSin - halfHeight*rotationCos);
 		
-		result[0] = position.x - axisAlignedWidth;
-		result[1] = position.y - axisAlignedHeight;
+		//Bottom Right
+		result[2] = position.x + (halfWidth*rotationCos + halfHeight*rotationSin);
+		result[3] = position.y + (halfWidth*rotationSin - halfHeight*rotationCos);
 		
-		result[2] = position.x + axisAlignedWidth;
-		result[3] = position.y - axisAlignedHeight;
+		//Top Right
+		result[4] = position.x + (halfWidth*rotationCos - halfHeight*rotationSin);
+		result[5] = position.y + (halfWidth*rotationSin + halfHeight*rotationCos);
 		
-		result[4] = position.x + axisAlignedWidth;
-		result[5] = position.y + axisAlignedHeight;
-		
-		result[6] = position.x - axisAlignedWidth;
-		result[7] = position.y + axisAlignedHeight;
+		//Top Left
+		result[6] = position.x + (-halfWidth*rotationCos - halfHeight*rotationSin);
+		result[7] = position.y + (-halfWidth*rotationSin + halfHeight*rotationCos);
 		
 		return result;
 	}

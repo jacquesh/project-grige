@@ -351,6 +351,8 @@ public class Camera {
 	
 	protected void refresh(float ambientLightAlpha)
 	{
+		gl.glDepthMask(true);
+		
 		//Clear the screen
 		gl.glClearColor(0, 0, 0, 1);
 		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
@@ -366,6 +368,8 @@ public class Camera {
 		gl.glClearColor(0, 0, 0, ambientLightAlpha);
 		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT | GL.GL_STENCIL_BUFFER_BIT);
 		lightingFBO.unbind(gl);
+		
+		gl.glDepthMask(false);
 	}
 	
 	protected void drawObject(Drawable object)
@@ -373,11 +377,12 @@ public class Camera {
 		//Compute the object transform matrix
 		float objWidth = object.width();
 		float objHeight = object.height();
-		float rotationRadians = object.rotation()*FloatUtil.PI/180;
+		float rotationSin = FloatUtil.sin(object.rotation());
+		float rotationCos = FloatUtil.cos(object.rotation());
 		
 		float[] objectTransformMatrix = new float[]{
-				objWidth*FloatUtil.cos(rotationRadians),-objHeight*FloatUtil.sin(rotationRadians),0,0,
-				objWidth*FloatUtil.sin(rotationRadians), objHeight*FloatUtil.cos(rotationRadians),0,0,
+				 objWidth*rotationCos, objHeight*rotationSin,0,0,
+				-objWidth*rotationSin, objHeight*rotationCos,0,0,
 				0,0,1,0,
 				object.x(), object.y(), -object.depth(), 1
 		};
@@ -420,11 +425,12 @@ public class Camera {
 		//Compute the object transform matrix
 		float objWidth = object.width();
 		float objHeight = object.height();
-		float rotationRadians = object.rotation()*FloatUtil.PI/180;
+		float rotationSin = FloatUtil.sin(object.rotation());
+		float rotationCos = FloatUtil.cos(object.rotation());
 		
 		float[] objectTransformMatrix = new float[]{
-				objWidth*FloatUtil.cos(rotationRadians),-objHeight*FloatUtil.sin(rotationRadians),0,0,
-				objWidth*FloatUtil.sin(rotationRadians), objHeight*FloatUtil.cos(rotationRadians),0,0,
+				 objWidth*rotationCos, objHeight*rotationSin,0,0,
+				-objWidth*rotationSin, objHeight*rotationCos,0,0,
 				0,0,1,0,
 				object.x(), object.y(), -object.depth(), 1
 		};
@@ -595,6 +601,7 @@ public class Camera {
 		int currentVertexIndex = 0;
 		
 		float[] vertices = obj.getVertices();
+		
 		Vector2 vertexNormal = new Vector2(0,0);
 		Vector2 projectedLightVertex = new Vector2(0, 0);
 		
@@ -630,6 +637,7 @@ public class Camera {
 					vertexList.add(currentVertexIndex+1, previousVert.y);
 					vertexList.add(currentVertexIndex+2, -obj.depth()-0.5f); //Z-value for depth testing and for ease of use in vertex buffers, negative because we don't use object transform matrices for shadow geometry
 																			 //We subtract 0.5 so that the shadow lies just below the current depth, this prevents odd effects (e.g when objects overlap) and I guess is more physically accurate
+					
 					projectedLightVertex.set(previousLightOffsetDir);
 					projectedLightVertex.multiply(-1000); //lightOffset is the vector: "vertex -> light", we use (-) because we need to offset "light vertex ->"
 					projectedLightVertex.add(previousVert);
