@@ -462,8 +462,8 @@ public class Camera {
 	{
 		//Compute the object transform matrix
 		float[] objectTransformMatrix = new float[]{
-				light.radius(),0,0,0,
-				0,light.radius(),0,0,
+				light.getRadius(),0,0,0,
+				0,light.getRadius(),0,0,
 				0,0,1,0,
 				light.x(), light.y(), -light.depth(), 1
 		};
@@ -483,7 +483,7 @@ public class Camera {
 		gl.glUniform2f(lightLocIndex, light.x(), light.y());
 		
 		int radiusIndex = gl.glGetUniformLocation(lightingShader.program(), "radius");
-		gl.glUniform1f(radiusIndex, light.radius());
+		gl.glUniform1f(radiusIndex, light.getRadius());
 		
 		int colourIndex = gl.glGetUniformLocation(lightingShader.program(), "lightColour");
 		gl.glUniform3fv(colourIndex, 1, light.getColour(), 0);
