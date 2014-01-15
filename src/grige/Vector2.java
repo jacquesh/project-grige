@@ -1,6 +1,7 @@
 package grige;
 
-public class Vector2 {
+public class Vector2
+{
 	public float x;
 	public float y;
 	
@@ -8,6 +9,17 @@ public class Vector2 {
 	{
 		this.x = x;
 		this.y = y;
+	}
+	
+	public void set(Vector2 other)
+	{
+		set(other.x, other.y);
+	}
+	
+	public void set(float newX, float newY)
+	{
+		x = newX;
+		y = newY;
 	}
 	
 	public void add(Vector2 other)
@@ -52,5 +64,11 @@ public class Vector2 {
 	public float magnitude()
 	{
 		return (float)Math.sqrt(sqrMagnitude());
+	}
+	
+	@Override
+	public String toString()
+	{
+		return "("+x+"; "+y+")";
 	}
 }
