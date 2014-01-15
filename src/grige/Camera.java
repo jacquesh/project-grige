@@ -89,7 +89,6 @@ public class Camera {
 	private ShaderProgram screenCanvasShader;
 	private ShaderProgram geometryShader;
 	private ShaderProgram lightingShader;
-	private ShaderProgram alphaClearShader;
 	private ShaderProgram shadowGeometryShader;
 	
 	//GL context
@@ -176,7 +175,7 @@ public class Camera {
 		gl.glBindVertexArray(geometryVAO);
 		
 		//Generate and store the required buffers
-		gl.glGenBuffers(4, buffers,0); //Indices, VertexLocations, TextureCoordinates
+		gl.glGenBuffers(4, buffers,0);
 		int indexBuffer = buffers[0];
 		int vertexBuffer = buffers[1];
 		int texCoordBuffer = buffers[2];
@@ -224,15 +223,14 @@ public class Camera {
 		lightingShader = loadShader("LightVertexShader.vsh", "LightFragmentShader.fsh");
 		lightingShader.useProgram(gl, true);
 		
-		int[] buffers = new int[2];
+		int[] buffers = new int[1];
 		//Create the vertex array
 		gl.glGenVertexArrays(1, buffers, 0);
 		lightingVAO = buffers[0];
 		gl.glBindVertexArray(lightingVAO);
 		
-		gl.glGenBuffers(2, buffers ,0);
+		gl.glGenBuffers(1, buffers ,0);
 		int vertexBuffer = buffers[0];
-		int colourBuffer = buffers[1];
 		
 		int positionIndex = gl.glGetAttribLocation(lightingShader.program(), "position");
 		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, vertexBuffer);
@@ -250,7 +248,6 @@ public class Camera {
 	private void initializeShadowData()
 	{
 		//Load the shaders
-		alphaClearShader = loadShader("AlphaClearance.vsh", "AlphaClearance.fsh");
 		shadowGeometryShader = loadShader("ShadowGeometry.vsh", "ShadowGeometry.fsh");
 		
 		int[] buffers = new int[1];
@@ -352,7 +349,7 @@ public class Camera {
 		shadowGeometryShader.useProgram(gl, false);
 	}
 	
-	public void refresh()
+	protected void refresh()
 	{
 		//Clear the screen
 		gl.glClearColor(0, 0, 0, 1);
@@ -463,13 +460,11 @@ public class Camera {
 		
 		//Draw the light
 		lightingFBO.bind(gl);
-		lightingShader.useProgram(gl, true);;
+		lightingShader.useProgram(gl, true);
 		gl.glBindVertexArray(lightingVAO);
 		
 		gl.glEnable(GL.GL_BLEND);
 		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE);
-		//gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
-		//gl.glBlendFunc(GL.GL_ONE, GL.GL_ONE);
 		
 		int lightObjTransformIndex = gl.glGetUniformLocation(lightingShader.program(), "objectTransform");
 		gl.glUniformMatrix4fv(lightObjTransformIndex, 1, false, objectTransformMatrix, 0);
@@ -541,7 +536,6 @@ public class Camera {
 		screenCanvasShader.useProgram(gl, false);
 	}
 	
-	//Initialization utility functions
 	private ShaderProgram loadShader(String vertexShader, String fragmentShader)
 	{
 		GL2ES2 gl = this.gl.getGL2ES2();
@@ -565,6 +559,36 @@ public class Camera {
 		return newShader;
 	}
 	
+	/*
+	 * Generate vertices for a circle of radius 1
+	 * with edgeVertexCount+1 vertices (1 centre, edgeVertexCount at the perimeter)
+	 */
+	private float[] generateTriangleFanVertices(int edgeVertexCount)
+	{
+		float angleIncrement = 2*FloatUtil.PI/edgeVertexCount;
+		float[] resultVerts = new float[3*(edgeVertexCount+1+1)];
+		
+		//Define the origin of the fan
+		resultVerts[0] = 0f;
+		resultVerts[1] = 0f;
+		resultVerts[2] = 0f;
+		
+		//Define all the edge vertices of the fan
+		for(int i=0; i<=edgeVertexCount; i++)
+		{
+			int startIndex = (i+1)*3;
+			
+			resultVerts[startIndex]   = FloatUtil.cos(i*angleIncrement);//X-value
+			resultVerts[startIndex+1] = FloatUtil.sin(i*angleIncrement);//Y-value
+			resultVerts[startIndex+2] = 0; //Z-value
+		}
+		
+		return resultVerts;
+	}
+	
+	/*
+	 * Compute the vertices for the shadow cast by the given GameObject when lit by the given Light
+	 */
 	protected float[] generateShadowVertices(Light l, GameObject obj)
 	{
 		ArrayList<Float> vertexList = new ArrayList<Float>();
@@ -645,32 +669,5 @@ public class Camera {
 			vertArray[i] = vertexList.get(i);
 		
 		return vertArray;
-	}
-	
-	/*
-	 * Generate vertices for a circle of radius 1
-	 * with edgeVertexCount+1 vertices (1 centre, edgeVertexCount at the perimeter)
-	 */
-	private float[] generateTriangleFanVertices(int edgeVertexCount)
-	{
-		float angleIncrement = 2*FloatUtil.PI/edgeVertexCount;
-		float[] resultVerts = new float[3*(edgeVertexCount+1+1)];
-		
-		//Define the origin of the fan
-		resultVerts[0] = 0f;
-		resultVerts[1] = 0f;
-		resultVerts[2] = 0f;
-		
-		//Define all the edge vertices of the fan
-		for(int i=0; i<=edgeVertexCount; i++)
-		{
-			int startIndex = (i+1)*3;
-			
-			resultVerts[startIndex]   = FloatUtil.cos(i*angleIncrement);//X-value
-			resultVerts[startIndex+1] = FloatUtil.sin(i*angleIncrement);//Y-value
-			resultVerts[startIndex+2] = 0; //Z-value
-		}
-		
-		return resultVerts;
 	}
 }
