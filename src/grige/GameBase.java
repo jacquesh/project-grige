@@ -26,6 +26,8 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	private ArrayList<GameObject> worldObjects;
 	private ArrayList<Light> worldLights;
 	
+	private float ambientLight;
+	
 	//Game Managers
 	protected Camera camera;
 	protected InputManager input;
@@ -42,6 +44,8 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	public GameBase()
 	{
 		GameBase.instance = this;
+		
+		ambientLight = 0f;
 	}
 	
 	public final void start()
@@ -129,7 +133,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		GL gl = glad.getGL();
 		
 		//Reset the camera for this draw call
-		camera.refresh();
+		camera.refresh(ambientLight);
 		
 		//Draw all our objects into the depth buffer so that our lights can get depth-tested correctly
 		for(GameObject obj : worldObjects)

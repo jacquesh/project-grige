@@ -349,7 +349,7 @@ public class Camera {
 		shadowGeometryShader.useProgram(gl, false);
 	}
 	
-	protected void refresh()
+	protected void refresh(float ambientLightAlpha)
 	{
 		//Clear the screen
 		gl.glClearColor(0, 0, 0, 1);
@@ -363,7 +363,7 @@ public class Camera {
 		
 		//Clear the lighting buffer
 		lightingFBO.bind(gl);
-		gl.glClearColor(0, 0, 0, 0);
+		gl.glClearColor(0, 0, 0, ambientLightAlpha);
 		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT | GL.GL_STENCIL_BUFFER_BIT);
 		lightingFBO.unbind(gl);
 	}
