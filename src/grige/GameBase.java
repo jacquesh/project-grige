@@ -50,6 +50,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		gameWindow.display(); //Draw once before looping to initalize the screen/opengl
 		
 		running = true;
+		
 		while(running)
 		{
 			internalUpdate(0);
@@ -70,12 +71,16 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		gameWindow.setSize(320, 320);
 		gameWindow.setVisible(true);
 		gameWindow.setTitle("JOGL Test");
-		gameWindow.addWindowListener(this);
-		gameWindow.addGLEventListener(this);
 		
 		//Create the various managers for the game
-		input = new InputManager();
+		input = new InputManager(gameWindow.getHeight());
 		camera = new Camera(gameWindow.getWidth(),gameWindow.getHeight(),10);
+		
+		//Add the required event listeners
+		gameWindow.addWindowListener(this);
+		gameWindow.addGLEventListener(this);
+		gameWindow.addKeyListener(input);
+		gameWindow.addMouseListener(input);
 		
 		//Instantiate other structures
 		worldObjects = new ArrayList<GameObject>();
