@@ -69,6 +69,8 @@ public class Camera {
 	private Vector2 position;
 	private Vector2I size;
 	private float depth;
+	
+	private Color clearColour;
 	private float ambientLightAlpha;
 	
 	//Current transformation matrices
@@ -100,12 +102,16 @@ public class Camera {
 		position = new Vector2(0, 0);
 		size = new Vector2I(startWidth, startHeight);
 		depth = startDepth;
+		
+		ambientLightAlpha = 0;
+		clearColour = new Color(0,0,0,1);
 	}
 	
 	public void setPosition(float newX, float newY)
 	{
 		position.x = newX;
 		position.y = newY;
+		System.out.println(position);
 		
 		viewingMatrix = new float[]{1,0,0,0, 0,1,0,0, 0,0,1,0, -position.x-size.x/2f,-position.y-size.y/2f,0,1f};
 		rebufferViewingMatrix();
@@ -129,6 +135,7 @@ public class Camera {
 	}
 	
 	public void setAmbientLightAlpha(float newAlpha) { ambientLightAlpha = newAlpha; }
+	public void setClearColor(float r, float g, float b){ clearColour.setValues(r, g, b, 1); }
 	
 	public float getX() { return position.x; }
 	public float getY() { return position.y; }
@@ -136,6 +143,7 @@ public class Camera {
 	public float getHeight() { return size.y; }
 	public float getDepth() { return depth; }
 	public float getAmbientLightAlpha() { return ambientLightAlpha; }
+	public Color getClearColor() { return clearColour; }
 	
 	protected void initialize(GL glContext)
 	{
@@ -363,7 +371,7 @@ public class Camera {
 		
 		//Clear the geometry buffer
 		geometryFBO.bind(gl);
-		gl.glClearColor(1, 1, 1, 1);
+		gl.glClearColor(clearColour.getRed(), clearColour.getGreen(), clearColour.getBlue(), clearColour.getAlpha());
 		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
 		geometryFBO.unbind(gl);
 		
@@ -486,7 +494,7 @@ public class Camera {
 		gl.glUniform1f(radiusIndex, light.getRadius());
 		
 		int colourIndex = gl.glGetUniformLocation(lightingShader.program(), "lightColour");
-		gl.glUniform3fv(colourIndex, 1, light.getColour(), 0);
+		gl.glUniform3fv(colourIndex, 1, light.getColour().toColorFloatArray(), 0);
 		
 		int intensityIndex = gl.glGetUniformLocation(lightingShader.program(), "intensity");
 		gl.glUniform1f(intensityIndex, 1f);
