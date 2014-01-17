@@ -3,6 +3,7 @@ package grige;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
@@ -69,6 +70,8 @@ public class Camera {
 	private Vector2 position;
 	private Vector2I size;
 	private float depth;
+	
+	private Color clearColour;
 	private float ambientLightAlpha;
 	
 	//Current transformation matrices
@@ -100,6 +103,9 @@ public class Camera {
 		position = new Vector2(0, 0);
 		size = new Vector2I(startWidth, startHeight);
 		depth = startDepth;
+		
+		ambientLightAlpha = 0;
+		clearColour = new Color(0,0,0,1);
 	}
 	
 	public void setPosition(float newX, float newY)
@@ -107,8 +113,12 @@ public class Camera {
 		position.x = newX;
 		position.y = newY;
 		
-		viewingMatrix = new float[]{1,0,0,0, 0,1,0,0, 0,0,1,0, -position.x-size.x/2f,-position.y-size.y/2f,0,1f};
-		rebufferViewingMatrix();
+		viewingMatrix = new float[]{
+				1,0,0,0,
+				0,1,0,0,
+				0,0,1,0,
+				-position.x-size.x/2f,-position.y-size.y/2f,0,1f
+		};
 	}
 	
 	public void setPosition(Vector2 newPosition)
@@ -122,13 +132,17 @@ public class Camera {
 		size.y = newHeight;
 		depth = newDepth;
 		
-		projectionMatrix = new float[]{2f/size.x,0,0,0, 0,2f/size.y,0,0, 0,0,-2f/depth,0, 0,0,-1,1};
-		rebufferProjectionMatrix();
-		
+		projectionMatrix = new float[]{
+				2f/size.x,0,0,0,
+				0,2f/size.y,0,0,
+				0,0,-2f/depth,0,
+				0,0,-1,1
+		};
 		setPosition(position.x,position.y); //Update the viewing matrix as well, because the size has changed (so we need to translate (0,0) differently)
 	}
 	
 	public void setAmbientLightAlpha(float newAlpha) { ambientLightAlpha = newAlpha; }
+	public void setClearColor(float r, float g, float b){ clearColour.setValues(r, g, b, 1); }
 	
 	public float getX() { return position.x; }
 	public float getY() { return position.y; }
@@ -136,6 +150,7 @@ public class Camera {
 	public float getHeight() { return size.y; }
 	public float getDepth() { return depth; }
 	public float getAmbientLightAlpha() { return ambientLightAlpha; }
+	public Color getClearColor() { return clearColour; }
 	
 	protected void initialize(GL glContext)
 	{
@@ -307,14 +322,14 @@ public class Camera {
 		screenCanvasShader.useProgram(gl, false);
 	}
 	
-	protected void rebufferViewingMatrix()
+	private void rebufferViewingMatrix()
 	{
 		int viewMatrixIndex;
 		
 		//Geometry shader
 		geometryShader.useProgram(gl, true);
 		viewMatrixIndex = gl.glGetUniformLocation(geometryShader.program(), "viewingMatrix");
-		gl.glUniformMatrix4fv(viewMatrixIndex, 1, false, viewingMatrix, 0);		
+		gl.glUniformMatrix4fv(viewMatrixIndex, 1, false, viewingMatrix, 0);
 		geometryShader.useProgram(gl, false);
 		
 		//Lighting shader
@@ -330,7 +345,7 @@ public class Camera {
 		shadowGeometryShader.useProgram(gl, false);
 	}
 	
-	protected void rebufferProjectionMatrix()
+	private void rebufferProjectionMatrix()
 	{
 		int projMatrixIndex;
 		
@@ -353,8 +368,17 @@ public class Camera {
 		shadowGeometryShader.useProgram(gl, false);
 	}
 	
-	protected void refresh()
+	private void rebufferScreenSize()
 	{
+		lightingShader.useProgram(gl, true);
+		int screenSizeIndex = gl.glGetUniformLocation(lightingShader.program(), "screenSize");
+		gl.glUniform2f(screenSizeIndex, getWidth(), getHeight());
+		lightingShader.useProgram(gl, false);
+	}
+	
+	protected void refresh(GL glContext)
+	{
+		gl = glContext.getGL2();
 		gl.glDepthMask(true);
 		
 		//Clear the screen
@@ -363,7 +387,7 @@ public class Camera {
 		
 		//Clear the geometry buffer
 		geometryFBO.bind(gl);
-		gl.glClearColor(1, 1, 1, 1);
+		gl.glClearColor(clearColour.getRed(), clearColour.getGreen(), clearColour.getBlue(), clearColour.getAlpha());
 		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
 		geometryFBO.unbind(gl);
 		
@@ -372,6 +396,10 @@ public class Camera {
 		gl.glClearColor(0, 0, 0, ambientLightAlpha);
 		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT | GL.GL_STENCIL_BUFFER_BIT);
 		lightingFBO.unbind(gl);
+		
+		rebufferViewingMatrix();
+		rebufferProjectionMatrix();
+		rebufferScreenSize();
 		
 		gl.glDepthMask(false);
 	}
@@ -405,7 +433,7 @@ public class Camera {
 		
 		//Texture specification
 		int textureSamplerIndex = gl.glGetUniformLocation(geometryShader.program(), "textureUnit");
-		gl.glUniform1f(textureSamplerIndex, 0);
+		gl.glUniform1i(textureSamplerIndex, 0);
 		
 		int geometryObjTransformIndex = gl.glGetUniformLocation(geometryShader.program(), "objectTransform");
 		gl.glUniformMatrix4fv(geometryObjTransformIndex, 1, false, objectTransformMatrix, 0);
@@ -468,6 +496,13 @@ public class Camera {
 				light.x(), light.y(), -light.depth(), 1
 		};
 		
+		//Compute the transformed light location (for lighting)
+		float[] lightLoc = new float[]{light.x(), light.y(), light.depth(), 1};
+		float[] transformedLightLoc = new float[4];
+		float[] transformMatrix = Arrays.copyOf(projectionMatrix, 16);
+		FloatUtil.multMatrixf(transformMatrix, 0, viewingMatrix, 0);
+		FloatUtil.multMatrixVecf(transformMatrix, lightLoc, transformedLightLoc);
+		
 		//Draw the light
 		lightingFBO.bind(gl);
 		lightingShader.useProgram(gl, true);
@@ -480,13 +515,13 @@ public class Camera {
 		gl.glUniformMatrix4fv(lightObjTransformIndex, 1, false, objectTransformMatrix, 0);
 		
 		int lightLocIndex = gl.glGetUniformLocation(lightingShader.program(), "lightLoc");
-		gl.glUniform2f(lightLocIndex, light.x(), light.y());
+		gl.glUniform2f(lightLocIndex, transformedLightLoc[0], transformedLightLoc[1]);
 		
 		int radiusIndex = gl.glGetUniformLocation(lightingShader.program(), "radius");
 		gl.glUniform1f(radiusIndex, light.getRadius());
 		
 		int colourIndex = gl.glGetUniformLocation(lightingShader.program(), "lightColour");
-		gl.glUniform3fv(colourIndex, 1, light.getColour(), 0);
+		gl.glUniform3fv(colourIndex, 1, light.getColour().toColorFloatArray(), 0);
 		
 		int intensityIndex = gl.glGetUniformLocation(lightingShader.program(), "intensity");
 		gl.glUniform1f(intensityIndex, 1f);
