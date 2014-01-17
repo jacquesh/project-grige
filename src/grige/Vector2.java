@@ -1,5 +1,7 @@
 package grige;
 
+import com.jogamp.opengl.math.FloatUtil;
+
 public class Vector2
 {
 	public float x;
@@ -63,7 +65,7 @@ public class Vector2
 	
 	public float magnitude()
 	{
-		return (float)Math.sqrt(sqrMagnitude());
+		return FloatUtil.sqrt(sqrMagnitude());
 	}
 	
 	@Override
