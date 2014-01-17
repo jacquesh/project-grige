@@ -322,7 +322,7 @@ public class Camera {
 		screenCanvasShader.useProgram(gl, false);
 	}
 	
-	protected void rebufferViewingMatrix()
+	private void rebufferViewingMatrix()
 	{
 		int viewMatrixIndex;
 		
@@ -345,7 +345,7 @@ public class Camera {
 		shadowGeometryShader.useProgram(gl, false);
 	}
 	
-	protected void rebufferProjectionMatrix()
+	private void rebufferProjectionMatrix()
 	{
 		int projMatrixIndex;
 		
@@ -366,6 +366,14 @@ public class Camera {
 		projMatrixIndex = gl.glGetUniformLocation(shadowGeometryShader.program(), "projectionMatrix");
 		gl.glUniformMatrix4fv(projMatrixIndex, 1, false, projectionMatrix, 0);
 		shadowGeometryShader.useProgram(gl, false);
+	}
+	
+	private void rebufferScreenSize()
+	{
+		lightingShader.useProgram(gl, true);
+		int screenSizeIndex = gl.glGetUniformLocation(lightingShader.program(), "screenSize");
+		gl.glUniform2f(screenSizeIndex, getWidth(), getHeight());
+		lightingShader.useProgram(gl, false);
 	}
 	
 	protected void refresh(GL glContext)
@@ -391,6 +399,7 @@ public class Camera {
 		
 		rebufferViewingMatrix();
 		rebufferProjectionMatrix();
+		rebufferScreenSize();
 		
 		gl.glDepthMask(false);
 	}
@@ -489,17 +498,10 @@ public class Camera {
 		
 		//Compute the transformed light location (for lighting)
 		float[] lightLoc = new float[]{light.x(), light.y(), light.depth(), 1};
-		float[] result = new float[4];
+		float[] transformedLightLoc = new float[4];
 		float[] transformMatrix = Arrays.copyOf(projectionMatrix, 16);
 		FloatUtil.multMatrixf(transformMatrix, 0, viewingMatrix, 0);
-		FloatUtil.multMatrixf(transformMatrix, 0, objectTransformMatrix, 0);
-		FloatUtil.multMatrixVecf(transformMatrix, lightLoc, result);
-		
-		for(int i=0; i<16; i+=4)
-			System.out.println(transformMatrix[i]+"; "+transformMatrix[i+1]+"; "+transformMatrix[i+2]+"; "+transformMatrix[i+3]);
-		System.out.println();
-		
-		System.out.println("("+result[0]+"; "+result[1]+"; "+result[2]+"; "+result[3]+")\n");
+		FloatUtil.multMatrixVecf(transformMatrix, lightLoc, transformedLightLoc);
 		
 		//Draw the light
 		lightingFBO.bind(gl);
@@ -512,10 +514,8 @@ public class Camera {
 		int lightObjTransformIndex = gl.glGetUniformLocation(lightingShader.program(), "objectTransform");
 		gl.glUniformMatrix4fv(lightObjTransformIndex, 1, false, objectTransformMatrix, 0);
 		
-		
 		int lightLocIndex = gl.glGetUniformLocation(lightingShader.program(), "lightLoc");
-		//gl.glUniform2f(lightLocIndex, light.x(), light.y());
-		gl.glUniform2f(lightLocIndex, result[0], result[1]);
+		gl.glUniform2f(lightLocIndex, transformedLightLoc[0], transformedLightLoc[1]);
 		
 		int radiusIndex = gl.glGetUniformLocation(lightingShader.program(), "radius");
 		gl.glUniform1f(radiusIndex, light.getRadius());
