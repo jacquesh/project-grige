@@ -1,5 +1,6 @@
 package grige;
 
+import grige.audio.AudioManager;
 
 import com.jogamp.newt.opengl.GLWindow;
 
@@ -29,6 +30,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	//Game Managers
 	protected Camera camera;
 	protected InputManager input;
+	protected AudioManager audio;
 	
 	//OpenGL Data
 	private GLProfile glProfile;
@@ -75,6 +77,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		//Create the various managers for the game
 		input = new InputManager(gameWindow.getHeight());
 		camera = new Camera(gameWindow.getWidth(),gameWindow.getHeight(),10);
+		audio = new AudioManager();
 		
 		//Add the required event listeners
 		gameWindow.addWindowListener(this);
@@ -126,6 +129,8 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	public final void init(GLAutoDrawable glad)
 	{
 		camera.initialize(gameWindow.getGL());
+		audio.initialize();
+		
 		initialize();
 	}
 	
