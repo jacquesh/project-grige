@@ -111,10 +111,8 @@ public class Camera {
 	{
 		position.x = newX;
 		position.y = newY;
-		System.out.println(position);
 		
 		viewingMatrix = new float[]{1,0,0,0, 0,1,0,0, 0,0,1,0, -position.x-size.x/2f,-position.y-size.y/2f,0,1f};
-		rebufferViewingMatrix();
 	}
 	
 	public void setPosition(Vector2 newPosition)
@@ -129,8 +127,6 @@ public class Camera {
 		depth = newDepth;
 		
 		projectionMatrix = new float[]{2f/size.x,0,0,0, 0,2f/size.y,0,0, 0,0,-2f/depth,0, 0,0,-1,1};
-		rebufferProjectionMatrix();
-		
 		setPosition(position.x,position.y); //Update the viewing matrix as well, because the size has changed (so we need to translate (0,0) differently)
 	}
 	
@@ -321,9 +317,9 @@ public class Camera {
 		
 		//Geometry shader
 		geometryShader.useProgram(gl, true);
+		
 		viewMatrixIndex = gl.glGetUniformLocation(geometryShader.program(), "viewingMatrix");
-		gl.glUniformMatrix4fv(viewMatrixIndex, 1, false, viewingMatrix, 0);		
-		geometryShader.useProgram(gl, false);
+		gl.glUniformMatrix4fv(viewMatrixIndex, 1, false, viewingMatrix, 0);
 		
 		//Lighting shader
 		lightingShader.useProgram(gl, true);
@@ -361,8 +357,9 @@ public class Camera {
 		shadowGeometryShader.useProgram(gl, false);
 	}
 	
-	protected void refresh()
+	protected void refresh(GL glContext)
 	{
+		gl = glContext.getGL2();
 		gl.glDepthMask(true);
 		
 		//Clear the screen
@@ -380,6 +377,9 @@ public class Camera {
 		gl.glClearColor(0, 0, 0, ambientLightAlpha);
 		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT | GL.GL_STENCIL_BUFFER_BIT);
 		lightingFBO.unbind(gl);
+		
+		rebufferViewingMatrix();
+		rebufferProjectionMatrix();
 		
 		gl.glDepthMask(false);
 	}
