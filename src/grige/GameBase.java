@@ -28,7 +28,6 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	
 	//Game Managers
 	protected Camera camera;
-	protected InputManager input;
 	protected Audio audio;
 	
 	//OpenGL Data
@@ -74,14 +73,11 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		gameWindow.setTitle("JOGL Test");
 		
 		//Create the various managers for the game
-		input = new InputManager(gameWindow.getHeight());
 		camera = new Camera(gameWindow.getWidth(),gameWindow.getHeight(),10);
 		
 		//Add the required event listeners
 		gameWindow.addWindowListener(this);
 		gameWindow.addGLEventListener(this);
-		gameWindow.addKeyListener(input);
-		gameWindow.addMouseListener(input);
 		
 		//Instantiate other structures
 		worldObjects = new ArrayList<GameObject>();
@@ -101,7 +97,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	private void internalUpdate(float deltaTime)
 	{
 		//Update input data
-		input.update();
+		Input.update();
 		
 		for(GameObject obj : worldObjects)
 		{
@@ -129,6 +125,11 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		//Initialize internal components
 		camera.initialize(glad.getGL());
 		Audio.initialize();
+		Input.initialize(gameWindow.getHeight());
+		
+		//Add input listeners
+		gameWindow.addKeyListener(Input.getInstance());
+		gameWindow.addMouseListener(Input.getInstance());
 		
 		//Run child class initialization
 		initialize();
