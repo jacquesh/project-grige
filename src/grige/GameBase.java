@@ -49,7 +49,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	{
 		internalSetup();
 		gameWindow.display(); //Draw once before looping to initalize the screen/opengl
-		
+
 		running = true;
 		
 		while(running)
@@ -126,9 +126,11 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	//GLEvent listener methods
 	public final void init(GLAutoDrawable glad)
 	{
-		camera.initialize(gameWindow.getGL());
+		//Initialize internal components
+		camera.initialize(glad.getGL());
 		Audio.initialize();
 		
+		//Run child class initialization
 		initialize();
 	}
 	
@@ -137,7 +139,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		GL gl = glad.getGL();
 		
 		//Reset the camera for this draw call
-		camera.refresh();
+		camera.refresh(gl);
 		
 		//Draw all our objects into the depth buffer so that our lights can get depth-tested correctly
 		for(GameObject obj : worldObjects)
@@ -210,4 +212,44 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	public void windowMoved(WindowEvent we){}
 	public void windowResized(WindowEvent we){}
 	public void windowRepaint(WindowUpdateEvent wue){}
+	
+	public static void printOpenGLError(GL gl, boolean displayNoError)
+	{
+		int error;
+		
+		do
+		{
+			error = gl.glGetError();
+			switch(error)
+			{
+			case(GL.GL_NO_ERROR):
+				if(displayNoError)
+					System.out.println("No Error");
+				break;
+			
+			case(GL.GL_INVALID_ENUM):
+				System.out.println("Invalid Enum");
+				break;
+			
+			case(GL.GL_INVALID_VALUE):
+				System.out.println("Invalid Value");
+				break;
+				
+			case(GL.GL_INVALID_OPERATION):
+				System.out.println("Invalid Operation");
+				break;
+				
+			case(GL.GL_INVALID_FRAMEBUFFER_OPERATION):
+				System.out.println("Invalid Framebuffer Operation");
+				break;
+				
+			case(GL.GL_OUT_OF_MEMORY):
+				System.out.println("Out of Memory");
+				break;
+				
+			default:
+				System.out.println("UNKNOWN OPENGL ERROR: "+error);
+			}
+		}while(error != 0);
+	}
 }
