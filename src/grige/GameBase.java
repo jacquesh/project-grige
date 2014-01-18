@@ -29,6 +29,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	//Game Managers
 	protected Camera camera;
 	protected InputManager input;
+	protected Audio audio;
 	
 	//OpenGL Data
 	private GLProfile glProfile;
@@ -125,7 +126,11 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	//GLEvent listener methods
 	public final void init(GLAutoDrawable glad)
 	{
+		//Initialize internal components
 		camera.initialize(glad.getGL());
+		Audio.initialize();
+		
+		//Run child class initialization
 		initialize();
 	}
 	
@@ -188,18 +193,19 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	{
 		camera.setSize(width, height, camera.getDepth());
 	}
-	public void dispose(GLAutoDrawable glad)
-	{
-		
-	}
-	
+
+	public void dispose(GLAutoDrawable glad){}
 	
 	//Window listener methods
 	public void windowDestroyNotify(WindowEvent we)
 	{
+		//Do any necessary cleanup
+		Audio.cleanup();
+		
 		//The window and profile get cleaned up automatically in this case anyways
 		System.exit(0);
 	}
+	
 	public void windowDestroyed(WindowEvent we){}
 	public void windowGainedFocus(WindowEvent we){}
 	public void windowLostFocus(WindowEvent we){}
