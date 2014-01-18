@@ -1,5 +1,7 @@
 package grige;
 
+import java.util.ArrayList;
+
 import com.jogamp.openal.*;
 
 import com.jogamp.openal.util.ALut;
@@ -64,6 +66,18 @@ public class Audio
 		return clip;
 	}
 	
+	public static void destroySource(AudioSource source)
+	{
+		sourceStorage[0] = source.getID();
+		al.alDeleteSources(1, sourceStorage, 0);
+	}
+	
+	public static void destroyClip(AudioClip clip)
+	{
+		bufferStorage[0] = clip.getID();
+		al.alDeleteBuffers(1, bufferStorage, 0);
+	}
+	
 	public static void play(AudioSource source, AudioClip clip, boolean loop)
 	{
 		al.alSourcei(source.getID(), AL.AL_LOOPING, loop ? AL.AL_TRUE : AL.AL_FALSE);
@@ -83,8 +97,6 @@ public class Audio
 
 	static void cleanup()
 	{
-		al.alDeleteBuffers(1, bufferStorage, 0);
-		al.alDeleteSources(1, sourceStorage, 0);
 		ALut.alutExit();
 	}
 }
