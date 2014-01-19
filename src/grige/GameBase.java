@@ -113,6 +113,8 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	
 	protected void cleanup()
 	{
+		Audio.cleanup();
+		
 		gameWindow.destroy();
 		GLProfile.shutdown();
 	}
@@ -203,11 +205,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	//Window listener methods
 	public void windowDestroyNotify(WindowEvent we)
 	{
-		//Do any necessary cleanup
-		Audio.cleanup();
-		
-		//The window and profile get cleaned up automatically in this case anyways
-		System.exit(0);
+		running = false;
 	}
 	
 	public void windowDestroyed(WindowEvent we){}
