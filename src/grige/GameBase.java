@@ -204,41 +204,36 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	
 	public static void printOpenGLError(GL gl, boolean displayNoError)
 	{
-		int error;
-		
-		do
+		int error = gl.glGetError();
+		switch(error)
 		{
-			error = gl.glGetError();
-			switch(error)
-			{
-			case(GL.GL_NO_ERROR):
-				if(displayNoError)
-					System.out.println("No Error");
-				break;
+		case(GL.GL_NO_ERROR):
+			if(displayNoError)
+				System.out.println("No Error");
+			break;
+		
+		case(GL.GL_INVALID_ENUM):
+			System.out.println("Invalid Enum");
+			break;
+		
+		case(GL.GL_INVALID_VALUE):
+			System.out.println("Invalid Value");
+			break;
 			
-			case(GL.GL_INVALID_ENUM):
-				System.out.println("Invalid Enum");
-				break;
+		case(GL.GL_INVALID_OPERATION):
+			System.out.println("Invalid Operation");
+			break;
 			
-			case(GL.GL_INVALID_VALUE):
-				System.out.println("Invalid Value");
-				break;
-				
-			case(GL.GL_INVALID_OPERATION):
-				System.out.println("Invalid Operation");
-				break;
-				
-			case(GL.GL_INVALID_FRAMEBUFFER_OPERATION):
-				System.out.println("Invalid Framebuffer Operation");
-				break;
-				
-			case(GL.GL_OUT_OF_MEMORY):
-				System.out.println("Out of Memory");
-				break;
-				
-			default:
-				System.out.println("UNKNOWN OPENGL ERROR: "+error);
-			}
-		}while(error != 0);
+		case(GL.GL_INVALID_FRAMEBUFFER_OPERATION):
+			System.out.println("Invalid Framebuffer Operation");
+			break;
+			
+		case(GL.GL_OUT_OF_MEMORY):
+			System.out.println("Out of Memory");
+			break;
+			
+		default:
+			System.out.println("UNKNOWN OPENGL ERROR: "+error);
+		}
 	}
 }
