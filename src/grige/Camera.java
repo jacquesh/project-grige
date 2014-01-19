@@ -152,6 +152,62 @@ public class Camera {
 	public float getAmbientLightAlpha() { return ambientLightAlpha; }
 	public Color getClearColor() { return clearColour; }
 	
+	public Vector2 screenToWorldLoc(Vector2 screenLoc)
+	{
+		return screenToWorldLoc(screenLoc.x, screenLoc.y);
+	}
+	
+	public Vector2 screenToWorldLoc(float x, float y)
+	{
+		float[] screenLoc = new float[]{2*x/getWidth()-1, 2*y/getHeight()-1, 0, 1}; //Transform from pixel space to OpenGL screen space
+		float[] worldLoc = new float[4];
+		
+		float[] inverseViewingMatrix = new float[]{
+				1,0,0,0,
+				0,1,0,0,
+				0,0,1,0,
+				position.x+size.x/2f,position.y+size.y/2f,0,1f
+		};
+		float[] inverseProjectionMatrix = new float[]{
+				size.x/2f,0,0,0,
+				0,size.y/2f,0,0,
+				0,0,-depth/2f,0,
+				0,0,-depth/2f,1
+		};
+		
+		float[] transformMatrix = inverseViewingMatrix;
+		FloatUtil.multMatrixf(transformMatrix, 0, inverseProjectionMatrix, 0);
+		FloatUtil.multMatrixVecf(transformMatrix, screenLoc, worldLoc);
+		
+		Vector2 result = new Vector2(worldLoc[0], worldLoc[1]); //This is in OpenGL screen space, so we need to change it into pixel space
+		
+		return result;
+	}
+	
+	public Vector2 worldToScreenLoc(Vector2 worldLoc)
+	{
+		return worldToScreenLoc(worldLoc.x, worldLoc.y);
+	}
+	
+	public Vector2 worldToScreenLoc(float x, float y)
+	{
+		float[] worldLoc = new float[]{x, y, 0, 1};
+		float[] screenLoc = new float[4];
+		float[] transformMatrix = Arrays.copyOf(projectionMatrix, 16);
+		FloatUtil.multMatrixf(transformMatrix, 0, viewingMatrix, 0);
+		FloatUtil.multMatrixVecf(transformMatrix, worldLoc, screenLoc);
+		
+		Vector2 result = new Vector2(screenLoc[0], screenLoc[1]); //This is in OpenGL screen space, so we need to change it into pixel space
+		
+		result.x += 1;
+		result.y += 1;
+		
+		result.x *= getWidth()/2;
+		result.y *= getHeight()/2;
+		
+		return result;
+	}
+	
 	protected void initialize(GL glContext)
 	{
 		gl = glContext.getGL2();
