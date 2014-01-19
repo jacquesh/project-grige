@@ -73,7 +73,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		gameWindow = GLWindow.create(glCapabilities);
 		gameWindow.setSize(320, 320);
 		gameWindow.setVisible(true);
-		gameWindow.setTitle("JOGL Test");
+		gameWindow.setTitle("GrIGE");
 		
 		//Create the various managers for the game
 		camera = new Camera(gameWindow.getWidth(),gameWindow.getHeight(),10);
@@ -122,6 +122,33 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	GL2 getGLContext()
 	{
 		return gameWindow.getGL().getGL2();
+	}
+	
+	//Window utility functions
+	public String getWindowTitle() { return gameWindow.getTitle(); }
+	public boolean isFullscreen() { return gameWindow.isFullscreen(); }
+	public Vector2I getWindowSize() { return new Vector2I(gameWindow.getWidth(), gameWindow.getHeight()); }
+	public int getWindowWidth() { return gameWindow.getWidth(); }
+	public int getWindowHeight() { return gameWindow.getHeight(); }
+	
+	public void setWindowTitle(String title)
+	{
+		gameWindow.setTitle(title);
+	}
+	
+	public void setWindowSize(Vector2I size)
+	{
+		setWindowSize(size.x, size.y);
+	}
+	
+	public void setWindowSize(int width, int height)
+	{
+		gameWindow.setSize(width, height);
+	}
+	
+	public void setFullscreen(boolean fullscreen)
+	{
+		gameWindow.setFullscreen(fullscreen);
 	}
 	
 	//GLEvent listener methods
