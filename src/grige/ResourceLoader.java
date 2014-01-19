@@ -16,12 +16,11 @@ public final class ResourceLoader {
 
 	private ResourceLoader(){}
 	
-	
 	public static Texture loadImage(String filepath)
 	{
 		File sourceFile = new File(filepath);
 		
-		System.out.println(sourceFile.getAbsolutePath());
+		System.out.println("Loading texture "+sourceFile.getAbsolutePath());
 		if(!sourceFile.exists())
 		{
 			System.out.println("Error, attempt to load non-existant file: "+filepath);
@@ -29,7 +28,7 @@ public final class ResourceLoader {
 		}
 		
 		try{
-			GL gl = GameBase.instance.getGLContext().getGL();
+			GL gl = GameBase.instance.getGL();
 			
 			TextureData data = TextureIO.newTextureData(gl.getGLProfile(), sourceFile, false, TextureIO.PNG);
 			Texture result = new Texture(gl, data);

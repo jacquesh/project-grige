@@ -12,7 +12,6 @@ import javax.media.opengl.GLProfile;
 import javax.media.opengl.GL;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.GL2;
 
 import java.util.ArrayList;
 
@@ -119,9 +118,9 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		GLProfile.shutdown();
 	}
 	
-	GL2 getGLContext()
+	GL getGL()
 	{
-		return gameWindow.getGL().getGL2();
+		return gameWindow.getGL();
 	}
 	
 	//Window utility functions
