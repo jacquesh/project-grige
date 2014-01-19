@@ -1,6 +1,5 @@
 package grige;
 
-
 import com.jogamp.newt.opengl.GLWindow;
 
 import com.jogamp.newt.event.WindowEvent;
@@ -48,13 +47,17 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	{
 		internalSetup();
 		gameWindow.display(); //Draw once before looping to initalize the screen/opengl
-
+		
 		running = true;
+		long lastFrameTime = System.nanoTime();
 		
 		while(running)
-		{
-			internalUpdate(0);
+		{	
+			long currentTime = System.nanoTime();
+			float deltaTime = (currentTime - lastFrameTime)/1000000000f;
+			lastFrameTime = currentTime;
 			
+			internalUpdate(deltaTime);
 			gameWindow.display();
 		}
 		cleanup();
