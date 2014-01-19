@@ -163,20 +163,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 				vertexArrays.add(vertices);
 			}
 			
-			//Set to draw only to the stencil buffer (no colour/alpha)
-			gl.glColorMask(false, false, false, false);
-			gl.glStencilFunc(GL.GL_ALWAYS, 1, 1);
-			gl.glStencilOp(GL.GL_KEEP, GL.GL_KEEP, GL.GL_REPLACE);
-			
-			//Render all shadows from this light into the stencil buffer
-			//This is so that when we render the actual light, it doesn't light up the shadows
-			for(int i=0; i<vertexArrays.size(); i++)
-				camera.drawShadow(vertexArrays.get(i));
-			
-			//Reset drawing to standard colour/alpha
-			gl.glStencilOp(GL.GL_KEEP, GL.GL_KEEP, GL.GL_KEEP);
-			gl.glStencilFunc(GL.GL_EQUAL, 0, 1);
-			gl.glColorMask(true, true, true, true);
+			camera.drawShadowsToStencil(vertexArrays);
 			
 			//Draw lighting (where the stencil is empty)			
 			camera.drawLight(l);

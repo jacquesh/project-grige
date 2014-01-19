@@ -544,7 +544,7 @@ public class Camera {
 		lightingFBO.unbind(gl);
 	}
 	
-	protected void drawShadow(float[] shadowVerts)
+	private void drawShadow(float[] shadowVerts)
 	{
 		lightingFBO.bind(gl);
 		shadowGeometryShader.useProgram(gl, true);
@@ -559,6 +559,24 @@ public class Camera {
 		
 		shadowGeometryShader.useProgram(gl, false);
 		lightingFBO.unbind(gl);
+	}
+	
+	protected void drawShadowsToStencil(ArrayList<float[]> vertexArrays)
+	{
+		//Set to draw only to the stencil buffer (no colour/alpha)
+		gl.glColorMask(false, false, false, false);
+		gl.glStencilFunc(GL.GL_ALWAYS, 1, 1);
+		gl.glStencilOp(GL.GL_KEEP, GL.GL_KEEP, GL.GL_REPLACE);
+		
+		//Render all shadows from this light into the stencil buffer
+		//This is so that when we render the actual light, it doesn't light up the shadows
+		for(int i=0; i<vertexArrays.size(); i++)
+			drawShadow(vertexArrays.get(i));
+		
+		//Reset drawing to standard colour/alpha
+		gl.glStencilOp(GL.GL_KEEP, GL.GL_KEEP, GL.GL_KEEP);
+		gl.glStencilFunc(GL.GL_EQUAL, 0, 1);
+		gl.glColorMask(true, true, true, true);
 	}
 	
 	protected void commitDraw()
