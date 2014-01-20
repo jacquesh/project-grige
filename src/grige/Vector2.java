@@ -13,6 +13,16 @@ public class Vector2
 		this.y = y;
 	}
 	
+	public Vector2(Vector2 other)
+	{
+		this(other.x, other.y);
+	}
+	
+	public Vector2(Vector3 other)
+	{
+		this(other.x, other.y);
+	}
+	
 	public void set(Vector2 other)
 	{
 		set(other.x, other.y);
