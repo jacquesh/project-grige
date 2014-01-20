@@ -152,12 +152,17 @@ public class Camera {
 	
 	public Vector2 screenToWorldLoc(Vector2 screenLoc)
 	{
-		return screenToWorldLoc(screenLoc.x, screenLoc.y);
+		return new Vector2(screenToWorldLoc(screenLoc.x, screenLoc.y, 0));
 	}
 	
 	public Vector2 screenToWorldLoc(float x, float y)
 	{
-		float[] screenLoc = new float[]{2*x/getWidth()-1, 2*y/getHeight()-1, 0, 1}; //Transform from pixel space to OpenGL screen space
+		return new Vector2(screenToWorldLoc(x,y,0));
+	}
+	
+	public Vector3 screenToWorldLoc(float x, float y, float z)
+	{
+		float[] screenLoc = new float[]{2*x/getWidth()-1, 2*y/getHeight()-1, 2*z/getDepth()-1, 1}; //Transform from pixel space to OpenGL screen space
 		float[] worldLoc = new float[4];
 		
 		float[] inverseViewingMatrix = new float[]{
@@ -177,31 +182,38 @@ public class Camera {
 		FloatUtil.multMatrixf(transformMatrix, 0, inverseProjectionMatrix, 0);
 		FloatUtil.multMatrixVecf(transformMatrix, screenLoc, worldLoc);
 		
-		Vector2 result = new Vector2(worldLoc[0], worldLoc[1]); //This is in OpenGL screen space, so we need to change it into pixel space
+		Vector3 result = new Vector3(worldLoc[0], worldLoc[1], worldLoc[2]); //This is in OpenGL screen space, so we need to change it into pixel space
 		
 		return result;
 	}
 	
 	public Vector2 worldToScreenLoc(Vector2 worldLoc)
 	{
-		return worldToScreenLoc(worldLoc.x, worldLoc.y);
+		return new Vector2(worldToScreenLoc(worldLoc.x, worldLoc.y, 0));
 	}
 	
 	public Vector2 worldToScreenLoc(float x, float y)
 	{
-		float[] worldLoc = new float[]{x, y, 0, 1};
+		return new Vector2(worldToScreenLoc(x,y,0));
+	}
+	
+	public Vector3 worldToScreenLoc(float x, float y, float z)
+	{
+		float[] worldLoc = new float[]{x, y, z, 1};
 		float[] screenLoc = new float[4];
 		float[] transformMatrix = Arrays.copyOf(projectionMatrix, 16);
 		FloatUtil.multMatrixf(transformMatrix, 0, viewingMatrix, 0);
 		FloatUtil.multMatrixVecf(transformMatrix, worldLoc, screenLoc);
 		
-		Vector2 result = new Vector2(screenLoc[0], screenLoc[1]); //This is in OpenGL screen space, so we need to change it into pixel space
+		Vector3 result = new Vector3(screenLoc[0], screenLoc[1], screenLoc[2]); //This is in OpenGL screen space, so we need to change it into pixel space
 		
 		result.x += 1;
 		result.y += 1;
+		result.z += 1;
 		
 		result.x *= getWidth()/2;
 		result.y *= getHeight()/2;
+		result.z *= getDepth()/2;
 		
 		return result;
 	}
@@ -546,7 +558,7 @@ public class Camera {
 	protected void drawLight(Light light)
 	{
 		//Compute the transformed light location (for lighting)
-		Vector2 transformedLightLoc = worldToScreenLoc(light.x(), light.y());
+		Vector3 transformedLightLoc = worldToScreenLoc(light.x(), light.y(), light.depth());
 		
 		//Draw the light
 		lightingFBO.bind(gl);
@@ -557,7 +569,7 @@ public class Camera {
 		gl.glBlendFunc(GL.GL_ONE, GL.GL_ONE);
 		
 		int lightLocIndex = gl.glGetUniformLocation(lightingShader.program(), "lightLoc");
-		gl.glUniform2f(lightLocIndex, transformedLightLoc.x, transformedLightLoc.y);
+		gl.glUniform3f(lightLocIndex, transformedLightLoc.x, transformedLightLoc.y, transformedLightLoc.z);
 		
 		int radiusIndex = gl.glGetUniformLocation(lightingShader.program(), "radius");
 		gl.glUniform1f(radiusIndex, light.getRadius());
