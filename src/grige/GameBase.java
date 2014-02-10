@@ -75,7 +75,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		gameWindow.setTitle("GrIGE");
 		
 		//Create the various managers for the game
-		camera = new Camera(gameWindow.getWidth(),gameWindow.getHeight(),10);
+		camera = new Camera(gameWindow.getWidth(),gameWindow.getHeight(),10000);
 		
 		//Add the required event listeners
 		gameWindow.addWindowListener(this);

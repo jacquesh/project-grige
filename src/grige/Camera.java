@@ -437,14 +437,6 @@ public class Camera {
 		shadowGeometryShader.useProgram(gl, false);
 	}
 	
-	private void rebufferScreenSize()
-	{
-		lightingShader.useProgram(gl, true);
-		int screenSizeIndex = gl.glGetUniformLocation(lightingShader.program(), "screenSize");
-		gl.glUniform2f(screenSizeIndex, getWidth(), getHeight());
-		lightingShader.useProgram(gl, false);
-	}
-	
 	protected void refresh(GL glContext)
 	{
 		gl = glContext.getGL2();
@@ -468,7 +460,6 @@ public class Camera {
 		
 		rebufferViewingMatrix();
 		rebufferProjectionMatrix();
-		rebufferScreenSize();
 		
 		gl.glDepthMask(false);
 	}
@@ -559,6 +550,13 @@ public class Camera {
 	{
 		//Compute the transformed light location (for lighting)
 		Vector3 transformedLightLoc = worldToScreenLoc(light.x(), light.y(), light.depth());
+
+		float[] lightVertices = {
+				-1.0f, -1.0f, -light.depth(),
+				-1.0f, 1.0f, -light.depth(),
+				1.0f, -1.0f, -light.depth(),
+				1.0f,  1.0f, -light.depth(),
+		};
 		
 		//Draw the light
 		lightingFBO.bind(gl);
@@ -567,6 +565,16 @@ public class Camera {
 		
 		gl.glEnable(GL.GL_BLEND);
 		gl.glBlendFunc(GL.GL_ONE, GL.GL_ONE);
+		
+		int[] buffer = new int[1];
+		gl.glGenBuffers(1, buffer, 0);
+		
+		int positionIndex = gl.glGetAttribLocation(lightingShader.program(), "position");
+		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, buffer[0]);
+		gl.glBufferData(GL.GL_ARRAY_BUFFER, lightVertices.length*(Float.SIZE/8), FloatBuffer.wrap(lightVertices), GL.GL_STATIC_DRAW);
+		gl.glEnableVertexAttribArray(positionIndex);
+		gl.glVertexAttribPointer(positionIndex, 3, GL.GL_FLOAT, false, 0, 0);
+		
 		
 		int lightLocIndex = gl.glGetUniformLocation(lightingShader.program(), "lightLoc");
 		gl.glUniform3f(lightLocIndex, transformedLightLoc.x, transformedLightLoc.y, transformedLightLoc.z);
