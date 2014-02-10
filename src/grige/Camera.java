@@ -489,6 +489,7 @@ public class Camera {
 		gl.glBindVertexArray(geometryVAO);
 		gl.glDepthMask(true);
 		
+		gl.glEnable(GL.GL_BLEND);
 		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
 		
 		//Texture specification
@@ -505,6 +506,8 @@ public class Camera {
 		gl.glDrawElements(GL.GL_TRIANGLE_STRIP, quadIndices.length, GL.GL_UNSIGNED_INT, 0);
 		
 		objTex.disable(gl);
+		
+		gl.glDisable(GL.GL_BLEND);
 		
 		gl.glDepthMask(false);
 		gl.glBindVertexArray(0);
