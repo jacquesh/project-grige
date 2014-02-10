@@ -10,27 +10,35 @@ import com.jogamp.newt.event.MouseEvent;
 
 import java.util.HashMap;
 
-public final class InputManager implements KeyListener, MouseListener{
+public final class Input implements KeyListener, MouseListener
+{
 	
-	private HashMap<Short, Boolean> nextInput; //Input currently being executed
-	private HashMap<Short, Boolean> currentInput; //Input from the latest frame
-	private HashMap<Short, Boolean> previousInput; //Input from the previous frame
+	private static HashMap<Short, Boolean> nextInput; //Input currently being executed
+	private static HashMap<Short, Boolean> currentInput; //Input from the latest frame
+	private static HashMap<Short, Boolean> previousInput; //Input from the previous frame
 	
-	private boolean[] nextMouseButtons;
-	private boolean[] currentMouseButtons;
-	private boolean[] previousMouseButtons;
+	private static boolean[] nextMouseButtons;
+	private static boolean[] currentMouseButtons;
+	private static boolean[] previousMouseButtons;
 	
-	private int nextMouseWheel;
-	private int currentMouseWheel;
+	private static int nextMouseWheel;
+	private static int currentMouseWheel;
 	
-	private Vector2I mouseLoc;
+	private static Vector2I mouseLoc;
 	
-	public int getMouseX() { return mouseLoc.x; }
-	public int getMouseY() { return mouseLoc.y; }
+	private static int screenHeight;
 	
-	private int screenHeight;
+	private static Input instance;
+	static Input getInstance()
+	{
+		if(instance == null)
+			instance = new Input();
+		return instance;
+	}
 	
-	protected InputManager(int glScreenHeight)
+	private Input(){}
+	
+	static void initialize(int glScreenHeight)
 	{
 		mouseLoc = new Vector2I(0,0);
 		screenHeight = glScreenHeight;
@@ -71,42 +79,46 @@ public final class InputManager implements KeyListener, MouseListener{
 		}
 	}
 	
-	public boolean getKey(short keySymbol)
+	public static boolean getKey(short keySymbol)
 	{
 		return currentInput.get(keySymbol); 
 	}
 	
-	public boolean getKeyDown(short keySymbol)
+	public static boolean getKeyDown(short keySymbol)
 	{
 		return currentInput.get(keySymbol) && !previousInput.get(keySymbol);
 	}
 	
-	public boolean getKeyUp(short keySymbol)
+	public static boolean getKeyUp(short keySymbol)
 	{
 		return !currentInput.get(keySymbol) && previousInput.get(keySymbol);
 	}
 	
-	public boolean getMouseButton(int buttonID)
+	public static int getMouseX() { return mouseLoc.x; }
+	public static int getMouseY() { return mouseLoc.y; }
+	
+	public static boolean getMouseButton(int buttonID)
 	{
 		return currentMouseButtons[buttonID];
 	}
 	
-	public boolean getMouseButtonDown(int buttonID)
+	public static boolean getMouseButtonDown(int buttonID)
 	{
 		return currentMouseButtons[buttonID] && !previousMouseButtons[buttonID];
 	}
 	
-	public boolean getMouseButtonUp(int buttonID)
+	public static boolean getMouseButtonUp(int buttonID)
 	{
 		return !currentMouseButtons[buttonID] && previousMouseButtons[buttonID];
 	}
 	
-	public int getMouseWheel()
+	
+	public static int getMouseWheel()
 	{
 		return currentMouseWheel;
 	}
 	
-	protected void update()
+	protected static void update()
 	{
 		//Keyboard input
 		for(short key : currentInput.keySet())
@@ -130,36 +142,36 @@ public final class InputManager implements KeyListener, MouseListener{
 	public void keyPressed(KeyEvent evt)
 	{
 		if(!evt.isAutoRepeat())
-			nextInput.put(evt.getKeySymbol(), true);
+			Input.nextInput.put(evt.getKeySymbol(), true);
 	}
 	
 	public void keyReleased(KeyEvent evt)
 	{
 		if(!evt.isAutoRepeat())
-			nextInput.put(evt.getKeySymbol(), false);
+			Input.nextInput.put(evt.getKeySymbol(), false);
 	}
 	
 	public void mouseWheelMoved(MouseEvent evt)
 	{
-		nextMouseWheel += (int)evt.getRotation()[1];
+		Input.nextMouseWheel += (int)evt.getRotation()[1];
 	}
 	
 	public void mousePressed(MouseEvent evt)
 	{
 		int button = evt.getButton() - 1; //We minus 1 because for JOGL left mouse is button 1. We want zero-based things dammit!
-		nextMouseButtons[button] = true;
+		Input.nextMouseButtons[button] = true;
 	}
 	
 	public void mouseReleased(MouseEvent evt)
 	{
 		int button = evt.getButton() - 1;
-		nextMouseButtons[button] = false;
+		Input.nextMouseButtons[button] = false;
 	}
 	
 	public void mouseMoved(MouseEvent evt)
 	{
-		mouseLoc.x = evt.getX();
-		mouseLoc.y = screenHeight - evt.getY();
+		Input.mouseLoc.x = evt.getX();
+		Input.mouseLoc.y = Input.screenHeight - evt.getY();
 	}
 	
 	public void mouseDragged(MouseEvent evt)

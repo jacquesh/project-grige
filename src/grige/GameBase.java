@@ -1,6 +1,5 @@
 package grige;
 
-
 import com.jogamp.newt.opengl.GLWindow;
 
 import com.jogamp.newt.event.WindowEvent;
@@ -13,7 +12,6 @@ import javax.media.opengl.GLProfile;
 import javax.media.opengl.GL;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.GL2;
 
 import java.util.ArrayList;
 
@@ -28,7 +26,6 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	
 	//Game Managers
 	protected Camera camera;
-	protected InputManager input;
 	protected Audio audio;
 	
 	//OpenGL Data
@@ -49,13 +46,17 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	{
 		internalSetup();
 		gameWindow.display(); //Draw once before looping to initalize the screen/opengl
-
+		
 		running = true;
+		long lastFrameTime = System.nanoTime();
 		
 		while(running)
-		{
-			internalUpdate(0);
+		{	
+			long currentTime = System.nanoTime();
+			float deltaTime = (currentTime - lastFrameTime)/1000000000f;
+			lastFrameTime = currentTime;
 			
+			internalUpdate(deltaTime);
 			gameWindow.display();
 		}
 		cleanup();
@@ -71,17 +72,14 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		gameWindow = GLWindow.create(glCapabilities);
 		gameWindow.setSize(320, 320);
 		gameWindow.setVisible(true);
-		gameWindow.setTitle("JOGL Test");
+		gameWindow.setTitle("GrIGE");
 		
 		//Create the various managers for the game
-		input = new InputManager(gameWindow.getHeight());
-		camera = new Camera(gameWindow.getWidth(),gameWindow.getHeight(),10);
+		camera = new Camera(gameWindow.getWidth(),gameWindow.getHeight(),10000);
 		
 		//Add the required event listeners
 		gameWindow.addWindowListener(this);
 		gameWindow.addGLEventListener(this);
-		gameWindow.addKeyListener(input);
-		gameWindow.addMouseListener(input);
 		
 		//Instantiate other structures
 		worldObjects = new ArrayList<GameObject>();
@@ -101,7 +99,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	private void internalUpdate(float deltaTime)
 	{
 		//Update input data
-		input.update();
+		Input.update();
 		
 		for(GameObject obj : worldObjects)
 		{
@@ -114,13 +112,42 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	
 	protected void cleanup()
 	{
+		Audio.cleanup();
+		
 		gameWindow.destroy();
 		GLProfile.shutdown();
 	}
 	
-	GL2 getGLContext()
+	GL getGL()
 	{
-		return gameWindow.getGL().getGL2();
+		return gameWindow.getGL();
+	}
+	
+	//Window utility functions
+	public String getWindowTitle() { return gameWindow.getTitle(); }
+	public boolean isFullscreen() { return gameWindow.isFullscreen(); }
+	public Vector2I getWindowSize() { return new Vector2I(gameWindow.getWidth(), gameWindow.getHeight()); }
+	public int getWindowWidth() { return gameWindow.getWidth(); }
+	public int getWindowHeight() { return gameWindow.getHeight(); }
+	
+	public void setWindowTitle(String title)
+	{
+		gameWindow.setTitle(title);
+	}
+	
+	public void setWindowSize(Vector2I size)
+	{
+		setWindowSize(size.x, size.y);
+	}
+	
+	public void setWindowSize(int width, int height)
+	{
+		gameWindow.setSize(width, height);
+	}
+	
+	public void setFullscreen(boolean fullscreen)
+	{
+		gameWindow.setFullscreen(fullscreen);
 	}
 	
 	//GLEvent listener methods
@@ -129,6 +156,11 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		//Initialize internal components
 		camera.initialize(glad.getGL());
 		Audio.initialize();
+		Input.initialize(gameWindow.getHeight());
+		
+		//Add input listeners
+		gameWindow.addKeyListener(Input.getInstance());
+		gameWindow.addMouseListener(Input.getInstance());
 		
 		//Run child class initialization
 		initialize();
@@ -157,20 +189,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 				vertexArrays.add(vertices);
 			}
 			
-			//Set to draw only to the stencil buffer (no colour/alpha)
-			gl.glColorMask(false, false, false, false);
-			gl.glStencilFunc(GL.GL_ALWAYS, 1, 1);
-			gl.glStencilOp(GL.GL_KEEP, GL.GL_KEEP, GL.GL_REPLACE);
-			
-			//Render all shadows from this light into the stencil buffer
-			//This is so that when we render the actual light, it doesn't light up the shadows
-			for(int i=0; i<vertexArrays.size(); i++)
-				camera.drawShadow(vertexArrays.get(i));
-			
-			//Reset drawing to standard colour/alpha
-			gl.glStencilOp(GL.GL_KEEP, GL.GL_KEEP, GL.GL_KEEP);
-			gl.glStencilFunc(GL.GL_EQUAL, 0, 1);
-			gl.glColorMask(true, true, true, true);
+			camera.drawShadowsToStencil(vertexArrays);
 			
 			//Draw lighting (where the stencil is empty)			
 			camera.drawLight(l);
@@ -199,11 +218,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	//Window listener methods
 	public void windowDestroyNotify(WindowEvent we)
 	{
-		//Do any necessary cleanup
-		Audio.cleanup();
-		
-		//The window and profile get cleaned up automatically in this case anyways
-		System.exit(0);
+		running = false;
 	}
 	
 	public void windowDestroyed(WindowEvent we){}
@@ -215,41 +230,36 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	
 	public static void printOpenGLError(GL gl, boolean displayNoError)
 	{
-		int error;
-		
-		do
+		int error = gl.glGetError();
+		switch(error)
 		{
-			error = gl.glGetError();
-			switch(error)
-			{
-			case(GL.GL_NO_ERROR):
-				if(displayNoError)
-					System.out.println("No Error");
-				break;
+		case(GL.GL_NO_ERROR):
+			if(displayNoError)
+				System.out.println("No Error");
+			break;
+		
+		case(GL.GL_INVALID_ENUM):
+			System.out.println("Invalid Enum");
+			break;
+		
+		case(GL.GL_INVALID_VALUE):
+			System.out.println("Invalid Value");
+			break;
 			
-			case(GL.GL_INVALID_ENUM):
-				System.out.println("Invalid Enum");
-				break;
+		case(GL.GL_INVALID_OPERATION):
+			System.out.println("Invalid Operation");
+			break;
 			
-			case(GL.GL_INVALID_VALUE):
-				System.out.println("Invalid Value");
-				break;
-				
-			case(GL.GL_INVALID_OPERATION):
-				System.out.println("Invalid Operation");
-				break;
-				
-			case(GL.GL_INVALID_FRAMEBUFFER_OPERATION):
-				System.out.println("Invalid Framebuffer Operation");
-				break;
-				
-			case(GL.GL_OUT_OF_MEMORY):
-				System.out.println("Out of Memory");
-				break;
-				
-			default:
-				System.out.println("UNKNOWN OPENGL ERROR: "+error);
-			}
-		}while(error != 0);
+		case(GL.GL_INVALID_FRAMEBUFFER_OPERATION):
+			System.out.println("Invalid Framebuffer Operation");
+			break;
+			
+		case(GL.GL_OUT_OF_MEMORY):
+			System.out.println("Out of Memory");
+			break;
+			
+		default:
+			System.out.println("UNKNOWN OPENGL ERROR: "+error);
+		}
 	}
 }

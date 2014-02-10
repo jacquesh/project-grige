@@ -64,8 +64,6 @@ public class Camera {
 			0, 1, 2, 3,
 	};
 	
-	private final float[] fanVertices = generateTriangleFanVertices(32);
-	
 	//Camera attributes
 	private Vector2 position;
 	private Vector2I size;
@@ -151,6 +149,74 @@ public class Camera {
 	public float getDepth() { return depth; }
 	public float getAmbientLightAlpha() { return ambientLightAlpha; }
 	public Color getClearColor() { return clearColour; }
+	
+	public Vector2 screenToWorldLoc(Vector2 screenLoc)
+	{
+		return new Vector2(screenToWorldLoc(screenLoc.x, screenLoc.y, 0));
+	}
+	
+	public Vector2 screenToWorldLoc(float x, float y)
+	{
+		return new Vector2(screenToWorldLoc(x,y,0));
+	}
+	
+	public Vector3 screenToWorldLoc(float x, float y, float z)
+	{
+		float[] screenLoc = new float[]{2*x/getWidth()-1, 2*y/getHeight()-1, 2*z/getDepth()-1, 1}; //Transform from pixel space to OpenGL screen space
+		float[] worldLoc = new float[4];
+		
+		float[] inverseViewingMatrix = new float[]{
+				1,0,0,0,
+				0,1,0,0,
+				0,0,1,0,
+				position.x+size.x/2f,position.y+size.y/2f,0,1f
+		};
+		float[] inverseProjectionMatrix = new float[]{
+				size.x/2f,0,0,0,
+				0,size.y/2f,0,0,
+				0,0,-depth/2f,0,
+				0,0,-depth/2f,1
+		};
+		
+		float[] transformMatrix = inverseViewingMatrix;
+		FloatUtil.multMatrixf(transformMatrix, 0, inverseProjectionMatrix, 0);
+		FloatUtil.multMatrixVecf(transformMatrix, screenLoc, worldLoc);
+		
+		Vector3 result = new Vector3(worldLoc[0], worldLoc[1], worldLoc[2]); //This is in OpenGL screen space, so we need to change it into pixel space
+		
+		return result;
+	}
+	
+	public Vector2 worldToScreenLoc(Vector2 worldLoc)
+	{
+		return new Vector2(worldToScreenLoc(worldLoc.x, worldLoc.y, 0));
+	}
+	
+	public Vector2 worldToScreenLoc(float x, float y)
+	{
+		return new Vector2(worldToScreenLoc(x,y,0));
+	}
+	
+	public Vector3 worldToScreenLoc(float x, float y, float z)
+	{
+		float[] worldLoc = new float[]{x, y, z, 1};
+		float[] screenLoc = new float[4];
+		float[] transformMatrix = Arrays.copyOf(projectionMatrix, 16);
+		FloatUtil.multMatrixf(transformMatrix, 0, viewingMatrix, 0);
+		FloatUtil.multMatrixVecf(transformMatrix, worldLoc, screenLoc);
+		
+		Vector3 result = new Vector3(screenLoc[0], screenLoc[1], screenLoc[2]); //This is in OpenGL screen space, so we need to change it into pixel space
+		
+		result.x += 1;
+		result.y += 1;
+		result.z += 1;
+		
+		result.x *= getWidth()/2;
+		result.y *= getHeight()/2;
+		result.z *= getDepth()/2;
+		
+		return result;
+	}
 	
 	protected void initialize(GL glContext)
 	{
@@ -242,23 +308,26 @@ public class Camera {
 		lightingShader = loadShader("LightVertexShader.vsh", "LightFragmentShader.fsh");
 		lightingShader.useProgram(gl, true);
 		
-		int[] buffers = new int[1];
+		int[] buffers = new int[2];
 		//Create the vertex array
 		gl.glGenVertexArrays(1, buffers, 0);
 		lightingVAO = buffers[0];
 		gl.glBindVertexArray(lightingVAO);
 		
-		gl.glGenBuffers(1, buffers ,0);
-		int vertexBuffer = buffers[0];
+		gl.glGenBuffers(2, buffers ,0);
+		int indexBuffer = buffers[0];
+		int vertexBuffer = buffers[1];
 		
+		//Buffer the vertex indices
+		gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+		gl.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, screenCanvasIndices.length*(Integer.SIZE/8), IntBuffer.wrap(screenCanvasIndices), GL.GL_STATIC_DRAW);
+		
+		//Buffer the vertex locations
 		int positionIndex = gl.glGetAttribLocation(lightingShader.program(), "position");
 		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, vertexBuffer);
-		gl.glBufferData(GL.GL_ARRAY_BUFFER, fanVertices.length*(Float.SIZE/8), FloatBuffer.wrap(fanVertices),GL.GL_STATIC_DRAW);
+		gl.glBufferData(GL.GL_ARRAY_BUFFER, screenCanvasVertices.length*(Float.SIZE/8), FloatBuffer.wrap(screenCanvasVertices), GL.GL_STATIC_DRAW);
 		gl.glEnableVertexAttribArray(positionIndex);
 		gl.glVertexAttribPointer(positionIndex, 3, GL.GL_FLOAT, false, 0, 0);
-		
-		int screenHeightIndex = gl.glGetAttribLocation(lightingShader.program(), "screenHeight");
-		gl.glUniform1f(screenHeightIndex, 320f);
 		
 		gl.glBindVertexArray(0);
 		lightingShader.useProgram(gl, false);
@@ -368,14 +437,6 @@ public class Camera {
 		shadowGeometryShader.useProgram(gl, false);
 	}
 	
-	private void rebufferScreenSize()
-	{
-		lightingShader.useProgram(gl, true);
-		int screenSizeIndex = gl.glGetUniformLocation(lightingShader.program(), "screenSize");
-		gl.glUniform2f(screenSizeIndex, getWidth(), getHeight());
-		lightingShader.useProgram(gl, false);
-	}
-	
 	protected void refresh(GL glContext)
 	{
 		gl = glContext.getGL2();
@@ -399,7 +460,6 @@ public class Camera {
 		
 		rebufferViewingMatrix();
 		rebufferProjectionMatrix();
-		rebufferScreenSize();
 		
 		gl.glDepthMask(false);
 	}
@@ -488,20 +548,15 @@ public class Camera {
 
 	protected void drawLight(Light light)
 	{
-		//Compute the object transform matrix
-		float[] objectTransformMatrix = new float[]{
-				light.getRadius(),0,0,0,
-				0,light.getRadius(),0,0,
-				0,0,1,0,
-				light.x(), light.y(), -light.depth(), 1
-		};
-		
 		//Compute the transformed light location (for lighting)
-		float[] lightLoc = new float[]{light.x(), light.y(), light.depth(), 1};
-		float[] transformedLightLoc = new float[4];
-		float[] transformMatrix = Arrays.copyOf(projectionMatrix, 16);
-		FloatUtil.multMatrixf(transformMatrix, 0, viewingMatrix, 0);
-		FloatUtil.multMatrixVecf(transformMatrix, lightLoc, transformedLightLoc);
+		Vector3 transformedLightLoc = worldToScreenLoc(light.x(), light.y(), light.depth());
+
+		float[] lightVertices = {
+				-1.0f, -1.0f, -light.depth(),
+				-1.0f, 1.0f, -light.depth(),
+				1.0f, -1.0f, -light.depth(),
+				1.0f,  1.0f, -light.depth(),
+		};
 		
 		//Draw the light
 		lightingFBO.bind(gl);
@@ -509,13 +564,20 @@ public class Camera {
 		gl.glBindVertexArray(lightingVAO);
 		
 		gl.glEnable(GL.GL_BLEND);
-		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE);
+		gl.glBlendFunc(GL.GL_ONE, GL.GL_ONE);
 		
-		int lightObjTransformIndex = gl.glGetUniformLocation(lightingShader.program(), "objectTransform");
-		gl.glUniformMatrix4fv(lightObjTransformIndex, 1, false, objectTransformMatrix, 0);
+		int[] buffer = new int[1];
+		gl.glGenBuffers(1, buffer, 0);
+		
+		int positionIndex = gl.glGetAttribLocation(lightingShader.program(), "position");
+		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, buffer[0]);
+		gl.glBufferData(GL.GL_ARRAY_BUFFER, lightVertices.length*(Float.SIZE/8), FloatBuffer.wrap(lightVertices), GL.GL_STATIC_DRAW);
+		gl.glEnableVertexAttribArray(positionIndex);
+		gl.glVertexAttribPointer(positionIndex, 3, GL.GL_FLOAT, false, 0, 0);
+		
 		
 		int lightLocIndex = gl.glGetUniformLocation(lightingShader.program(), "lightLoc");
-		gl.glUniform2f(lightLocIndex, transformedLightLoc[0], transformedLightLoc[1]);
+		gl.glUniform3f(lightLocIndex, transformedLightLoc.x, transformedLightLoc.y, transformedLightLoc.z);
 		
 		int radiusIndex = gl.glGetUniformLocation(lightingShader.program(), "radius");
 		gl.glUniform1f(radiusIndex, light.getRadius());
@@ -526,7 +588,7 @@ public class Camera {
 		int intensityIndex = gl.glGetUniformLocation(lightingShader.program(), "intensity");
 		gl.glUniform1f(intensityIndex, 1f);
 		
-		gl.glDrawArrays(GL.GL_TRIANGLE_FAN, 0, fanVertices.length);
+		gl.glDrawElements(GL.GL_TRIANGLE_STRIP, screenCanvasIndices.length, GL.GL_UNSIGNED_INT, 0);
 		
 		gl.glDisable(GL.GL_BLEND);
 		
@@ -544,7 +606,7 @@ public class Camera {
 		lightingFBO.unbind(gl);
 	}
 	
-	protected void drawShadow(float[] shadowVerts)
+	private void drawShadow(float[] shadowVerts)
 	{
 		lightingFBO.bind(gl);
 		shadowGeometryShader.useProgram(gl, true);
@@ -559,6 +621,24 @@ public class Camera {
 		
 		shadowGeometryShader.useProgram(gl, false);
 		lightingFBO.unbind(gl);
+	}
+	
+	protected void drawShadowsToStencil(ArrayList<float[]> vertexArrays)
+	{
+		//Set to draw only to the stencil buffer (no colour/alpha)
+		gl.glColorMask(false, false, false, false);
+		gl.glStencilFunc(GL.GL_ALWAYS, 1, 1);
+		gl.glStencilOp(GL.GL_KEEP, GL.GL_KEEP, GL.GL_REPLACE);
+		
+		//Render all shadows from this light into the stencil buffer
+		//This is so that when we render the actual light, it doesn't light up the shadows
+		for(int i=0; i<vertexArrays.size(); i++)
+			drawShadow(vertexArrays.get(i));
+		
+		//Reset drawing to standard colour/alpha
+		gl.glStencilOp(GL.GL_KEEP, GL.GL_KEEP, GL.GL_KEEP);
+		gl.glStencilFunc(GL.GL_EQUAL, 0, 1);
+		gl.glColorMask(true, true, true, true);
 	}
 	
 	protected void commitDraw()
@@ -602,33 +682,6 @@ public class Camera {
 		fragShader.destroy(gl);
 
 		return newShader;
-	}
-	
-	/*
-	 * Generate vertices for a circle of radius 1
-	 * with edgeVertexCount+1 vertices (1 centre, edgeVertexCount at the perimeter)
-	 */
-	private float[] generateTriangleFanVertices(int edgeVertexCount)
-	{
-		float angleIncrement = 2*FloatUtil.PI/edgeVertexCount;
-		float[] resultVerts = new float[3*(edgeVertexCount+1+1)];
-		
-		//Define the origin of the fan
-		resultVerts[0] = 0f;
-		resultVerts[1] = 0f;
-		resultVerts[2] = 0f;
-		
-		//Define all the edge vertices of the fan
-		for(int i=0; i<=edgeVertexCount; i++)
-		{
-			int startIndex = (i+1)*3;
-			
-			resultVerts[startIndex]   = FloatUtil.cos(i*angleIncrement);//X-value
-			resultVerts[startIndex+1] = FloatUtil.sin(i*angleIncrement);//Y-value
-			resultVerts[startIndex+2] = 0; //Z-value
-		}
-		
-		return resultVerts;
 	}
 	
 	/*
