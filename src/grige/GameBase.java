@@ -176,8 +176,8 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		
 		camera.drawLightingStart();
 		//Draw all our objects into the depth buffer so that our lights can get depth-tested correctly
-		for(GameObject obj : worldObjects)
-			camera.drawObjectDepthToLighting(obj);
+		//for(GameObject obj : worldObjects)
+		//	camera.drawObjectDepthToLighting(obj);
 		
 		//Draw *all* the lights
 		gl.glEnable(GL.GL_STENCIL_TEST); //We need to stencil out bits of light, so enable stencil test while we're drawing lights
