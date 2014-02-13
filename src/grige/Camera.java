@@ -86,12 +86,14 @@ public class Camera {
 	//Frame Buffers
 	private FBObject geometryFBO;
 	private FBObject lightingFBO;
+	private FBObject interfaceFBO;
 	
 	//Shader Data
 	private ShaderProgram screenCanvasShader;
 	private ShaderProgram geometryShader;
 	private ShaderProgram lightingShader;
 	private ShaderProgram shadowGeometryShader;
+	private ShaderProgram interfaceShader;
 	
 	//GL context
 	private GL2 gl;
@@ -233,6 +235,7 @@ public class Camera {
 		initializeGeometryData();
 		initializeLightingData();
 		initializeShadowData();
+		initializeInterfaceData();
 		initializeScreenCanvas();
 		
 		//Initialize and buffer the projection and viewing matrices
@@ -342,6 +345,18 @@ public class Camera {
 		
 		gl.glGenBuffers(1, buffers, 0);
 		shadowVertexBuffer = buffers[0];
+	}
+	
+	private void initializeInterfaceData()
+	{
+		//Create the framebuffer
+		interfaceFBO = new FBObject();
+		interfaceFBO.reset(gl, size.x, size.y);
+		interfaceFBO.attachTexture2D(gl, 0, true);
+		interfaceFBO.unbind(gl);
+		
+		//Load the shaders
+		interfaceShader = loadShader("Interface.vsh", "Interface.fsh");
 	}
 	
 	private void initializeScreenCanvas()
@@ -457,6 +472,12 @@ public class Camera {
 		gl.glClearColor(0, 0, 0, ambientLightAlpha);
 		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT | GL.GL_STENCIL_BUFFER_BIT);
 		lightingFBO.unbind(gl);
+		
+		//Clear the interface buffer
+		interfaceFBO.bind(gl);
+		gl.glClearColor(0, 0, 0, 1);
+		gl.glClear(GL.GL_COLOR_BUFFER_BIT);
+		interfaceFBO.unbind(gl);
 		
 		rebufferViewingMatrix();
 		rebufferProjectionMatrix();
