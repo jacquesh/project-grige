@@ -193,7 +193,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 			
 			camera.drawShadowsToStencil(vertexArrays);
 			
-			//Draw lighting (where the stencil is empty)			
+			//Draw lighting (where the stencil is empty)
 			camera.drawLight(l);
 			camera.clearShadowStencil();
 		}

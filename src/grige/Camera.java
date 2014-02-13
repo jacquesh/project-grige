@@ -622,7 +622,6 @@ public class Camera {
 	
 	private void drawShadow(float[] shadowVerts)
 	{
-		lightingFBO.bind(gl);
 		shadowGeometryShader.useProgram(gl, true);
 		
 		int positionIndex = gl.glGetAttribLocation(shadowGeometryShader.program(), "position");
@@ -634,7 +633,6 @@ public class Camera {
 		gl.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, shadowVerts.length/3);
 		
 		shadowGeometryShader.useProgram(gl, false);
-		lightingFBO.unbind(gl);
 	}
 	
 	protected void drawShadowsToStencil(ArrayList<float[]> vertexArrays)
