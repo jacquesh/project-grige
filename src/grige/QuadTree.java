@@ -75,15 +75,6 @@ public class QuadTree
 		return returnObjects;
 	}
 	
-	public void retrieveAll(ArrayList<Drawable> returnObjects)
-	{
-		if(nodes[0] != null)
-			for(int i=0; i<4; i++)
-				nodes[i].retrieveAll(returnObjects);
-		
-		returnObjects.addAll(objects);
-	}
-	
 	/*
 	 * Clears the entire QuadTree
 	 */

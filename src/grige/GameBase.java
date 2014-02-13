@@ -101,12 +101,13 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		//Update input data
 		Input.update();
 		
+		//Run an update on all objects
 		for(GameObject obj : worldObjects)
 		{
 			obj.update(deltaTime);
 		}
 		
-		//Call the user-defined update
+		//Call the user-defined game update
 		update(deltaTime);
 	}
 	
@@ -173,6 +174,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		//Reset the camera for this draw call
 		camera.refresh(gl);
 		
+		camera.drawLightingStart();
 		//Draw all our objects into the depth buffer so that our lights can get depth-tested correctly
 		for(GameObject obj : worldObjects)
 			camera.drawObjectDepthToLighting(obj);
@@ -196,10 +198,13 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 			camera.clearShadowStencil();
 		}
 		gl.glDisable(GL.GL_STENCIL_TEST); //We only use stencil test for rendering lights
+		camera.drawLightingEnd();
 		
+		camera.drawGeometryStart();
 		//Draw all the objects now that we've finalized our lighting
 		for(GameObject obj : worldObjects)
 			camera.drawObject(obj);
+		camera.drawGeometryEnd();
 		
 		//Child-class drawing
 		display();

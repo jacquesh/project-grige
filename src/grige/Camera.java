@@ -464,6 +464,23 @@ public class Camera {
 		gl.glDepthMask(false);
 	}
 	
+	public void drawGeometryStart()
+	{
+		geometryFBO.bind(gl);
+	}
+	public void drawGeometryEnd()
+	{
+		geometryFBO.unbind(gl);
+	}
+	public void drawLightingStart()
+	{
+		lightingFBO.bind(gl);
+	}
+	public void drawLightingEnd()
+	{
+		lightingFBO.unbind(gl);
+	}
+	
 	protected void drawObject(Drawable object)
 	{
 		//Compute the object transform matrix
@@ -483,7 +500,6 @@ public class Camera {
 		if(object.getTexture() == null)
 			return;
 		
-		geometryFBO.bind(gl);
 		geometryShader.useProgram(gl, true);
 		gl.glActiveTexture(GL.GL_TEXTURE0);
 		gl.glBindVertexArray(geometryVAO);
@@ -512,7 +528,6 @@ public class Camera {
 		gl.glDepthMask(false);
 		gl.glBindVertexArray(0);
 		geometryShader.useProgram(gl, false);
-		geometryFBO.unbind(gl);
 	}
 	
 	protected void drawObjectDepthToLighting(Drawable object)
@@ -531,7 +546,6 @@ public class Camera {
 		};
 		
 		//Draw geometry		
-		lightingFBO.bind(gl);
 		geometryShader.useProgram(gl, true);
 		gl.glBindVertexArray(geometryVAO);
 		gl.glDepthMask(true);
@@ -546,7 +560,6 @@ public class Camera {
 		gl.glDepthMask(false);
 		gl.glBindVertexArray(0);
 		geometryShader.useProgram(gl, false);
-		lightingFBO.unbind(gl);
 	}
 
 	protected void drawLight(Light light)
@@ -562,7 +575,6 @@ public class Camera {
 		};
 		
 		//Draw the light
-		lightingFBO.bind(gl);
 		lightingShader.useProgram(gl, true);
 		gl.glBindVertexArray(lightingVAO);
 		
@@ -597,7 +609,6 @@ public class Camera {
 		
 		gl.glBindVertexArray(0);
 		lightingShader.useProgram(gl, false);
-		lightingFBO.unbind(gl);
 	}
 	
 	protected void clearShadowStencil()
