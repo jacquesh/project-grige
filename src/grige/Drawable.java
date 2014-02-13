@@ -30,6 +30,11 @@ public class Drawable
 		return texture;
 	}
 	
+	public AABB getAABB()
+	{
+		return new AABB(position.x, position.y, width(), height());
+	}
+	
 	public float x() { return position.x; }
 	public float y() { return position.y; }
 	public float depth() { return depth; }
