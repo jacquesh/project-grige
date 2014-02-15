@@ -234,8 +234,10 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 			camera.drawObject(obj);
 		camera.drawGeometryEnd();
 		
-		//Child-class drawing
+		//Let the child game class draw any required UI
+		camera.drawInterfaceStart();
 		display();
+		camera.drawInterfaceEnd();
 		
 		//Commit all drawing thats happened, combining them via their respective framebuffers as needed
 		camera.commitDraw();

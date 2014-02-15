@@ -15,9 +15,11 @@ import com.jogamp.opengl.FBObject.TextureAttachment;
 import com.jogamp.opengl.math.FloatUtil;
 
 import com.jogamp.opengl.util.texture.Texture;
-
 import com.jogamp.opengl.util.glsl.ShaderCode;
 import com.jogamp.opengl.util.glsl.ShaderProgram;
+
+import java.awt.Font;
+import com.jogamp.opengl.util.awt.TextRenderer;
 
 public class Camera {	
 	
@@ -401,6 +403,8 @@ public class Camera {
 		gl.glUniform1i(geometryTextureSamplerIndex, 0);
 		int lightingTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader.program(), "lightingTextureUnit");
 		gl.glUniform1i(lightingTextureSamplerIndex, 1);
+		int interfaceTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader.program(), "interfaceTextureUnit");
+		gl.glUniform1i(interfaceTextureSamplerIndex, 2);
 		
 		gl.glBindVertexArray(0);
 		screenCanvasShader.useProgram(gl, false);
@@ -475,7 +479,7 @@ public class Camera {
 		
 		//Clear the interface buffer
 		interfaceFBO.bind(gl);
-		gl.glClearColor(0, 0, 0, 1);
+		gl.glClearColor(0, 0, 0, 0);
 		gl.glClear(GL.GL_COLOR_BUFFER_BIT);
 		interfaceFBO.unbind(gl);
 		
@@ -485,22 +489,12 @@ public class Camera {
 		gl.glDepthMask(false);
 	}
 	
-	public void drawGeometryStart()
-	{
-		geometryFBO.bind(gl);
-	}
-	public void drawGeometryEnd()
-	{
-		geometryFBO.unbind(gl);
-	}
-	public void drawLightingStart()
-	{
-		lightingFBO.bind(gl);
-	}
-	public void drawLightingEnd()
-	{
-		lightingFBO.unbind(gl);
-	}
+	public void drawGeometryStart() { geometryFBO.bind(gl); }
+	public void drawGeometryEnd() { geometryFBO.unbind(gl); }
+	public void drawLightingStart() { lightingFBO.bind(gl); }
+	public void drawLightingEnd() { lightingFBO.unbind(gl); }
+	public void drawInterfaceStart() { interfaceFBO.bind(gl); }
+	public void drawInterfaceEnd() { interfaceFBO.unbind(gl); }
 	
 	protected void drawObject(Drawable object)
 	{
@@ -674,6 +668,22 @@ public class Camera {
 		gl.glColorMask(true, true, true, true);
 	}
 	
+	
+	public void drawText(String str, float x, float y)
+	{
+		Font font = new Font("SansSerif", Font.BOLD, 16);
+		TextRenderer renderer = new TextRenderer(font, true, false);
+		
+		renderer.beginRendering((int)getWidth(), (int)getHeight());
+	    renderer.setColor(1.0f, 1f, 1f, 1f);
+	    renderer.setSmoothing(true);
+	    renderer.setUseVertexArrays(true);
+	    
+	    renderer.draw(str, 160, 160);
+	    
+	    renderer.endRendering();
+	}
+	
 	protected void commitDraw()
 	{
 		screenCanvasShader.useProgram(gl, true);
@@ -687,6 +697,10 @@ public class Camera {
 		TextureAttachment lightingTexture = (TextureAttachment)lightingFBO.getColorbuffer(0);
 		gl.glActiveTexture(GL.GL_TEXTURE1);
 		gl.glBindTexture(GL.GL_TEXTURE_2D, lightingTexture.getName());
+		
+		TextureAttachment interfaceTexture = (TextureAttachment)interfaceFBO.getColorbuffer(0);
+		gl.glActiveTexture(GL.GL_TEXTURE2);
+		gl.glBindTexture(GL.GL_TEXTURE_2D, interfaceTexture.getName());
 		
 		gl.glDrawElements(GL.GL_TRIANGLE_STRIP, screenCanvasIndices.length, GL.GL_UNSIGNED_INT, 0);
 		
