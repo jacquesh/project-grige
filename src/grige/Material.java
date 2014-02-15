@@ -27,12 +27,12 @@ public class Material
 	
 	public int getWidth()
 	{
-		return diffuseMap.getHeight();
+		return diffuseMap.getWidth();
 	}
 	
 	public int getHeight()
 	{
-		return diffuseMap.getWidth();
+		return diffuseMap.getHeight();
 	}
 	
 	public Texture getDiffuseMap()
