@@ -96,16 +96,44 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		worldLights.add(l);
 	}
 	
+	public Drawable[] getObjectsAtLocation(Vector2 loc)
+	{
+		ArrayList<Drawable> objList = new ArrayList<Drawable>();
+		
+		for(Drawable d : worldObjects)
+		{
+			AABB bounds = d.getAABB();
+			if(bounds.contains(loc))
+				objList.add(d);
+		}
+		
+		return objList.toArray(new Drawable[objList.size()]);
+	}
+	
+	public void destroy(GameObject obj)
+	{
+		obj.markedForDeath = true;
+	}
+	
 	private void internalUpdate(float deltaTime)
 	{
+		ArrayList<GameObject> deathList = new ArrayList<GameObject>();
+		
 		//Update input data
 		Input.update();
 		
 		//Run an update on all objects
 		for(GameObject obj : worldObjects)
 		{
-			obj.update(deltaTime);
+			if(obj.markedForDeath)
+				deathList.add(obj);
+			else
+				obj.update(deltaTime);
 		}
+		
+		//Remove all objects that are marked for death
+		for(GameObject obj : deathList)
+			worldObjects.remove(obj);
 		
 		//Call the user-defined game update
 		update(deltaTime);

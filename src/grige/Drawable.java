@@ -12,11 +12,14 @@ public class Drawable
 	private float scale;
 	private float rotation;
 	
+	boolean markedForDeath;
+	
 	public Drawable()
 	{
 		position = new Vector2(160, 160);
 		scale = 1;
 		depth = 0;
+		markedForDeath = false;
 	}
 	
 	public void setMaterial(Material newMaterial)
@@ -31,7 +34,9 @@ public class Drawable
 	
 	public AABB getAABB()
 	{
-		return new AABB(position.x, position.y, width(), height());
+		float w = width();
+		float h = height();
+		return new AABB(position.x-w/2f, position.y-h/2f, width(), height());
 	}
 	
 	public float x() { return position.x; }
