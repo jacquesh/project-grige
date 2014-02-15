@@ -1,11 +1,10 @@
 package grige;
 
 import com.jogamp.opengl.math.FloatUtil;
-import com.jogamp.opengl.util.texture.Texture;
 
 public class Drawable
 {
-	private Texture texture;
+	private Material material;
 	
 	private Vector2 position;
 	private float depth;
@@ -20,14 +19,14 @@ public class Drawable
 		depth = 0;
 	}
 	
-	public void setTexture(Texture newTexture)
+	public void setMaterial(Material newMaterial)
 	{
-		texture = newTexture;
+		material = newMaterial;
 	}
 	
-	protected Texture getTexture()
+	protected Material getMaterial()
 	{
-		return texture;
+		return material;
 	}
 	
 	public AABB getAABB()
@@ -66,18 +65,18 @@ public class Drawable
 	
 	public float width()
 	{
-		if(texture == null)
+		if(material == null)
 			return 0;
 		
-		return texture.getWidth() * scale;
+		return material.getWidth() * scale;
 	}
 	
 	public float height()
 	{
-		if(texture == null)
+		if(material == null)
 			return 0;
 		
-		return texture.getHeight() * scale;
+		return material.getHeight() * scale;
 	}
 	
 	/*

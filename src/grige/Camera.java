@@ -518,7 +518,7 @@ public class Camera {
 		};
 		
 		//Draw geometry
-		if(object.getTexture() == null)
+		if(object.getMaterial() == null)
 			return;
 		
 		geometryShader.useProgram(gl, true);
@@ -536,7 +536,7 @@ public class Camera {
 		int geometryObjTransformIndex = gl.glGetUniformLocation(geometryShader.program(), "objectTransform");
 		gl.glUniformMatrix4fv(geometryObjTransformIndex, 1, false, objectTransformMatrix, 0);
 		
-		Texture objTex = object.getTexture();
+		Texture objTex = object.getMaterial().getDiffuseMap();
 		objTex.enable(gl);
 		objTex.bind(gl);
 		
