@@ -54,4 +54,10 @@ public class Vector2I
     {
         return (int)Math.sqrt(sqrMagnitude());
     }
+    
+    @Override
+	public String toString()
+	{
+		return "("+x+"; "+y+")";
+	}
 }
