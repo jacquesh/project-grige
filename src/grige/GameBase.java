@@ -23,6 +23,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	private boolean running;
 	private ArrayList<GameObject> worldObjects;
 	private ArrayList<Light> worldLights;
+	private float currentFPS;
 	
 	//Game Managers
 	protected Camera camera;
@@ -55,6 +56,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 			long currentTime = System.nanoTime();
 			float deltaTime = (currentTime - lastFrameTime)/1000000000f;
 			lastFrameTime = currentTime;
+			currentFPS = 1f/deltaTime;
 			
 			internalUpdate(deltaTime);
 			gameWindow.display();
@@ -84,6 +86,11 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		//Instantiate other structures
 		worldObjects = new ArrayList<GameObject>();
 		worldLights = new ArrayList<Light>();
+	}
+	
+	public float getFPS()
+	{
+		return currentFPS;
 	}
 	
 	public void addObject(GameObject obj)
