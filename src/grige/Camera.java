@@ -4,6 +4,7 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
@@ -96,6 +97,9 @@ public class Camera {
 	private ShaderProgram lightingShader;
 	private ShaderProgram shadowGeometryShader;
 	private ShaderProgram interfaceShader;
+	
+	//Text Rendering Data
+	private HashMap<Font, TextRenderer> textFonts;
 	
 	//GL context
 	private GL2 gl;
@@ -359,6 +363,9 @@ public class Camera {
 		
 		//Load the shaders
 		interfaceShader = loadShader("Interface.vsh", "Interface.fsh");
+		
+		//Initialize Text Rendering data
+		textFonts = new HashMap<Font, TextRenderer>();
 	}
 	
 	private void initializeScreenCanvas()
@@ -669,19 +676,43 @@ public class Camera {
 	}
 	
 	
-	public void drawText(String str, float x, float y)
+	public void drawText(Font font, String str, float x, float y) { drawText(font, str, x, y, 0, new Color(1,1,1,1), 1, false); }
+	
+	public void drawText(Font font, String str, float x, float y, float z, Color color, float scale, boolean worldSpace)
 	{
-		Font font = new Font("SansSerif", Font.BOLD, 16);
-		TextRenderer renderer = new TextRenderer(font, true, false);
+		//Only create a new TextRenderer if we dont already have one for this font
+		TextRenderer renderer = null;
+		if(textFonts.containsKey(font))
+			renderer = textFonts.get(font);
+		else
+		{
+			renderer = new TextRenderer(font, true, false);
+			textFonts.put(font, renderer);
+		}
 		
-		renderer.beginRendering((int)getWidth(), (int)getHeight());
-	    renderer.setColor(1.0f, 1f, 1f, 1f);
-	    renderer.setSmoothing(true);
-	    renderer.setUseVertexArrays(true);
-	    
-	    renderer.draw(str, 160, 160);
-	    
-	    renderer.endRendering();
+		//Transform the given location into world co-ordinates
+		float[] worldLoc = new float[]{x, y, -z, 1};
+		float[] screenLoc = new float[4];
+		float[] transformMatrix = Arrays.copyOf(projectionMatrix, 16);
+		
+		if(worldSpace)
+		{	//If we want the text rendererd in worldspace then multiply by the viewing transform
+			FloatUtil.multMatrixf(transformMatrix, 0, viewingMatrix, 0);
+			FloatUtil.multMatrixVecf(transformMatrix, worldLoc, screenLoc);
+		}
+		else
+		{	//Otherwise just transform the point and subtract 1 from x & y to move the origin to the bottom left
+			FloatUtil.multMatrixVecf(transformMatrix, worldLoc, screenLoc);
+			screenLoc[0] -= 1;
+			screenLoc[1] -= 1;
+		}
+		//System.out.println("("+screenLoc[0]+";"+screenLoc[1]+";"+screenLoc[2]+") - "+screenLoc[3]);
+		
+		renderer.begin3DRendering();
+		renderer.setColor(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
+		
+		renderer.draw3D(str, screenLoc[0], screenLoc[1], screenLoc[2], 2*scale/size.x);
+		renderer.end3DRendering();
 	}
 	
 	protected void commitDraw()
