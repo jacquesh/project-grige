@@ -148,7 +148,7 @@ public class Camera {
 	}
 	
 	public void setAmbientLightAlpha(float newAlpha) { ambientLightAlpha = newAlpha; }
-	public void setClearColor(float r, float g, float b){ clearColour.setValues(r, g, b, 1); }
+	public void setClearColor(float r, float g, float b){ clearColour = new Color(r, g, b, 1); }
 	
 	public float getX() { return position.x; }
 	public float getY() { return position.y; }
@@ -620,7 +620,7 @@ public class Camera {
 		gl.glUniform1f(radiusIndex, light.getRadius());
 		
 		int colourIndex = gl.glGetUniformLocation(lightingShader.program(), "lightColour");
-		gl.glUniform3fv(colourIndex, 1, light.getColour().toColorFloatArray(), 0);
+		gl.glUniform3fv(colourIndex, 1, light.getColour().toFloat3Array(), 0);
 		
 		int intensityIndex = gl.glGetUniformLocation(lightingShader.program(), "intensity");
 		gl.glUniform1f(intensityIndex, 1f);
