@@ -10,5 +10,5 @@ void main(){
 	vec4 geometryColour = texture(geometryTextureUnit, texCoordV);
 	vec4 lightingColour = texture(lightingTextureUnit, texCoordV);
     
-    colour.rgb = geometryColour.rgb * lightingColour.a + lightingColour.rgb;
+    colour.rgb = (geometryColour.rgb + lightingColour.rgb) * lightingColour.a;
 }

@@ -48,6 +48,7 @@ public class Material
 		return selfIlluminationMap;
 	}
 	
+	
 	public static Material load(String filepath)
 	{
 		File sourceFile = new File(filepath);
