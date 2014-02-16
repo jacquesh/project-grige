@@ -106,6 +106,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	public Drawable[] getObjectsAtLocation(Vector2 loc)
 	{
 		ArrayList<Drawable> objList = new ArrayList<Drawable>();
+		loc = camera.screenToWorldLoc(loc);
 		
 		for(Drawable d : worldObjects)
 		{
