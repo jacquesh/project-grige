@@ -708,6 +708,7 @@ public class Camera {
 		}
 		//System.out.println("("+screenLoc[0]+";"+screenLoc[1]+";"+screenLoc[2]+") - "+screenLoc[3]);
 		
+		gl.glActiveTexture(GL.GL_TEXTURE0); //Bind a texture so that the renderer know what its rendering to
 		renderer.begin3DRendering();
 		renderer.setColor(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
 		
