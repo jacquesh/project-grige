@@ -21,7 +21,6 @@ public class Text2D3DTest extends GameBase
 	@Override
 	public void initialize()
 	{
-		camera.setAmbientLightAlpha(1);
 		font = new java.awt.Font("Serif", java.awt.Font.PLAIN, 16);
 	}
 	
