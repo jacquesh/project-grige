@@ -1,18 +1,22 @@
 package grige;
 
-import com.jogamp.opengl.math.FloatUtil;
+import javax.media.opengl.GL2;
 
-public class Drawable
+public abstract class Drawable
 {
-	private Material material;
+	protected Vector2 position;
+	protected float depth;
 	
-	private Vector2 position;
-	private float depth;
+	protected float scale;
+	protected float rotation;
 	
-	private float scale;
-	private float rotation;
+	protected boolean markedForDeath;
 	
-	boolean markedForDeath;
+	public abstract void setShader(GL2 gl, int shader);
+	protected abstract void draw(GL2 gl, Camera cam);
+	
+	public abstract float width();
+	public abstract float height();
 	
 	public Drawable()
 	{
@@ -20,23 +24,6 @@ public class Drawable
 		scale = 1;
 		depth = 0;
 		markedForDeath = false;
-	}
-	
-	public void setMaterial(Material newMaterial)
-	{
-		material = newMaterial;
-	}
-	
-	protected Material getMaterial()
-	{
-		return material;
-	}
-	
-	public AABB getAABB()
-	{
-		float w = width();
-		float h = height();
-		return new AABB(position.x-w/2f, position.y-h/2f, width(), height());
 	}
 	
 	public float x() { return position.x; }
@@ -66,54 +53,8 @@ public class Drawable
 		position.x = x;
 		position.y = y;
 	}
-	public void setPosition(Vector2 newPosition) { setPosition(newPosition.x, newPosition.y); }
-	
-	public float width()
+	public void setPosition(Vector2 newPosition)
 	{
-		if(material == null)
-			return 0;
-		
-		return material.getWidth() * scale;
-	}
-	
-	public float height()
-	{
-		if(material == null)
-			return 0;
-		
-		return material.getHeight() * scale;
-	}
-	
-	/*
-	 * Return the co-ordinates of the vertices of this drawable object in Counterclockwise order;
-	 * The order is important as it lets us construct geometry from these vertices without re-arranging anything
-	 * 
-	 * Primarily used for generating shadow geometry
-	 */
-	public float[] getVertices()
-	{
-		float[] result = new float[8];
-		float halfWidth = width()/2f;
-		float halfHeight = height()/2f;
-		float rotationSin = FloatUtil.sin(rotation);
-		float rotationCos = FloatUtil.cos(rotation);
-		
-		//Bottom Left
-		result[0] = position.x + (-halfWidth*rotationCos + halfHeight*rotationSin);
-		result[1] = position.y + (-halfWidth*rotationSin - halfHeight*rotationCos);
-		
-		//Bottom Right
-		result[2] = position.x + (halfWidth*rotationCos + halfHeight*rotationSin);
-		result[3] = position.y + (halfWidth*rotationSin - halfHeight*rotationCos);
-		
-		//Top Right
-		result[4] = position.x + (halfWidth*rotationCos - halfHeight*rotationSin);
-		result[5] = position.y + (halfWidth*rotationSin + halfHeight*rotationCos);
-		
-		//Top Left
-		result[6] = position.x + (-halfWidth*rotationCos - halfHeight*rotationSin);
-		result[7] = position.y + (-halfWidth*rotationSin + halfHeight*rotationCos);
-		
-		return result;
+		setPosition(newPosition.x, newPosition.y);
 	}
 }

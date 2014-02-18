@@ -10,6 +10,7 @@ import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
 
 import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.GLAutoDrawable;
 
@@ -34,7 +35,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	private GLCapabilities glCapabilities;
 	private GLWindow gameWindow;
 	
-	protected abstract void initialize();
+	protected abstract void initialize(GL2 gl);
 	protected abstract void update(float deltaTime);
 	protected abstract void display();
 	
@@ -103,19 +104,19 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		worldLights.add(l);
 	}
 	
-	public Drawable[] getObjectsAtLocation(Vector2 loc)
+	public GameObject[] getObjectsAtLocation(Vector2 loc)
 	{
-		ArrayList<Drawable> objList = new ArrayList<Drawable>();
+		ArrayList<GameObject> objList = new ArrayList<GameObject>();
 		loc = camera.screenToWorldLoc(loc);
 		
-		for(Drawable d : worldObjects)
+		for(GameObject obj : worldObjects)
 		{
-			AABB bounds = d.getAABB();
+			AABB bounds = obj.getAABB();
 			if(bounds.contains(loc))
-				objList.add(d);
+				objList.add(obj);
 		}
 		
-		return objList.toArray(new Drawable[objList.size()]);
+		return objList.toArray(new GameObject[objList.size()]);
 	}
 	
 	public void destroy(GameObject obj)
@@ -190,8 +191,9 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	//GLEvent listener methods
 	public final void init(GLAutoDrawable glad)
 	{
+		GL2 gl = glad.getGL().getGL2();
 		//Initialize internal components
-		camera.initialize(glad.getGL());
+		camera.initialize(gl);
 		Audio.initialize();
 		Input.initialize(gameWindow.getHeight());
 		
@@ -200,20 +202,27 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		gameWindow.addMouseListener(Input.getInstance());
 		
 		//Run child class initialization
-		initialize();
+		initialize(gl);
 	}
 	
 	public final void display(GLAutoDrawable glad)
 	{
-		GL gl = glad.getGL();
+		GL2 gl = glad.getGL().getGL2();
 		
 		//Reset the camera for this draw call
 		camera.refresh(gl);
 		
 		camera.drawLightingStart();
+		
 		//Draw all our objects into the depth buffer so that our shadows can get depth-tested correctly against objects at the same depth
 		for(GameObject obj : worldObjects)
-			camera.drawObjectDepthToLighting(obj);
+		{
+			gl.glDepthMask(true);
+			gl.glColorMask(false, false, false, false);
+			obj.draw(gl, camera);
+			gl.glColorMask(true, true, true, true);
+			gl.glDepthMask(false);
+		}
 		
 		//Draw *all* the lights
 		gl.glEnable(GL.GL_STENCIL_TEST); //We need to stencil out bits of light, so enable stencil test while we're drawing lights
@@ -230,7 +239,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 			camera.drawShadowsToStencil(vertexArrays);
 			
 			//Draw lighting (where the stencil is empty)
-			camera.drawLight(l);
+			l.draw(gl, camera);
 			camera.clearShadowStencil();
 		}
 		gl.glDisable(GL.GL_STENCIL_TEST); //We only use stencil test for rendering lights
@@ -239,7 +248,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		camera.drawGeometryStart();
 		//Draw all the objects now that we've finalized our lighting
 		for(GameObject obj : worldObjects)
-			camera.drawObject(obj);
+			obj.draw(gl, camera);
 		camera.drawGeometryEnd();
 		
 		//Let the child game class draw any required UI

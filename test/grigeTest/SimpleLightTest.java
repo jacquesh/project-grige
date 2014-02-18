@@ -4,6 +4,8 @@ import com.jogamp.newt.event.KeyEvent;
 
 import grige.*;
 
+import javax.media.opengl.GL2;
+
 public class SimpleLightTest extends GameBase
 {
 	
@@ -13,7 +15,7 @@ public class SimpleLightTest extends GameBase
 	}
 	
 	@Override
-	public void initialize()
+	public void initialize(GL2 gl)
 	{
 		PointLight pl = new PointLight();
 		pl.setRadius(1.5f);

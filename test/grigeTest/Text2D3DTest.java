@@ -6,7 +6,7 @@ import com.jogamp.newt.event.KeyEvent;
 
 import grige.*;
 
-
+import javax.media.opengl.GL2;
 
 public class Text2D3DTest extends GameBase
 {
@@ -19,7 +19,7 @@ public class Text2D3DTest extends GameBase
 	}
 	
 	@Override
-	public void initialize()
+	public void initialize(GL2 gl)
 	{
 		font = new java.awt.Font("Serif", java.awt.Font.PLAIN, 16);
 	}
