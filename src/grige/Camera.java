@@ -245,7 +245,7 @@ public class Camera {
 	private void initializeShadowData()
 	{
 		//Load the shaders
-		shadowGeometryShader = loadShader("ShadowGeometry.vsh", "ShadowGeometry.fsh");
+		shadowGeometryShader = Graphics.loadShader(gl, "ShadowGeometry.vsh", "ShadowGeometry.fsh");
 		
 		int[] buffers = new int[1];
 		
@@ -262,7 +262,7 @@ public class Camera {
 		interfaceFBO.unbind(gl);
 		
 		//Load the shaders
-		interfaceShader = loadShader("Interface.vsh", "Interface.fsh");
+		interfaceShader = Graphics.loadShader(gl, "Interface.vsh", "Interface.fsh");
 		
 		//Initialize Text Rendering data
 		textFonts = new HashMap<Font, TextRenderer>();
@@ -271,7 +271,7 @@ public class Camera {
 	private void initializeScreenCanvas()
 	{
 		//Load the shader
-		screenCanvasShader = loadShader("Canvas.vsh", "Canvas.fsh");
+		screenCanvasShader = Graphics.loadShader(gl, "Canvas.vsh", "Canvas.fsh");
 		screenCanvasShader.useProgram(gl, true);
 		
 		int[] buffers = new int[4];
@@ -379,15 +379,6 @@ public class Camera {
 	public void drawInterfaceStart() { interfaceFBO.bind(gl); }
 	public void drawInterfaceEnd() { interfaceFBO.unbind(gl); }
 	
-	protected void clearShadowStencil()
-	{
-		lightingFBO.bind(gl);
-		
-		gl.glClear(GL.GL_STENCIL_BUFFER_BIT);
-		
-		lightingFBO.unbind(gl);
-	}
-	
 	private void drawShadow(float[] shadowVerts)
 	{
 		shadowGeometryShader.useProgram(gl, true);
@@ -399,6 +390,7 @@ public class Camera {
 		gl.glVertexAttribPointer(positionIndex, 3, GL.GL_FLOAT, false, 0, 0);
 		
 		gl.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, shadowVerts.length/3);
+		gl.glDisableVertexAttribArray(positionIndex);
 		
 		shadowGeometryShader.useProgram(gl, false);
 	}
@@ -484,29 +476,6 @@ public class Camera {
 		
 		gl.glBindVertexArray(0);
 		screenCanvasShader.useProgram(gl, false);
-	}
-	
-	private ShaderProgram loadShader(String vertexShader, String fragmentShader)
-	{
-		GL2ES2 gl = this.gl.getGL2ES2();
-		
-		ShaderCode vertShader = ShaderCode.create(gl, GL2ES2.GL_VERTEX_SHADER, 1, getClass(), new String[]{"/shaders/"+vertexShader},false);
-		vertShader.compile(gl);
-		
-		ShaderCode fragShader = ShaderCode.create(gl, GL2ES2.GL_FRAGMENT_SHADER, 1, getClass(), new String[]{"/shaders/"+fragmentShader},false);
-		fragShader.compile(gl);
-		
-		ShaderProgram newShader = new ShaderProgram();
-		newShader.init(gl);
-		newShader.add(vertShader);
-		newShader.add(fragShader);
-		
-		newShader.link(gl, System.out);
-		
-		vertShader.destroy(gl);
-		fragShader.destroy(gl);
-
-		return newShader;
 	}
 	
 	/*
