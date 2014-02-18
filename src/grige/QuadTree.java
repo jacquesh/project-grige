@@ -8,14 +8,14 @@ public class QuadTree
 	private final int MAX_LEVELS = 5;
 	
 	private int level;
-	private ArrayList<Drawable> objects;
+	private ArrayList<GameObject> objects;
 	private AABB bounds;
 	private QuadTree[] nodes;
 	
 	public QuadTree(int treeLevel, AABB treeBounds)
 	{
 		level = treeLevel;
-		objects = new ArrayList<Drawable>(MAX_OBJECTS);
+		objects = new ArrayList<GameObject>(MAX_OBJECTS);
 		bounds = treeBounds;
 		nodes = new QuadTree[4];
 	}
@@ -25,7 +25,7 @@ public class QuadTree
 	 * exceeds capacity it will split and add all objects
 	 * to their corresponding child nodes
 	 */
-	public void insert(Drawable obj)
+	public void insert(GameObject obj)
 	{
 		AABB rect = obj.getAABB();
 		if(nodes[0] != null)
@@ -57,14 +57,14 @@ public class QuadTree
 		}
 	}
 	
-	public ArrayList<Drawable> retrieve(ArrayList<Drawable> returnObjects, Drawable obj)
+	public ArrayList<GameObject> retrieve(ArrayList<GameObject> returnObjects, GameObject obj)
 	{
 		retrieve(returnObjects, obj.getAABB());
 		
 		return returnObjects;
 	}
 	
-	public ArrayList<Drawable> retrieve(ArrayList<Drawable> returnObjects, AABB rect)
+	public ArrayList<GameObject> retrieve(ArrayList<GameObject> returnObjects, AABB rect)
 	{
 		int index = getIndex(rect);
 		if(index != -1 && nodes[0] != null)
