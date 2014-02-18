@@ -65,7 +65,7 @@ public class PointLight extends Light
 	}
 	
 	@Override
-	protected void draw(GL2 gl, Camera cam)
+	protected void onDraw(GL2 gl, Camera cam)
 	{
 		//Compute the transformed light location (for lighting)
 		Vector3 transformedLightLoc = cam.worldToScreenLoc(x(), y(), depth());
@@ -118,5 +118,11 @@ public class PointLight extends Light
 		
 		gl.glBindVertexArray(0);
 		gl.glUseProgram(0);
+	}
+	
+	@Override
+	protected void onDestroy()
+	{
+		
 	}
 }

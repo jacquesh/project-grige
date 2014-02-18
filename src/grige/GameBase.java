@@ -142,7 +142,10 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		
 		//Remove all objects that are marked for death
 		for(GameObject obj : deathList)
+		{
+			obj.onDestroy();
 			worldObjects.remove(obj);
+		}
 		
 		//Call the user-defined game update
 		update(deltaTime);
@@ -213,13 +216,12 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		camera.refresh(gl);
 		
 		camera.drawLightingStart();
-		
 		//Draw all our objects into the depth buffer so that our shadows can get depth-tested correctly against objects at the same depth
 		for(GameObject obj : worldObjects)
 		{
 			gl.glDepthMask(true);
 			gl.glColorMask(false, false, false, false);
-			obj.draw(gl, camera);
+			obj.onDraw(gl, camera);
 			gl.glColorMask(true, true, true, true);
 			gl.glDepthMask(false);
 		}
@@ -239,8 +241,8 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 			camera.drawShadowsToStencil(vertexArrays);
 			
 			//Draw lighting (where the stencil is empty)
-			l.draw(gl, camera);
-			camera.clearShadowStencil();
+			l.onDraw(gl, camera);
+			gl.glClear(GL.GL_STENCIL_BUFFER_BIT);
 		}
 		gl.glDisable(GL.GL_STENCIL_TEST); //We only use stencil test for rendering lights
 		camera.drawLightingEnd();
@@ -248,7 +250,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		camera.drawGeometryStart();
 		//Draw all the objects now that we've finalized our lighting
 		for(GameObject obj : worldObjects)
-			obj.draw(gl, camera);
+			obj.onDraw(gl, camera);
 		camera.drawGeometryEnd();
 		
 		//Let the child game class draw any required UI

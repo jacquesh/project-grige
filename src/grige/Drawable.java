@@ -13,7 +13,8 @@ public abstract class Drawable
 	protected boolean markedForDeath;
 	
 	public abstract void setShader(GL2 gl, int shader);
-	protected abstract void draw(GL2 gl, Camera cam);
+	protected abstract void onDraw(GL2 gl, Camera cam);
+	protected abstract void onDestroy();
 	
 	public abstract float width();
 	public abstract float height();

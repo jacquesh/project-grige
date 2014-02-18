@@ -168,7 +168,7 @@ public abstract class GameObject extends Drawable
 	}
 	
 	@Override
-	protected void draw(GL2 gl, Camera cam)
+	protected void onDraw(GL2 gl, Camera cam)
 	{
 		//Compute the object transform matrix
 		float objWidth = width();
@@ -224,4 +224,9 @@ public abstract class GameObject extends Drawable
 		gl.glUseProgram(0);
 	}
 	
+	@Override
+	protected void onDestroy()
+	{
+		
+	}
 }
