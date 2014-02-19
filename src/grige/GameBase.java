@@ -146,7 +146,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 			if(obj.markedForDeath)
 				deathList.add(obj);
 			else
-				obj.update(deltaTime);
+				obj.internalUpdate(deltaTime);
 		}
 		
 		//Remove all objects that are marked for death

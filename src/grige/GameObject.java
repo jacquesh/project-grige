@@ -37,9 +37,18 @@ public abstract class GameObject extends Drawable
 			0, 1, 2, 3,
 	};
 	
+	//GL data
 	private Material material;
 	private int geometryVAO;
 	private int shaderProgram;
+	
+	//Animation data
+	private Animation animation;
+	private int animationPlayDirection;
+	private int animationPlayMode;
+	private int animationFrame;
+	
+	public abstract void update(float deltaTime);
 	
 	public GameObject()
 	{
@@ -50,10 +59,53 @@ public abstract class GameObject extends Drawable
 	{
 		material = newMaterial;
 	}
-	
 	protected Material getMaterial()
 	{
 		return material;
+	}
+	
+	public void setAnimation(Animation newAnimation)
+	{
+		animation = newAnimation;
+		animationFrame = 0;
+		animationPlayDirection = 0;
+	}
+	
+	public void playAnimation(int playMode, int direction)
+	{
+		animationPlayMode = playMode;
+		animationPlayDirection = direction;
+	}
+	public void playAnimation()
+	{
+		playAnimation(Animation.PLAY_MODE_ONCE, 1);
+	}
+	public void playAnimation(int playMode)
+	{
+		playAnimation(playMode, 1);
+	}
+	public void playAnimationBackwards(int playMode)
+	{
+		playAnimation(playMode, -1);
+	}
+	public void pauseAnimation()
+	{
+		animationPlayDirection = 0;
+	}
+	public void stopAnimation()
+	{
+		if(animationPlayDirection > 0)
+			animationFrame = 0;
+		else if(animationPlayDirection < 0)
+			animationFrame = animation.length();
+		
+		animationPlayDirection = 0;
+	}
+	
+	
+	public void setAnimationFrame(int frame)
+	{
+		animationFrame = frame;
 	}
 	
 	public float width()
@@ -72,7 +124,34 @@ public abstract class GameObject extends Drawable
 		return material.getHeight() * scale;
 	}
 	
-	public abstract void update(float deltaTime);
+	protected void internalUpdate(float deltaTime)
+	{
+		if(animation != null && animationPlayDirection != 0)
+		{
+			int newFrame = animationFrame += animationPlayDirection;
+			if(newFrame < 0)
+			{
+				if(animationPlayMode == Animation.PLAY_MODE_LOOP)
+					newFrame += animation.length();
+				else if(animationPlayMode == Animation.PLAY_MODE_PINGPONG)
+					newFrame = -newFrame;
+				else if(animationPlayMode == Animation.PLAY_MODE_ONCE)
+					stopAnimation();
+			}
+			else if(newFrame >= animation.length())
+			{
+				if(animationPlayMode == Animation.PLAY_MODE_LOOP)
+					animationFrame = animationFrame%animation.length();
+				else if(animationPlayMode == Animation.PLAY_MODE_PINGPONG)
+					animationFrame = animation.length() - (animationFrame%(animation.length()-1));
+				else if(animationPlayMode == Animation.PLAY_MODE_ONCE)
+					stopAnimation();
+			}
+			setAnimationFrame(newFrame);
+		}
+		
+		update(deltaTime);
+	}
 	
 	/*
 	 * Generate an Axis-aligned boundingbox that entirely encompasses this object
