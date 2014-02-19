@@ -24,6 +24,9 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	private boolean running;
 	private ArrayList<GameObject> worldObjects;
 	private ArrayList<Light> worldLights;
+	
+	//Game time data
+	private long startTime;
 	private float currentFPS;
 	
 	//Game Managers
@@ -50,7 +53,8 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		gameWindow.display(); //Draw once before looping to initalize the screen/opengl
 		
 		running = true;
-		long lastFrameTime = System.nanoTime();
+		startTime = System.nanoTime();
+		long lastFrameTime = startTime;
 		
 		while(running)
 		{	
@@ -92,6 +96,11 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	public float getFPS()
 	{
 		return currentFPS;
+	}
+	
+	public float getRunningTime()
+	{
+		return (System.nanoTime() - startTime)/1000000000f;
 	}
 	
 	public void addObject(GameObject obj)
