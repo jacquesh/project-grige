@@ -13,10 +13,10 @@ Currently Supported Functionality
 * Easy camera movement
 * Object Selection/Picking based on screen position
 * Basic text rendering
+* Sprite animation (using SpriteSheetPacker)
 
 Yet-to-be-implemented Functionality
 -----------------------------------
-* Sprite animation
 * Sprite normal mapping (because pretteh lights)
 * Sprite self-illumination maps
 * UI elements (buttons/text fields etc)
