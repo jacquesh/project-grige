@@ -23,7 +23,7 @@ public class SpriteTest extends GameBase
 		shader = Graphics.loadShader(gl, "SimpleVertexShader.vsh", "SimpleFragmentShader.fsh").program();
 		camera.setAmbientLightAlpha(1);
 		
-		spriteMaterial = Material.load("test/grigeTest/bluegreengrid.png");
+		spriteMaterial = Material.load(gl, "test/grigeTest/bluegreengrid.png");
 		
 		testSprite = new SampleObject();
 		testSprite.setMaterial(spriteMaterial);

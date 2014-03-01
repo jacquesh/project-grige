@@ -24,7 +24,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	private boolean running;
 	private ArrayList<GameObject> worldObjects;
 	private ArrayList<Light> worldLights;
-	
+
 	//Game time data
 	private long startTime;
 	private float currentFPS;
@@ -166,11 +166,6 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		
 		gameWindow.destroy();
 		GLProfile.shutdown();
-	}
-	
-	GL getGL()
-	{
-		return gameWindow.getGL();
 	}
 	
 	//Window utility functions

@@ -3,7 +3,7 @@ package grige;
 import java.io.File;
 import java.io.IOException;
 
-import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
 
 import com.jogamp.opengl.util.texture.Texture;
 import com.jogamp.opengl.util.texture.TextureData;
@@ -49,7 +49,7 @@ public class Material
 	}
 	
 	
-	public static Material load(String filepath)
+	public static Material load(GL2 gl, String filepath)
 	{
 		File sourceFile = new File(filepath);
 		
@@ -60,9 +60,8 @@ public class Material
 			return null;
 		}
 		
-		try{
-			GL gl = GameBase.instance.getGL();
-			
+		try
+		{
 			TextureData data = TextureIO.newTextureData(gl.getGLProfile(), sourceFile, false, TextureIO.PNG);
 			Texture result = new Texture(gl, data);
 			

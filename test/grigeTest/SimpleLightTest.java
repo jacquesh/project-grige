@@ -21,7 +21,7 @@ public class SimpleLightTest extends GameBase
 		int lightingShader = Graphics.loadShader(gl, "LightVertexShader.vsh", "LightFragmentShader.fsh").program();
 		camera.setAmbientLightAlpha(0);
 		
-		Material spriteMaterial = Material.load("test/grigeTest/bluegreengrid.png");
+		Material spriteMaterial = Material.load(gl, "test/grigeTest/bluegreengrid.png");
 		
 		SampleObject testSprite = new SampleObject();
 		testSprite.setMaterial(spriteMaterial);
