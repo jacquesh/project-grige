@@ -298,31 +298,31 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		{
 		case(GL.GL_NO_ERROR):
 			if(displayNoError)
-				System.out.println("No Error");
+				Log.info("No Error");
 			break;
 		
 		case(GL.GL_INVALID_ENUM):
-			System.out.println("Invalid Enum");
+			Log.info("Invalid Enum");
 			break;
 		
 		case(GL.GL_INVALID_VALUE):
-			System.out.println("Invalid Value");
+			Log.info("Invalid Value");
 			break;
 			
 		case(GL.GL_INVALID_OPERATION):
-			System.out.println("Invalid Operation");
+			Log.info("Invalid Operation");
 			break;
 			
 		case(GL.GL_INVALID_FRAMEBUFFER_OPERATION):
-			System.out.println("Invalid Framebuffer Operation");
+			Log.info("Invalid Framebuffer Operation");
 			break;
 			
 		case(GL.GL_OUT_OF_MEMORY):
-			System.out.println("Out of Memory");
+			Log.info("Out of Memory");
 			break;
 			
 		default:
-			System.out.println("UNKNOWN OPENGL ERROR: "+error);
+			Log.info("UNKNOWN OPENGL ERROR: "+error);
 		}
 	}
 }

@@ -444,7 +444,6 @@ public class Camera {
 			screenLoc[0] -= 1;
 			screenLoc[1] -= 1;
 		}
-		//System.out.println("("+screenLoc[0]+";"+screenLoc[1]+";"+screenLoc[2]+") - "+screenLoc[3]);
 		
 		gl.glActiveTexture(GL.GL_TEXTURE0); //Bind a texture so that the renderer know what its rendering to
 		renderer.begin3DRendering();

@@ -53,10 +53,10 @@ public class Material
 	{
 		File sourceFile = new File(filepath);
 		
-		System.out.println("Loading texture "+sourceFile.getAbsolutePath());
+		Log.info("Loading texture "+sourceFile.getAbsolutePath());
 		if(!sourceFile.exists())
 		{
-			System.out.println("Error, attempt to load non-existant file: "+filepath);
+			Log.warn("Error, attempt to load non-existant file: "+filepath);
 			return null;
 		}
 		

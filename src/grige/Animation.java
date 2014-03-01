@@ -61,10 +61,10 @@ public class Animation
 	{
 		File sourceFile = new File(filepath);
 		
-		System.out.println("Loading animation "+sourceFile.getAbsolutePath());
+		Log.info("Loading animation "+sourceFile.getAbsolutePath());
 		if(!sourceFile.exists())
 		{
-			System.out.println("Error, attempt to load non-existant file: "+filepath);
+			Log.warn("Error, attempt to load non-existant file: "+filepath);
 			return null;
 		}
 		
