@@ -103,10 +103,10 @@ public abstract class GameObject extends Drawable
 	}
 	public void stopAnimation()
 	{
-		if(animationPlaySpeed > 0)
+		if(animationPlaySpeed >= 0)
 			animationFrame = 0;
 		else if(animationPlaySpeed < 0)
-			animationFrame = animation.length();
+			animationFrame = animation.length()-1;
 		
 		animationPlaySpeed = 0;
 	}
@@ -150,18 +150,30 @@ public abstract class GameObject extends Drawable
 				if(animationPlayMode == Animation.PLAY_MODE_LOOP)
 					newFrame += animation.length();
 				else if(animationPlayMode == Animation.PLAY_MODE_PINGPONG)
+				{
 					newFrame = -newFrame;
+					setAnimationSpeed(-animationPlaySpeed);
+				}
 				else if(animationPlayMode == Animation.PLAY_MODE_ONCE)
+				{
 					stopAnimation();
+					newFrame = animationFrame;
+				}
 			}
 			else if(newFrame >= animation.length())
 			{
 				if(animationPlayMode == Animation.PLAY_MODE_LOOP)
 					newFrame = newFrame%animation.length();
 				else if(animationPlayMode == Animation.PLAY_MODE_PINGPONG)
+				{
 					newFrame = animation.length() - (newFrame%(animation.length()-1));
+					setAnimationSpeed(-animationPlaySpeed);
+				}
 				else if(animationPlayMode == Animation.PLAY_MODE_ONCE)
+				{
 					stopAnimation();
+					newFrame = animationFrame;
+				}
 			}
 			
 			timeSinceAnimationUpdate -= frameIncrement/animationPlaySpeed;
@@ -289,11 +301,13 @@ public abstract class GameObject extends Drawable
 			AABBI currentAnimQuad = animation.getFrameBox(animationFrame);
 			float sizeX = material.getWidth();
 			float sizeY = material.getHeight();
+			
+			//Here we need to transform from the coordinates of the image [(0,0) at top left, (x,y,w,h)], to that of opengl [(0,0) bottom left, (x,y) for each point]
 			textureCoords = new float[]{
-					currentAnimQuad.position.x/sizeX, currentAnimQuad.position.y/sizeY,
-					currentAnimQuad.position.x/sizeX, (currentAnimQuad.position.y + currentAnimQuad.size.y)/sizeY,
-					(currentAnimQuad.position.x + currentAnimQuad.size.x)/sizeX, currentAnimQuad.position.y/sizeY,
-					(currentAnimQuad.position.x + currentAnimQuad.size.x)/sizeX, (currentAnimQuad.position.y + currentAnimQuad.size.y)/sizeY
+					currentAnimQuad.position.x/sizeX, 1-(currentAnimQuad.position.y + currentAnimQuad.size.y)/sizeY,
+					currentAnimQuad.position.x/sizeX, 1-currentAnimQuad.position.y/sizeY,
+					(currentAnimQuad.position.x + currentAnimQuad.size.x)/sizeX, 1-(currentAnimQuad.position.y + currentAnimQuad.size.y)/sizeY,
+					(currentAnimQuad.position.x + currentAnimQuad.size.x)/sizeX, 1-currentAnimQuad.position.y/sizeY
 			};
 		}
 		
