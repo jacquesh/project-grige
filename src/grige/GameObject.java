@@ -204,8 +204,8 @@ public abstract class GameObject extends Drawable
 		float[] result = new float[8];
 		float halfWidth = width()/2f;
 		float halfHeight = height()/2f;
-		float rotationSin = FloatUtil.sin(rotation);
-		float rotationCos = FloatUtil.cos(rotation);
+		float rotationSin = FloatUtil.sin(FloatUtil.PI/180 * rotation);
+		float rotationCos = FloatUtil.cos(FloatUtil.PI/180 * rotation);
 		
 		//Bottom Left
 		result[0] = position.x + (-halfWidth*rotationCos + halfHeight*rotationSin);
@@ -281,8 +281,8 @@ public abstract class GameObject extends Drawable
 		//Compute the object transform matrix
 		float objWidth = width();
 		float objHeight = height();
-		float rotationSin = FloatUtil.sin(rotation());
-		float rotationCos = FloatUtil.cos(rotation());
+		float rotationSin = FloatUtil.sin(FloatUtil.PI/180 * rotation);
+		float rotationCos = FloatUtil.cos(FloatUtil.PI/180 * rotation);
 		
 		float[] objectTransformMatrix = new float[]{
 				 objWidth*rotationCos, objHeight*rotationSin,0,0,
