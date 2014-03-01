@@ -22,6 +22,12 @@ public class PointLight extends Light
 	private int shaderProgram;
 	private int lightingVAO;
 	
+	public PointLight()
+	{
+		super();
+		setDepth(1);
+	}
+	
 	public float width()
 	{
 		return 0;
@@ -67,6 +73,12 @@ public class PointLight extends Light
 	@Override
 	protected void onDraw(GL2 gl, Camera cam)
 	{
+		if(shaderProgram == 0)
+		{
+			Log.fatal("Attempting to render a shaderless light. Skipping...");
+			return;
+		}
+		
 		//Compute the transformed light location (for lighting)
 		Vector3 transformedLightLoc = cam.worldToScreenLoc(x(), y(), depth());
 

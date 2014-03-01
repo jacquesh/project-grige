@@ -278,6 +278,12 @@ public abstract class GameObject extends Drawable
 	@Override
 	protected void onDraw(GL2 gl, Camera cam)
 	{
+		if(shaderProgram == 0)
+		{
+			Log.fatal("Attempting to render a shaderless object. Skipping...");
+			return;
+		}
+		
 		//Compute the object transform matrix
 		float objWidth = width();
 		float objHeight = height();
