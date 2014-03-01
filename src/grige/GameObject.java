@@ -19,7 +19,7 @@ public abstract class GameObject extends Drawable
 			0.5f,  0.5f, 0.0f,	
 	};
 	
-	private final float[] quadTextureCoords = {
+	private final float[] defaultTextureCoords = {
 			0.0f, 0.0f,
 			0.0f, 1.0f,
 			1.0f, 0.0f,
@@ -42,9 +42,13 @@ public abstract class GameObject extends Drawable
 	private int geometryVAO;
 	private int shaderProgram;
 	
+	//GL buffers
+	private int texCoordBuffer;
+	
 	//Animation data
 	private Animation animation;
-	private int animationPlayDirection;
+	private float timeSinceAnimationUpdate;
+	private float animationPlaySpeed;
 	private int animationPlayMode;
 	private int animationFrame;
 	
@@ -68,17 +72,22 @@ public abstract class GameObject extends Drawable
 	{
 		animation = newAnimation;
 		animationFrame = 0;
-		animationPlayDirection = 0;
+		animationPlaySpeed = 0;
 	}
 	
-	public void playAnimation(int playMode, int direction)
+	public void setAnimationSpeed(float playSpeed)
+	{
+		animationPlaySpeed = playSpeed;
+	}
+	public void playAnimation(int playMode, float playSpeed)
 	{
 		animationPlayMode = playMode;
-		animationPlayDirection = direction;
+		animationPlaySpeed = playSpeed;
+		timeSinceAnimationUpdate = 0;
 	}
 	public void playAnimation()
 	{
-		playAnimation(Animation.PLAY_MODE_ONCE, 1);
+		playAnimation(Animation.PLAY_MODE_LOOP, 1);
 	}
 	public void playAnimation(int playMode)
 	{
@@ -90,18 +99,17 @@ public abstract class GameObject extends Drawable
 	}
 	public void pauseAnimation()
 	{
-		animationPlayDirection = 0;
+		animationPlaySpeed = 0;
 	}
 	public void stopAnimation()
 	{
-		if(animationPlayDirection > 0)
+		if(animationPlaySpeed > 0)
 			animationFrame = 0;
-		else if(animationPlayDirection < 0)
+		else if(animationPlaySpeed < 0)
 			animationFrame = animation.length();
 		
-		animationPlayDirection = 0;
+		animationPlaySpeed = 0;
 	}
-	
 	
 	public void setAnimationFrame(int frame)
 	{
@@ -113,7 +121,10 @@ public abstract class GameObject extends Drawable
 		if(material == null)
 			return 0;
 		
-		return material.getWidth() * scale;
+		if(animation == null)
+			return material.getWidth() * scale;
+		
+		return animation.getFrameBox(animationFrame).size.x * scale;
 	}
 	
 	public float height()
@@ -121,14 +132,19 @@ public abstract class GameObject extends Drawable
 		if(material == null)
 			return 0;
 		
-		return material.getHeight() * scale;
+		if(animation == null)
+			return material.getHeight() * scale;
+		
+		return animation.getFrameBox(animationFrame).size.y * scale;
 	}
 	
 	protected void internalUpdate(float deltaTime)
 	{
-		if(animation != null && animationPlayDirection != 0)
+		if(animation != null && animationPlaySpeed != 0)
 		{
-			int newFrame = animationFrame += animationPlayDirection;
+			timeSinceAnimationUpdate += deltaTime;
+			int frameIncrement = (int)(timeSinceAnimationUpdate*animationPlaySpeed);
+			int newFrame = animationFrame + frameIncrement;
 			if(newFrame < 0)
 			{
 				if(animationPlayMode == Animation.PLAY_MODE_LOOP)
@@ -141,12 +157,14 @@ public abstract class GameObject extends Drawable
 			else if(newFrame >= animation.length())
 			{
 				if(animationPlayMode == Animation.PLAY_MODE_LOOP)
-					animationFrame = animationFrame%animation.length();
+					newFrame = newFrame%animation.length();
 				else if(animationPlayMode == Animation.PLAY_MODE_PINGPONG)
-					animationFrame = animation.length() - (animationFrame%(animation.length()-1));
+					newFrame = animation.length() - (newFrame%(animation.length()-1));
 				else if(animationPlayMode == Animation.PLAY_MODE_ONCE)
 					stopAnimation();
 			}
+			
+			timeSinceAnimationUpdate -= frameIncrement/animationPlaySpeed;
 			setAnimationFrame(newFrame);
 		}
 		
@@ -210,11 +228,17 @@ public abstract class GameObject extends Drawable
 		gl.glBindVertexArray(geometryVAO);
 		
 		//Generate and store the required buffers
-		gl.glGenBuffers(4, buffers,0);
+		gl.glGenBuffers(3, buffers,0);
 		int indexBuffer = buffers[0];
 		int vertexBuffer = buffers[1];
-		int texCoordBuffer = buffers[2];
-		int colourBuffer = buffers[3];
+		int colourBuffer = buffers[2];
+		
+		//Generate and store the buffers that we may have generated previously
+		if(texCoordBuffer == 0)
+		{
+			gl.glGenBuffers(1, buffers, 0);
+			texCoordBuffer = buffers[0];
+		}
 		
 		//Buffer the vertex indices
 		gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
@@ -226,13 +250,6 @@ public abstract class GameObject extends Drawable
 		gl.glBufferData(GL.GL_ARRAY_BUFFER, quadVertices.length*(Float.SIZE/8), FloatBuffer.wrap(quadVertices), GL.GL_STATIC_DRAW);
 		gl.glEnableVertexAttribArray(positionIndex);
 		gl.glVertexAttribPointer(positionIndex, 3, GL.GL_FLOAT, false, 0, 0);
-		
-		//Buffer the vertex texture coordinates
-		int texCoordIndex = gl.glGetAttribLocation(shaderProgram, "texCoord");
-		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, texCoordBuffer);
-		gl.glBufferData(GL.GL_ARRAY_BUFFER, quadTextureCoords.length*(Float.SIZE/8), FloatBuffer.wrap(quadTextureCoords), GL.GL_STATIC_DRAW);
-		gl.glEnableVertexAttribArray(texCoordIndex);
-		gl.glVertexAttribPointer(texCoordIndex, 2, GL.GL_FLOAT, false, 0, 0);
 		
 		//Buffer the tint colour
 		int colourIndex = gl.glGetAttribLocation(shaderProgram, "tintColour");
@@ -262,6 +279,24 @@ public abstract class GameObject extends Drawable
 				x(), y(), -depth(), 1
 		};
 		
+		//Compute texture coordinates
+		float[] textureCoords;
+		
+		if(animation == null)
+			textureCoords = defaultTextureCoords;
+		else
+		{
+			AABBI currentAnimQuad = animation.getFrameBox(animationFrame);
+			float sizeX = material.getWidth();
+			float sizeY = material.getHeight();
+			textureCoords = new float[]{
+					currentAnimQuad.position.x/sizeX, currentAnimQuad.position.y/sizeY,
+					currentAnimQuad.position.x/sizeX, (currentAnimQuad.position.y + currentAnimQuad.size.y)/sizeY,
+					(currentAnimQuad.position.x + currentAnimQuad.size.x)/sizeX, currentAnimQuad.position.y/sizeY,
+					(currentAnimQuad.position.x + currentAnimQuad.size.x)/sizeX, (currentAnimQuad.position.y + currentAnimQuad.size.y)/sizeY
+			};
+		}
+		
 		//Draw geometry
 		if(getMaterial() == null)
 			return;
@@ -277,6 +312,13 @@ public abstract class GameObject extends Drawable
 		//Texture specification
 		int textureSamplerIndex = gl.glGetUniformLocation(shaderProgram, "textureUnit");
 		gl.glUniform1i(textureSamplerIndex, 0);
+		
+		//Texture coordinates
+		int texCoordIndex = gl.glGetAttribLocation(shaderProgram, "texCoord");
+		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, texCoordBuffer);
+		gl.glBufferData(GL.GL_ARRAY_BUFFER, textureCoords.length*(Float.SIZE/8), FloatBuffer.wrap(textureCoords), GL.GL_STATIC_DRAW);
+		gl.glEnableVertexAttribArray(texCoordIndex);
+		gl.glVertexAttribPointer(texCoordIndex, 2, GL.GL_FLOAT, false, 0, 0);
 		
 		//Transforms
 		int projMatrixIndex = gl.glGetUniformLocation(shaderProgram, "projectionMatrix");
