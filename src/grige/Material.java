@@ -3,6 +3,8 @@ package grige;
 import java.io.File;
 import java.io.IOException;
 
+import java.nio.FloatBuffer;
+
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 
@@ -56,19 +58,14 @@ public class Material
 	}
 	
 	
-	public static Material get64(GL2 gl)
+	public static Material createPixel(GL2 gl)
 	{
 		int[] tex = new int[1];
 		gl.glGenTextures(1, tex, 0);
 		gl.glBindTexture(GL.GL_TEXTURE_2D, tex[0]);
 		
-		gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST);
-		gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST);
-		gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_CLAMP_TO_EDGE);
-		gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_CLAMP_TO_EDGE);
-		
 		float[] pixels = new float[]{1f, 1f, 1f};
-		gl.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGB, 1, 1, 0, GL.GL_RGB, GL.GL_FLOAT, java.nio.FloatBuffer.wrap(pixels));
+		gl.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGB, 1, 1, 0, GL.GL_RGB, GL.GL_FLOAT, FloatBuffer.wrap(pixels));
 		
 		gl.glBindTexture(GL.GL_TEXTURE_2D, 0);
 		
