@@ -18,6 +18,8 @@ public class Material
 	private int normalMap;
 	private int selfIlluminationMap;
 	
+	private float[][] solidityMap;
+	
 	private int width;
 	private int height;
 	
@@ -56,7 +58,32 @@ public class Material
 	{
 		return selfIlluminationMap;
 	}
+	public float[][] getSolidityMap()
+	{
+		return solidityMap;
+	}
 	
+	private void computeSolidityMap(GL2 gl)
+	{
+		solidityMap = new float[height][width];
+		
+		gl.glBindTexture(GL.GL_TEXTURE_2D, diffuseMap);
+		FloatBuffer pixelBuffer = FloatBuffer.allocate(width*height*4);
+		
+		gl.glGetTexImage(GL.GL_TEXTURE_2D, 0, GL.GL_RGBA, GL.GL_FLOAT, pixelBuffer);
+		
+		for(int y=0; y<height; y++)
+		{
+			for(int x=0; x<width; x++)
+			{
+				pixelBuffer.get();
+				pixelBuffer.get();
+				pixelBuffer.get();
+				solidityMap[y][x] = pixelBuffer.get();
+			}
+		}
+		gl.glBindTexture(GL.GL_TEXTURE_2D, 0);
+	}
 	
 	public static Material createPixel(GL2 gl)
 	{
@@ -69,7 +96,10 @@ public class Material
 		
 		gl.glBindTexture(GL.GL_TEXTURE_2D, 0);
 		
-		return new Material(1, 1, tex[0]);
+		
+		Material mat = new Material(1, 1, tex[0]);
+		mat.computeSolidityMap(gl);
+		return mat;
 	}
 	
 	public static Material load(GL2 gl, String filepath)
@@ -88,7 +118,9 @@ public class Material
 			TextureData data = TextureIO.newTextureData(gl.getGLProfile(), sourceFile, false, TextureIO.PNG);
 			Texture result = new Texture(gl, data);
 			
-			return new Material(result.getWidth(), result.getHeight(), result.getTextureObject(gl));
+			Material mat = new Material(result.getWidth(), result.getHeight(), result.getTextureObject(gl));
+			mat.computeSolidityMap(gl);
+			return mat;
 			
 		}catch(IOException ioe)
 		{
