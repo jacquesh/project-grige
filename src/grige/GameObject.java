@@ -350,13 +350,14 @@ public abstract class GameObject extends Drawable
 		int geometryObjTransformIndex = gl.glGetUniformLocation(shaderProgram, "objectTransform");
 		gl.glUniformMatrix4fv(geometryObjTransformIndex, 1, false, objectTransformMatrix, 0);
 		
-		Texture objTex = getMaterial().getDiffuseMap();
-		objTex.enable(gl);
-		objTex.bind(gl);
-		
+		int objTex = getMaterial().getDiffuseMap();
+		gl.glEnable(objTex);
+		gl.glBindTexture(GL.GL_TEXTURE_2D, objTex);
+
 		gl.glDrawElements(GL.GL_TRIANGLE_STRIP, quadIndices.length, GL.GL_UNSIGNED_INT, 0);
 		
-		objTex.disable(gl);
+		gl.glDisable(objTex);
+		gl.glBindTexture(GL.GL_TEXTURE_2D, 0);
 		
 		gl.glDisable(GL.GL_BLEND);
 		

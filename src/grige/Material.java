@@ -3,6 +3,7 @@ package grige;
 import java.io.File;
 import java.io.IOException;
 
+import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 
 import com.jogamp.opengl.util.texture.Texture;
@@ -11,43 +12,68 @@ import com.jogamp.opengl.util.texture.TextureIO;
 
 public class Material
 {
-	private Texture diffuseMap;
-	private Texture normalMap;
-	private Texture selfIlluminationMap;
+	private int diffuseMap;
+	private int normalMap;
+	private int selfIlluminationMap;
 	
-	private Material(Texture diffuse)
+	private int width;
+	private int height;
+	
+	private Material(int textureWidth, int textureHeight, int diffuse)
 	{
-		if(diffuse == null)
+		if(diffuse == 0)
 			throw new IllegalArgumentException("Invalid Diffuse Texture, cannot be null");
 		
 		diffuseMap = diffuse;
-		normalMap = null;
-		selfIlluminationMap = null;
+		normalMap = 0;
+		selfIlluminationMap = 0;
+		
+		width = textureWidth;
+		height = textureHeight;
 	}
 	
 	public int getWidth()
 	{
-		return diffuseMap.getWidth();
+		return width;
 	}
 	
 	public int getHeight()
 	{
-		return diffuseMap.getHeight();
+		return height;
 	}
 	
-	public Texture getDiffuseMap()
+	public int getDiffuseMap()
 	{
 		return diffuseMap;
 	}
-	public Texture getNormalMap()
+	public int getNormalMap()
 	{
 		return normalMap;
 	}
-	public Texture getSelfIlluminationMap()
+	public int getSelfIlluminationMap()
 	{
 		return selfIlluminationMap;
 	}
 	
+	
+	public static Material get64(GL2 gl)
+	{
+		int[] tex = new int[1];
+		gl.glGenTextures(1, tex, 0);
+		gl.glBindTexture(GL.GL_TEXTURE_2D, tex[0]);
+		
+		gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST);
+		gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST);
+		gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_CLAMP_TO_EDGE);
+		gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_CLAMP_TO_EDGE);
+		
+		float[] pixels = new float[]{1f, 1f, 1f};
+		gl.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGB, 1, 1, 0, GL.GL_RGB, GL.GL_FLOAT, java.nio.FloatBuffer.wrap(pixels));
+		
+		gl.glBindTexture(GL.GL_TEXTURE_2D, 0);
+		
+		return new Material(1, 1, tex[0]);
+	}
 	
 	public static Material load(GL2 gl, String filepath)
 	{
@@ -65,7 +91,7 @@ public class Material
 			TextureData data = TextureIO.newTextureData(gl.getGLProfile(), sourceFile, false, TextureIO.PNG);
 			Texture result = new Texture(gl, data);
 			
-			return new Material(result);
+			return new Material(result.getWidth(), result.getHeight(), result.getTextureObject(gl));
 			
 		}catch(IOException ioe)
 		{
