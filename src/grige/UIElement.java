@@ -24,13 +24,6 @@ public abstract class UIElement extends Drawable
 			1.0f, 1.0f,
 	};
 	
-	private final float[] quadTintColours = {
-			1f, 1f, 1f, 1f,
-			1f, 1f, 1f, 1f,
-			1f, 1f, 1f, 1f,
-			1f, 1f, 1f, 1f,
-	};
-	
 	private final int[] quadIndices = {
 			0, 1, 2, 3,
 	};
@@ -45,9 +38,6 @@ public abstract class UIElement extends Drawable
 	
 	//Animation data
 	private Animation animation;
-	private float timeSinceAnimationUpdate;
-	private float animationPlaySpeed;
-	private int animationPlayMode;
 	private int animationFrame;
 	
 	public abstract void update(float deltaTime);
@@ -70,43 +60,6 @@ public abstract class UIElement extends Drawable
 	{
 		animation = newAnimation;
 		animationFrame = 0;
-		animationPlaySpeed = 0;
-	}
-	
-	public void setAnimationSpeed(float playSpeed)
-	{
-		animationPlaySpeed = playSpeed;
-	}
-	public void playAnimation(int playMode, float playSpeed)
-	{
-		animationPlayMode = playMode;
-		animationPlaySpeed = playSpeed;
-		timeSinceAnimationUpdate = 0;
-	}
-	public void playAnimation()
-	{
-		playAnimation(Animation.PLAY_MODE_LOOP, 1);
-	}
-	public void playAnimation(int playMode)
-	{
-		playAnimation(playMode, 1);
-	}
-	public void playAnimationBackwards(int playMode)
-	{
-		playAnimation(playMode, -1);
-	}
-	public void pauseAnimation()
-	{
-		animationPlaySpeed = 0;
-	}
-	public void stopAnimation()
-	{
-		if(animationPlaySpeed >= 0)
-			animationFrame = 0;
-		else if(animationPlaySpeed < 0)
-			animationFrame = animation.length()-1;
-		
-		animationPlaySpeed = 0;
 	}
 	
 	public void setAnimationFrame(int frame)
@@ -137,47 +90,7 @@ public abstract class UIElement extends Drawable
 	}
 	
 	protected void internalUpdate(float deltaTime)
-	{
-		if(animation != null && animationPlaySpeed != 0)
-		{
-			timeSinceAnimationUpdate += deltaTime;
-			int frameIncrement = (int)(timeSinceAnimationUpdate*animationPlaySpeed);
-			int newFrame = animationFrame + frameIncrement;
-			if(newFrame < 0)
-			{
-				if(animationPlayMode == Animation.PLAY_MODE_LOOP)
-					newFrame += animation.length();
-				else if(animationPlayMode == Animation.PLAY_MODE_PINGPONG)
-				{
-					newFrame = -newFrame;
-					setAnimationSpeed(-animationPlaySpeed);
-				}
-				else if(animationPlayMode == Animation.PLAY_MODE_ONCE)
-				{
-					stopAnimation();
-					newFrame = animationFrame;
-				}
-			}
-			else if(newFrame >= animation.length())
-			{
-				if(animationPlayMode == Animation.PLAY_MODE_LOOP)
-					newFrame = newFrame%animation.length();
-				else if(animationPlayMode == Animation.PLAY_MODE_PINGPONG)
-				{
-					newFrame = animation.length() - (newFrame%(animation.length()-1));
-					setAnimationSpeed(-animationPlaySpeed);
-				}
-				else if(animationPlayMode == Animation.PLAY_MODE_ONCE)
-				{
-					stopAnimation();
-					newFrame = animationFrame;
-				}
-			}
-			
-			timeSinceAnimationUpdate -= frameIncrement/animationPlaySpeed;
-			setAnimationFrame(newFrame);
-		}
-		
+	{	
 		update(deltaTime);
 	}
 	
@@ -191,46 +104,13 @@ public abstract class UIElement extends Drawable
 		return new AABB(position.x-w/2f, position.y-h/2f, width(), height());
 	}
 	
-	/*
-	 * Return the co-ordinates of the vertices of this drawable object in Counterclockwise order;
-	 * The order is important as it lets us construct geometry from these vertices without re-arranging anything
-	 * 
-	 * Primarily used for generating shadow geometry
-	 */
-	public float[] getVertices()
-	{
-		float[] result = new float[8];
-		float halfWidth = width()/2f;
-		float halfHeight = height()/2f;
-		float rotationSin = FloatUtil.sin(FloatUtil.PI/180 * rotation);
-		float rotationCos = FloatUtil.cos(FloatUtil.PI/180 * rotation);
-		
-		//Bottom Left
-		result[0] = position.x + (-halfWidth*rotationCos + halfHeight*rotationSin);
-		result[1] = position.y + (-halfWidth*rotationSin - halfHeight*rotationCos);
-		
-		//Bottom Right
-		result[2] = position.x + (halfWidth*rotationCos + halfHeight*rotationSin);
-		result[3] = position.y + (halfWidth*rotationSin - halfHeight*rotationCos);
-		
-		//Top Right
-		result[4] = position.x + (halfWidth*rotationCos - halfHeight*rotationSin);
-		result[5] = position.y + (halfWidth*rotationSin + halfHeight*rotationCos);
-		
-		//Top Left
-		result[6] = position.x + (-halfWidth*rotationCos - halfHeight*rotationSin);
-		result[7] = position.y + (-halfWidth*rotationSin + halfHeight*rotationCos);
-		
-		return result;
-	}
-	
 	@Override
 	public void setShader(GL2 gl, int shader)
 	{
 		shaderProgram = shader;
 		gl.glUseProgram(shader);
 		
-		int[] buffers = new int[4];
+		int[] buffers = new int[3];
 		
 		//Create the vertex array
 		gl.glGenVertexArrays(1, buffers, 0);
@@ -238,10 +118,9 @@ public abstract class UIElement extends Drawable
 		gl.glBindVertexArray(geometryVAO);
 		
 		//Generate and store the required buffers
-		gl.glGenBuffers(3, buffers,0);
+		gl.glGenBuffers(2, buffers,0);
 		int indexBuffer = buffers[0];
 		int vertexBuffer = buffers[1];
-		int colourBuffer = buffers[2];
 		
 		//Generate and store the buffers that we may have generated previously
 		if(texCoordBuffer == 0)
@@ -260,13 +139,6 @@ public abstract class UIElement extends Drawable
 		gl.glBufferData(GL.GL_ARRAY_BUFFER, quadVertices.length*(Float.SIZE/8), FloatBuffer.wrap(quadVertices), GL.GL_STATIC_DRAW);
 		gl.glEnableVertexAttribArray(positionIndex);
 		gl.glVertexAttribPointer(positionIndex, 3, GL.GL_FLOAT, false, 0, 0);
-		
-		//Buffer the tint colour
-		int colourIndex = gl.glGetAttribLocation(shaderProgram, "tintColour");
-		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, colourBuffer);
-		gl.glBufferData(GL.GL_ARRAY_BUFFER, quadTintColours.length*(Float.SIZE/8), FloatBuffer.wrap(quadTintColours), GL.GL_STATIC_DRAW);
-		gl.glEnableVertexAttribArray(colourIndex);
-		gl.glVertexAttribPointer(colourIndex, 4, GL.GL_FLOAT, false, 0, 0);
 		
 		gl.glBindVertexArray(0);
 		
@@ -322,10 +194,6 @@ public abstract class UIElement extends Drawable
 		gl.glUseProgram(shaderProgram);
 		gl.glActiveTexture(GL.GL_TEXTURE0);
 		gl.glBindVertexArray(geometryVAO);
-		gl.glDepthMask(true);
-		
-		gl.glEnable(GL.GL_BLEND);
-		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
 		
 		//Texture specification
 		int textureSamplerIndex = gl.glGetUniformLocation(shaderProgram, "textureUnit");
@@ -357,9 +225,6 @@ public abstract class UIElement extends Drawable
 		gl.glDisable(objTex);
 		gl.glBindTexture(GL.GL_TEXTURE_2D, 0);
 		
-		gl.glDisable(GL.GL_BLEND);
-		
-		gl.glDepthMask(false);
 		gl.glBindVertexArray(0);
 		gl.glUseProgram(0);
 	}
