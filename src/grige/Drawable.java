@@ -1,33 +1,30 @@
 package grige;
 
-import com.jogamp.opengl.math.FloatUtil;
-import com.jogamp.opengl.util.texture.Texture;
+import javax.media.opengl.GL2;
 
-public class Drawable
+public abstract class Drawable
 {
-	private Texture texture;
+	protected Vector2 position;
+	protected float depth;
 	
-	private Vector2 position;
-	private float depth;
+	protected float scale;
+	protected float rotation;
 	
-	private float scale;
-	private float rotation;
+	protected boolean markedForDeath;
+	
+	public abstract void setShader(GL2 gl, int shader);
+	protected abstract void onDraw(GL2 gl, Camera cam);
+	protected abstract void onDestroy();
+	
+	public abstract float width();
+	public abstract float height();
 	
 	public Drawable()
 	{
 		position = new Vector2(160, 160);
 		scale = 1;
 		depth = 0;
-	}
-	
-	public void setTexture(Texture newTexture)
-	{
-		texture = newTexture;
-	}
-	
-	protected Texture getTexture()
-	{
-		return texture;
+		markedForDeath = false;
 	}
 	
 	public float x() { return position.x; }
@@ -57,54 +54,8 @@ public class Drawable
 		position.x = x;
 		position.y = y;
 	}
-	public void setPosition(Vector2 newPosition) { setPosition(newPosition.x, newPosition.y); }
-	
-	public float width()
+	public void setPosition(Vector2 newPosition)
 	{
-		if(texture == null)
-			return 0;
-		
-		return texture.getWidth() * scale;
-	}
-	
-	public float height()
-	{
-		if(texture == null)
-			return 0;
-		
-		return texture.getHeight() * scale;
-	}
-	
-	/*
-	 * Return the co-ordinates of the vertices of this drawable object in Counterclockwise order;
-	 * The order is important as it lets us construct geometry from these vertices without re-arranging anything
-	 * 
-	 * Primarily used for generating shadow geometry
-	 */
-	public float[] getVertices()
-	{
-		float[] result = new float[8];
-		float halfWidth = width()/2f;
-		float halfHeight = height()/2f;
-		float rotationSin = FloatUtil.sin(rotation);
-		float rotationCos = FloatUtil.cos(rotation);
-		
-		//Bottom Left
-		result[0] = position.x + (-halfWidth*rotationCos + halfHeight*rotationSin);
-		result[1] = position.y + (-halfWidth*rotationSin - halfHeight*rotationCos);
-		
-		//Bottom Right
-		result[2] = position.x + (halfWidth*rotationCos + halfHeight*rotationSin);
-		result[3] = position.y + (halfWidth*rotationSin - halfHeight*rotationCos);
-		
-		//Top Right
-		result[4] = position.x + (halfWidth*rotationCos - halfHeight*rotationSin);
-		result[5] = position.y + (halfWidth*rotationSin + halfHeight*rotationCos);
-		
-		//Top Left
-		result[6] = position.x + (-halfWidth*rotationCos - halfHeight*rotationSin);
-		result[7] = position.y + (-halfWidth*rotationSin + halfHeight*rotationCos);
-		
-		return result;
+		setPosition(newPosition.x, newPosition.y);
 	}
 }

@@ -10,6 +10,7 @@ import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
 
 import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.GLAutoDrawable;
 
@@ -23,6 +24,11 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	private boolean running;
 	private ArrayList<GameObject> worldObjects;
 	private ArrayList<Light> worldLights;
+	private ArrayList<UIElement> uiElements;
+
+	//Game time data
+	private long startTime;
+	private float currentFPS;
 	
 	//Game Managers
 	protected Camera camera;
@@ -33,7 +39,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	private GLCapabilities glCapabilities;
 	private GLWindow gameWindow;
 	
-	protected abstract void initialize();
+	protected abstract void initialize(GL2 gl);
 	protected abstract void update(float deltaTime);
 	protected abstract void display();
 	
@@ -48,13 +54,15 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		gameWindow.display(); //Draw once before looping to initalize the screen/opengl
 		
 		running = true;
-		long lastFrameTime = System.nanoTime();
+		startTime = System.nanoTime();
+		long lastFrameTime = startTime;
 		
 		while(running)
 		{	
 			long currentTime = System.nanoTime();
 			float deltaTime = (currentTime - lastFrameTime)/1000000000f;
 			lastFrameTime = currentTime;
+			currentFPS = 1f/deltaTime;
 			
 			internalUpdate(deltaTime);
 			gameWindow.display();
@@ -84,6 +92,17 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		//Instantiate other structures
 		worldObjects = new ArrayList<GameObject>();
 		worldLights = new ArrayList<Light>();
+		uiElements = new ArrayList<UIElement>();
+	}
+	
+	public float getFPS()
+	{
+		return currentFPS;
+	}
+	
+	public float getRunningTime()
+	{
+		return (System.nanoTime() - startTime)/1000000000f;
 	}
 	
 	public void addObject(GameObject obj)
@@ -95,18 +114,60 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	{
 		worldLights.add(l);
 	}
-	
-	private void internalUpdate(float deltaTime)
+	public void addUIElement(UIElement ui)
 	{
-		//Update input data
-		Input.update();
+		uiElements.add(ui);
+	}
+	
+	public GameObject[] getObjectsAtLocation(Vector2 loc)
+	{
+		ArrayList<GameObject> objList = new ArrayList<GameObject>();
+		loc = camera.screenToWorldLoc(loc);
 		
 		for(GameObject obj : worldObjects)
 		{
-			obj.update(deltaTime);
+			AABB bounds = obj.getAABB();
+			if(bounds.contains(loc))
+				objList.add(obj);
 		}
 		
-		//Call the user-defined update
+		return objList.toArray(new GameObject[objList.size()]);
+	}
+	
+	public void destroy(GameObject obj)
+	{
+		obj.markedForDeath = true;
+	}
+	
+	private void internalUpdate(float deltaTime)
+	{
+		ArrayList<GameObject> deathList = new ArrayList<GameObject>();
+		
+		//Update input data
+		Input.update();
+		
+		//Run an update on all objects
+		for(GameObject obj : worldObjects)
+		{
+			if(obj.markedForDeath)
+				deathList.add(obj);
+			else
+				obj.internalUpdate(deltaTime);
+		}
+		
+		for(UIElement ui : uiElements)
+		{
+			ui.internalUpdate(deltaTime);
+		}
+		
+		//Remove all objects that are marked for death
+		for(GameObject obj : deathList)
+		{
+			obj.onDestroy();
+			worldObjects.remove(obj);
+		}
+		
+		//Call the user-defined game update
 		update(deltaTime);
 	}
 	
@@ -116,11 +177,6 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		
 		gameWindow.destroy();
 		GLProfile.shutdown();
-	}
-	
-	GL getGL()
-	{
-		return gameWindow.getGL();
 	}
 	
 	//Window utility functions
@@ -153,8 +209,9 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	//GLEvent listener methods
 	public final void init(GLAutoDrawable glad)
 	{
+		GL2 gl = glad.getGL().getGL2();
 		//Initialize internal components
-		camera.initialize(glad.getGL());
+		camera.initialize(gl);
 		Audio.initialize();
 		Input.initialize(gameWindow.getHeight());
 		
@@ -163,19 +220,26 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		gameWindow.addMouseListener(Input.getInstance());
 		
 		//Run child class initialization
-		initialize();
+		initialize(gl);
 	}
 	
 	public final void display(GLAutoDrawable glad)
 	{
-		GL gl = glad.getGL();
+		GL2 gl = glad.getGL().getGL2();
 		
 		//Reset the camera for this draw call
 		camera.refresh(gl);
 		
-		//Draw all our objects into the depth buffer so that our lights can get depth-tested correctly
+		camera.drawLightingStart();
+		//Draw all our objects into the depth buffer so that our shadows can get depth-tested correctly against objects at the same depth
 		for(GameObject obj : worldObjects)
-			camera.drawObjectDepthToLighting(obj);
+		{
+			gl.glDepthMask(true);
+			gl.glColorMask(false, false, false, false);
+			obj.onDraw(gl, camera);
+			gl.glColorMask(true, true, true, true);
+			gl.glDepthMask(false);
+		}
 		
 		//Draw *all* the lights
 		gl.glEnable(GL.GL_STENCIL_TEST); //We need to stencil out bits of light, so enable stencil test while we're drawing lights
@@ -191,18 +255,27 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 			
 			camera.drawShadowsToStencil(vertexArrays);
 			
-			//Draw lighting (where the stencil is empty)			
-			camera.drawLight(l);
-			camera.clearShadowStencil();
+			//Draw lighting (where the stencil is empty)
+			l.onDraw(gl, camera);
+			gl.glClear(GL.GL_STENCIL_BUFFER_BIT);
 		}
 		gl.glDisable(GL.GL_STENCIL_TEST); //We only use stencil test for rendering lights
+		camera.drawLightingEnd();
 		
+		camera.drawGeometryStart();
 		//Draw all the objects now that we've finalized our lighting
 		for(GameObject obj : worldObjects)
-			camera.drawObject(obj);
+			obj.onDraw(gl, camera);
+		camera.drawGeometryEnd();
 		
-		//Child-class drawing
+		//Let the child game class draw any required UI
+		camera.drawInterfaceStart();
 		display();
+		for(UIElement ui : uiElements)
+		{
+			ui.onDraw(gl, camera);
+		}
+		camera.drawInterfaceEnd();
 		
 		//Commit all drawing thats happened, combining them via their respective framebuffers as needed
 		camera.commitDraw();
@@ -235,31 +308,31 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		{
 		case(GL.GL_NO_ERROR):
 			if(displayNoError)
-				System.out.println("No Error");
+				Log.info("No Error");
 			break;
 		
 		case(GL.GL_INVALID_ENUM):
-			System.out.println("Invalid Enum");
+			Log.info("Invalid Enum");
 			break;
 		
 		case(GL.GL_INVALID_VALUE):
-			System.out.println("Invalid Value");
+			Log.info("Invalid Value");
 			break;
 			
 		case(GL.GL_INVALID_OPERATION):
-			System.out.println("Invalid Operation");
+			Log.info("Invalid Operation");
 			break;
 			
 		case(GL.GL_INVALID_FRAMEBUFFER_OPERATION):
-			System.out.println("Invalid Framebuffer Operation");
+			Log.info("Invalid Framebuffer Operation");
 			break;
 			
 		case(GL.GL_OUT_OF_MEMORY):
-			System.out.println("Out of Memory");
+			Log.info("Out of Memory");
 			break;
 			
 		default:
-			System.out.println("UNKNOWN OPENGL ERROR: "+error);
+			Log.info("UNKNOWN OPENGL ERROR: "+error);
 		}
 	}
 }

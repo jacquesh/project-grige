@@ -9,15 +9,13 @@ public abstract class Light extends Drawable
 	{
 		super();
 		
-		colour = new Color();
+		colour = new Color(1,1,1,1);
 		intensity = 1f;
 	}
 	
 	public void setColour(float red, float green, float blue)
 	{
-		colour.setRed(red);
-		colour.setGreen(green);
-		colour.setBlue(blue);
+		colour = new Color(red,green,blue);
 	}
 	
 	public void setIntensity(float newIntensity) { intensity = newIntensity; }

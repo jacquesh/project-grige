@@ -118,6 +118,31 @@ public final class Input implements KeyListener, MouseListener
 		return currentMouseWheel;
 	}
 	
+	protected static void consumeKeyDown(short keySymbol)
+	{
+		if(getKeyDown(keySymbol))
+			previousInput.put(keySymbol, true);
+	}
+	protected static void consumeKeyUp(short keySymbol)
+	{
+		if(getKeyUp(keySymbol))
+			currentInput.put(keySymbol, true);
+	}
+	protected static void consumeMouseButtonDown(int buttonID)
+	{
+		if(getMouseButtonDown(buttonID))
+			previousMouseButtons[buttonID] = true;
+	}
+	protected static void consumeMouseButtonUp(int buttonID)
+	{
+		if(getMouseButtonUp(buttonID))
+			currentMouseButtons[buttonID] = true;
+	}
+	protected static void consumeMouseWheel()
+	{
+		currentMouseWheel = 0;
+	}
+	
 	protected static void update()
 	{
 		//Keyboard input
