@@ -10,7 +10,7 @@ import com.jogamp.opengl.math.FloatUtil;
 import com.jogamp.opengl.util.glsl.ShaderProgram;
 import com.jogamp.opengl.util.texture.Texture;
 
-public abstract class GameObject extends Drawable
+public abstract class GameObject extends Animatable
 {
 	private final float[] quadVertices = {
 			-0.5f, -0.5f, 0.0f,
@@ -45,13 +45,6 @@ public abstract class GameObject extends Drawable
 	//GL buffers
 	private int texCoordBuffer;
 	
-	//Animation data
-	private Animation animation;
-	private float timeSinceAnimationUpdate;
-	private float animationPlaySpeed;
-	private int animationPlayMode;
-	private int animationFrame;
-	
 	public abstract void update(float deltaTime);
 	
 	public GameObject()
@@ -66,54 +59,6 @@ public abstract class GameObject extends Drawable
 	protected Material getMaterial()
 	{
 		return material;
-	}
-	
-	public void setAnimation(Animation newAnimation)
-	{
-		animation = newAnimation;
-		animationFrame = 0;
-		animationPlaySpeed = 0;
-	}
-	
-	public void setAnimationSpeed(float playSpeed)
-	{
-		animationPlaySpeed = playSpeed;
-	}
-	public void playAnimation(int playMode, float playSpeed)
-	{
-		animationPlayMode = playMode;
-		animationPlaySpeed = playSpeed;
-		timeSinceAnimationUpdate = 0;
-	}
-	public void playAnimation()
-	{
-		playAnimation(Animation.PLAY_MODE_LOOP, 1);
-	}
-	public void playAnimation(int playMode)
-	{
-		playAnimation(playMode, 1);
-	}
-	public void playAnimationBackwards(int playMode)
-	{
-		playAnimation(playMode, -1);
-	}
-	public void pauseAnimation()
-	{
-		animationPlaySpeed = 0;
-	}
-	public void stopAnimation()
-	{
-		if(animationPlaySpeed >= 0)
-			animationFrame = 0;
-		else if(animationPlaySpeed < 0)
-			animationFrame = animation.length()-1;
-		
-		animationPlaySpeed = 0;
-	}
-	
-	public void setAnimationFrame(int frame)
-	{
-		animationFrame = frame;
 	}
 	
 	public float width()
@@ -138,47 +83,10 @@ public abstract class GameObject extends Drawable
 		return animation.getFrameBox(animationFrame).size.y * scale;
 	}
 	
-	protected void internalUpdate(float deltaTime)
+	@Override
+	void internalUpdate(float deltaTime)
 	{
-		if(animation != null && animationPlaySpeed != 0)
-		{
-			timeSinceAnimationUpdate += deltaTime;
-			int frameIncrement = (int)(timeSinceAnimationUpdate*animationPlaySpeed);
-			int newFrame = animationFrame + frameIncrement;
-			if(newFrame < 0)
-			{
-				if(animationPlayMode == Animation.PLAY_MODE_LOOP)
-					newFrame += animation.length();
-				else if(animationPlayMode == Animation.PLAY_MODE_PINGPONG)
-				{
-					newFrame = -newFrame;
-					setAnimationSpeed(-animationPlaySpeed);
-				}
-				else if(animationPlayMode == Animation.PLAY_MODE_ONCE)
-				{
-					stopAnimation();
-					newFrame = animationFrame;
-				}
-			}
-			else if(newFrame >= animation.length())
-			{
-				if(animationPlayMode == Animation.PLAY_MODE_LOOP)
-					newFrame = newFrame%animation.length();
-				else if(animationPlayMode == Animation.PLAY_MODE_PINGPONG)
-				{
-					newFrame = animation.length() - (newFrame%(animation.length()-1));
-					setAnimationSpeed(-animationPlaySpeed);
-				}
-				else if(animationPlayMode == Animation.PLAY_MODE_ONCE)
-				{
-					stopAnimation();
-					newFrame = animationFrame;
-				}
-			}
-			
-			timeSinceAnimationUpdate -= frameIncrement/animationPlaySpeed;
-			setAnimationFrame(newFrame);
-		}
+		super.internalUpdate(deltaTime);
 		
 		update(deltaTime);
 	}
