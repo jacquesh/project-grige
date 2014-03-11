@@ -7,8 +7,8 @@ import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 
 import com.jogamp.opengl.math.FloatUtil;
-import com.jogamp.opengl.util.glsl.ShaderProgram;
-import com.jogamp.opengl.util.texture.Texture;
+
+import java.util.ArrayList;
 
 public abstract class GameObject extends Animatable
 {
@@ -59,6 +59,68 @@ public abstract class GameObject extends Animatable
 	protected Material getMaterial()
 	{
 		return material;
+	}
+	
+	public boolean collidesWith(GameObject other)
+	{
+		//SAT - http://www.codezealot.org/archives/55
+		ArrayList<Vector2> axes = new ArrayList<Vector2>(4);
+		
+		Vector2 axis = new Vector2(1,0);
+		axis.rotate(rotation);
+		axes.add(axis);
+		
+		axis = new Vector2(0,1);
+		axis.rotate(rotation);
+		axes.add(axis);
+		
+		if(FloatUtil.abs(other.rotation - rotation) > 1f)
+		{
+			axis = new Vector2(1,0);
+			axis.rotate(other.rotation);
+			axes.add(axis);
+			
+			axis = new Vector2(0,1);
+			axis.rotate(other.rotation);
+			axes.add(axis);
+		}
+		
+		float[] verts = getVertices();
+		float[] otherVerts = other.getVertices();
+		
+		for(int i=0; i<axes.size(); i++)
+		{
+			float thisMin = 1000000;
+			float thisMax = -1000000;
+			float otherMin = 1000000;
+			float otherMax = -1000000;
+			
+			for(int vert=0; vert<8; vert+=2)
+			{
+				float dot = verts[vert]*axes.get(i).x + verts[vert+1]*axes.get(i).y;
+				float otherDot = otherVerts[vert]*axes.get(i).x + otherVerts[vert+1]*axes.get(i).y;
+				
+				if(dot < thisMin)
+					thisMin = dot;
+				if(dot > thisMax)
+					thisMax = dot;
+				
+				if(otherDot < otherMin)
+					otherMin = otherDot;
+				if(otherDot > otherMax)
+					otherMax = otherDot;
+			}
+			
+			boolean intersects = (
+					(thisMin < otherMin && thisMax > otherMin) ||
+					(thisMin < otherMax && thisMax > otherMax) ||
+					(thisMin > otherMin && thisMax < otherMax)
+			);
+			if(!intersects)
+				return false;
+		}
+		
+		return true;
 	}
 	
 	public float width()
