@@ -40,6 +40,8 @@ public abstract class UIElement extends Drawable
 	private Animation animation;
 	private int animationFrame;
 	
+	private boolean isFocussed;
+	
 	public abstract void update(float deltaTime);
 	
 	public UIElement()
@@ -54,6 +56,15 @@ public abstract class UIElement extends Drawable
 	protected Material getMaterial()
 	{
 		return material;
+	}
+	
+	public void setFocus(boolean focussed)
+	{
+		isFocussed = focussed;
+	}
+	public boolean isFocussed()
+	{
+		return isFocussed;
 	}
 	
 	public void setAnimation(Animation newAnimation)
