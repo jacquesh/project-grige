@@ -8,8 +8,6 @@ import javax.media.opengl.GL2;
 
 import com.jogamp.opengl.math.FloatUtil;
 
-import java.util.ArrayList;
-
 public abstract class GameObject extends Animatable
 {
 	private final float[] quadVertices = {
@@ -64,31 +62,29 @@ public abstract class GameObject extends Animatable
 	public boolean collidesWith(GameObject other)
 	{
 		//SAT - http://www.codezealot.org/archives/55
-		ArrayList<Vector2> axes = new ArrayList<Vector2>(4);
+		Vector2[] axes = new Vector2[4];
+		int axisCount = 2;
 		
-		Vector2 axis = new Vector2(1,0);
-		axis.rotate(rotation);
-		axes.add(axis);
+		axes[0] = new Vector2(1,0);
+		axes[0].rotate(rotation);
 		
-		axis = new Vector2(0,1);
-		axis.rotate(rotation);
-		axes.add(axis);
+		axes[1] = new Vector2(0,1);
+		axes[1].rotate(rotation);
 		
 		if(FloatUtil.abs(other.rotation - rotation) > 1f)
 		{
-			axis = new Vector2(1,0);
-			axis.rotate(other.rotation);
-			axes.add(axis);
+			axisCount = 4;
+			axes[2] = new Vector2(1,0);
+			axes[2].rotate(other.rotation);
 			
-			axis = new Vector2(0,1);
-			axis.rotate(other.rotation);
-			axes.add(axis);
+			axes[3] = new Vector2(0,1);
+			axes[3].rotate(other.rotation);
 		}
 		
 		float[] verts = getVertices();
 		float[] otherVerts = other.getVertices();
 		
-		for(int i=0; i<axes.size(); i++)
+		for(int i=0; i<axisCount; i++)
 		{
 			float thisMin = 1000000;
 			float thisMax = -1000000;
@@ -97,8 +93,8 @@ public abstract class GameObject extends Animatable
 			
 			for(int vert=0; vert<8; vert+=2)
 			{
-				float dot = verts[vert]*axes.get(i).x + verts[vert+1]*axes.get(i).y;
-				float otherDot = otherVerts[vert]*axes.get(i).x + otherVerts[vert+1]*axes.get(i).y;
+				float dot = verts[vert]*axes[i].x + verts[vert+1]*axes[i].y;
+				float otherDot = otherVerts[vert]*axes[i].x + otherVerts[vert+1]*axes[i].y;
 				
 				if(dot < thisMin)
 					thisMin = dot;
