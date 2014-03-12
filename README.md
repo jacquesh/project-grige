@@ -19,6 +19,10 @@ Yet-to-be-implemented Functionality
 -----------------------------------
 * Sprite normal mapping (because pretteh lights)
 * Sprite self-illumination maps
+* Directional lights
+* Spotlights
 * UI elements (buttons/text fields etc)
 * Basic particles
 * Proper logging (there are currently some rare crashes)
+* Pixel-perfect collision detection
+* Basic multiplayer/network support
