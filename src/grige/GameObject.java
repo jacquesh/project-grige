@@ -198,7 +198,7 @@ public abstract class GameObject extends Animatable
 		shaderProgram = shader;
 		gl.glUseProgram(shader);
 		
-		int[] buffers = new int[4];
+		int[] buffers = new int[3];
 		
 		//Create the vertex array
 		gl.glGenVertexArrays(1, buffers, 0);
@@ -206,10 +206,9 @@ public abstract class GameObject extends Animatable
 		gl.glBindVertexArray(geometryVAO);
 		
 		//Generate and store the required buffers
-		gl.glGenBuffers(3, buffers,0);
+		gl.glGenBuffers(2, buffers,0);
 		int indexBuffer = buffers[0];
 		int vertexBuffer = buffers[1];
-		int colourBuffer = buffers[2];
 		
 		//Generate and store the buffers that we may have generated previously
 		if(texCoordBuffer == 0)
@@ -229,15 +228,7 @@ public abstract class GameObject extends Animatable
 		gl.glEnableVertexAttribArray(positionIndex);
 		gl.glVertexAttribPointer(positionIndex, 3, GL.GL_FLOAT, false, 0, 0);
 		
-		//Buffer the tint colour
-		int colourIndex = gl.glGetAttribLocation(shaderProgram, "tintColour");
-		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, colourBuffer);
-		gl.glBufferData(GL.GL_ARRAY_BUFFER, quadTintColours.length*(Float.SIZE/8), FloatBuffer.wrap(quadTintColours), GL.GL_STATIC_DRAW);
-		gl.glEnableVertexAttribArray(colourIndex);
-		gl.glVertexAttribPointer(colourIndex, 4, GL.GL_FLOAT, false, 0, 0);
-		
 		gl.glBindVertexArray(0);
-		
 		gl.glUseProgram(0);
 	}
 	
