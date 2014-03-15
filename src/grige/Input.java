@@ -3,14 +3,22 @@ package grige;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
+import com.jogamp.newt.opengl.GLWindow;
+
 import com.jogamp.newt.event.KeyListener;
 import com.jogamp.newt.event.MouseListener;
 import com.jogamp.newt.event.KeyEvent;
 import com.jogamp.newt.event.MouseEvent;
 
+import de.lessvoid.nifty.NiftyInputConsumer;
+
+import de.lessvoid.nifty.spi.input.InputSystem;
+
+import de.lessvoid.nifty.tools.resourceloader.NiftyResourceLoader;
+
 import java.util.HashMap;
 
-public final class Input implements KeyListener, MouseListener
+public final class Input implements KeyListener, MouseListener, InputSystem
 {
 	
 	private static HashMap<Short, Boolean> nextInput; //Input currently being executed
@@ -27,21 +35,23 @@ public final class Input implements KeyListener, MouseListener
 	private static Vector2I mouseLoc;
 	
 	private static int screenHeight;
+	private static GLWindow window;
 	
 	private static Input instance;
 	static Input getInstance()
 	{
-		if(instance == null)
-			instance = new Input();
 		return instance;
 	}
 	
 	private Input(){}
 	
-	static void initialize(int glScreenHeight)
+	static void initialize(GLWindow screen)
 	{
+		instance = new Input();
+		
+		window = screen;
 		mouseLoc = new Vector2I(0,0);
-		screenHeight = glScreenHeight;
+		screenHeight = window.getHeight();
 		
 		//Create the input storage structures
 		currentInput = new HashMap<Short, Boolean>();
@@ -164,6 +174,22 @@ public final class Input implements KeyListener, MouseListener
 		nextMouseWheel = 0;
 	}
 	
+	public void setMousePosition(int x, int y)
+	{
+		Log.info("SET MOUSE LOC TO: "+x+";"+y);
+		window.warpPointer(x, Input.screenHeight - y); //Transform the origin from bottom-left to top-left
+	}
+	
+	public void forwardEvents(NiftyInputConsumer inputConsumer)
+	{
+		Log.info("FORWARD INPUT EVENTS");
+	}
+	
+	public void setResourceLoader(NiftyResourceLoader resourceLoader)
+	{
+		
+	}
+	
 	public void keyPressed(KeyEvent evt)
 	{
 		if(!evt.isAutoRepeat())
@@ -196,7 +222,7 @@ public final class Input implements KeyListener, MouseListener
 	public void mouseMoved(MouseEvent evt)
 	{
 		Input.mouseLoc.x = evt.getX();
-		Input.mouseLoc.y = Input.screenHeight - evt.getY();
+		Input.mouseLoc.y = Input.screenHeight - evt.getY(); //Transform the origin form top-left to bottom-left
 	}
 	
 	public void mouseDragged(MouseEvent evt)
