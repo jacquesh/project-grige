@@ -308,14 +308,11 @@ public abstract class GameObject extends Animatable
 		gl.glUniformMatrix4fv(geometryObjTransformIndex, 1, false, objectTransformMatrix, 0);
 		
 		int objTex = getMaterial().getDiffuseMap();
-		gl.glEnable(objTex);
 		gl.glBindTexture(GL.GL_TEXTURE_2D, objTex);
-
+		
 		gl.glDrawElements(GL.GL_TRIANGLE_STRIP, quadIndices.length, GL.GL_UNSIGNED_INT, 0);
 		
-		gl.glDisable(objTex);
 		gl.glBindTexture(GL.GL_TEXTURE_2D, 0);
-		
 		gl.glDisable(GL.GL_BLEND);
 		
 		gl.glDepthMask(false);
