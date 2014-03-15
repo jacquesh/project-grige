@@ -14,6 +14,14 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.GLAutoDrawable;
 
+import de.lessvoid.nifty.Nifty;
+import de.lessvoid.nifty.nulldevice.NullSoundDevice;
+
+import de.lessvoid.nifty.spi.time.impl.FastTimeProvider;
+
+import de.lessvoid.nifty.renderer.jogl.render.batch.JoglBatchRenderBackendCoreProfile;
+import de.lessvoid.nifty.batch.BatchRenderDevice;
+
 import java.util.ArrayList;
 
 public abstract class GameBase implements GLEventListener, WindowListener{
@@ -38,6 +46,8 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	private GLProfile glProfile;
 	private GLCapabilities glCapabilities;
 	private GLWindow gameWindow;
+	
+	private Nifty nifty;
 	
 	protected abstract void initialize(GL2 gl);
 	protected abstract void update(float deltaTime);
@@ -213,11 +223,17 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		//Initialize internal components
 		camera.initialize(gl);
 		Audio.initialize();
-		Input.initialize(gameWindow.getHeight());
+		Input.initialize(gameWindow);
 		
 		//Add input listeners
 		gameWindow.addKeyListener(Input.getInstance());
 		gameWindow.addMouseListener(Input.getInstance());
+		
+		NullSoundDevice sd = null;
+		sd = new NullSoundDevice();
+		
+		BatchRenderDevice rd = new BatchRenderDevice(new JoglBatchRenderBackendCoreProfile(), 2048, 2048);
+		nifty = new Nifty(rd, sd, Input.getInstance(), new FastTimeProvider());
 		
 		//Run child class initialization
 		initialize(gl);
@@ -279,6 +295,13 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		
 		//Commit all drawing thats happened, combining them via their respective framebuffers as needed
 		camera.commitDraw();
+		
+		//To render the UI on top of all of that, we need to set the 0-texture to be active and enable blending
+		gl.glActiveTexture(GL.GL_TEXTURE0);
+		gl.glEnable(GL.GL_BLEND);
+		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
+		nifty.render(false);
+		gl.glDisable(GL.GL_BLEND);
 	}
 	
 	public void reshape(GLAutoDrawable glad, int x, int y, int width, int height)
