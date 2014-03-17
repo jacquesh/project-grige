@@ -244,6 +244,11 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		return (System.nanoTime() - startTime)/1000000000f;
 	}
 	
+	public Nifty getNifty()
+	{
+		return nifty;
+	}
+	
 	public void addObject(GameObject obj)
 	{
 		worldObjects.add(obj);
