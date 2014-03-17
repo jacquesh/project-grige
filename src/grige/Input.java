@@ -130,23 +130,19 @@ public final class Input implements KeyListener, MouseListener, InputSystem
 	
 	protected static void consumeKeyDown(short keySymbol)
 	{
-		if(getKeyDown(keySymbol))
-			previousInput.put(keySymbol, true);
+		previousInput.put(keySymbol, true);
 	}
 	protected static void consumeKeyUp(short keySymbol)
 	{
-		if(getKeyUp(keySymbol))
-			currentInput.put(keySymbol, true);
+		currentInput.put(keySymbol, true);
 	}
 	protected static void consumeMouseButtonDown(int buttonID)
 	{
-		if(getMouseButtonDown(buttonID))
-			previousMouseButtons[buttonID] = true;
+		previousMouseButtons[buttonID] = true;
 	}
 	protected static void consumeMouseButtonUp(int buttonID)
 	{
-		if(getMouseButtonUp(buttonID))
-			currentMouseButtons[buttonID] = true;
+		previousMouseButtons[buttonID] = false;
 	}
 	protected static void consumeMouseWheel()
 	{
@@ -174,20 +170,48 @@ public final class Input implements KeyListener, MouseListener, InputSystem
 		nextMouseWheel = 0;
 	}
 	
+	@Override
 	public void setMousePosition(int x, int y)
 	{
 		Log.info("SET MOUSE LOC TO: "+x+";"+y);
 		window.warpPointer(x, Input.screenHeight - y); //Transform the origin from bottom-left to top-left
 	}
 	
+	@Override
 	public void forwardEvents(NiftyInputConsumer inputConsumer)
 	{
-		Log.info("FORWARD INPUT EVENTS");
+		//Mouse Events
+		//Mouse Position
+		inputConsumer.processMouseEvent(mouseLoc.x, mouseLoc.y, 0, -1, false);
+		
+		//Mouse Buttons
+		for(int i=0; i<currentMouseButtons.length; i++)
+		{
+			if(getMouseButtonDown(i))
+			{
+				if(inputConsumer.processMouseEvent(mouseLoc.x, mouseLoc.y, 0, i, true))
+				{	consumeMouseButtonDown(i); }
+			}
+			
+			else if(getMouseButtonUp(i))
+			{
+				if(inputConsumer.processMouseEvent(mouseLoc.x, mouseLoc.y, 0, i, false))
+				{	consumeMouseButtonUp(i); }
+			}
+		}
+		
+		//Keyboard events
+		for(Short s : currentInput.keySet())
+		{
+			if(getKeyDown(s))
+				inputConsumer.processKeyboardEvent(null);//new KeyboardInputEvent());
+		}
 	}
 	
+	@Override
 	public void setResourceLoader(NiftyResourceLoader resourceLoader)
 	{
-		
+		System.out.println("SRL");
 	}
 	
 	public void keyPressed(KeyEvent evt)
