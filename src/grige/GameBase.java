@@ -243,6 +243,9 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	{
 		GL2 gl = glad.getGL().getGL2();
 		
+		//Update nifty here because we need a current OpenGL context
+		nifty.update();
+		
 		//Reset the camera for this draw call
 		camera.refresh(gl);
 		
