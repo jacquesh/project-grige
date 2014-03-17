@@ -214,7 +214,14 @@ public final class Input implements KeyListener, MouseListener, InputSystem
 			KeyEvent kEvt = keyEventQueue.pollLast();
 			boolean pressed = (kEvt.getEventType() == KeyEvent.EVENT_KEY_PRESSED);
 			KeyboardInputEvent newEvent = new KeyboardInputEvent(converter.convertToNiftyKeyCode(kEvt.getKeyCode(), 0), kEvt.getKeyChar(), pressed, kEvt.isShiftDown(), kEvt.isControlDown());
-			inputConsumer.processKeyboardEvent(newEvent);
+			
+			if(inputConsumer.processKeyboardEvent(newEvent))
+			{
+				if(pressed)
+					consumeKeyDown(kEvt.getKeyCode());
+				else
+					consumeKeyUp(kEvt.getKeyCode());
+			}
 		}
 	}
 	
