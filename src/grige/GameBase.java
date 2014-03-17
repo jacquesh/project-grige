@@ -32,7 +32,6 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	private boolean running;
 	private ArrayList<GameObject> worldObjects;
 	private ArrayList<Light> worldLights;
-	private ArrayList<UIElement> uiElements;
 
 	//Game time data
 	private long startTime;
@@ -97,7 +96,6 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		//Instantiate other structures
 		worldObjects = new ArrayList<GameObject>();
 		worldLights = new ArrayList<Light>();
-		uiElements = new ArrayList<UIElement>();
 	}
 	
 	public final void init(GLAutoDrawable glad)
@@ -184,10 +182,6 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		//Let the child game class draw any required UI
 		camera.drawInterfaceStart();
 		display();
-		for(UIElement ui : uiElements)
-		{
-			ui.onDraw(gl, camera);
-		}
 		camera.drawInterfaceEnd();
 		
 		//Commit all drawing thats happened, combining them via their respective framebuffers as needed
@@ -216,11 +210,6 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 				deathList.add(obj);
 			else
 				obj.internalUpdate(deltaTime);
-		}
-		
-		for(UIElement ui : uiElements)
-		{
-			ui.internalUpdate(deltaTime);
 		}
 		
 		//Remove all objects that are marked for death
@@ -257,10 +246,6 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	public void addLight(Light l)
 	{
 		worldLights.add(l);
-	}
-	public void addUIElement(UIElement ui)
-	{
-		uiElements.add(ui);
 	}
 	
 	public GameObject[] getObjectsAtLocation(Vector2 loc)

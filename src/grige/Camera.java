@@ -8,15 +8,12 @@ import java.util.HashMap;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
-import javax.media.opengl.GL2ES2;
 
 import com.jogamp.opengl.FBObject;
 
 import com.jogamp.opengl.FBObject.TextureAttachment;
 import com.jogamp.opengl.math.FloatUtil;
 
-import com.jogamp.opengl.util.texture.Texture;
-import com.jogamp.opengl.util.glsl.ShaderCode;
 import com.jogamp.opengl.util.glsl.ShaderProgram;
 
 import java.awt.Font;
@@ -66,9 +63,7 @@ public class Camera {
 	
 	//Shader Data
 	private ShaderProgram screenCanvasShader;
-	private ShaderProgram lightingShader;
 	private ShaderProgram shadowGeometryShader;
-	private ShaderProgram interfaceShader;
 	
 	//Text Rendering Data
 	private HashMap<Font, TextRenderer> textFonts;
@@ -260,9 +255,6 @@ public class Camera {
 		interfaceFBO.reset(gl, size.x, size.y);
 		interfaceFBO.attachTexture2D(gl, 0, true);
 		interfaceFBO.unbind(gl);
-		
-		//Load the shaders
-		interfaceShader = Graphics.loadShader(gl, "Interface.vsh", "Interface.fsh");
 		
 		//Initialize Text Rendering data
 		textFonts = new HashMap<Font, TextRenderer>();
