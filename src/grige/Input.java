@@ -14,9 +14,12 @@ import de.lessvoid.nifty.NiftyInputConsumer;
 
 import de.lessvoid.nifty.spi.input.InputSystem;
 
+import de.lessvoid.nifty.input.keyboard.KeyboardInputEvent;
+
 import de.lessvoid.nifty.tools.resourceloader.NiftyResourceLoader;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 
 public final class Input implements KeyListener, MouseListener, InputSystem
 {
@@ -24,6 +27,7 @@ public final class Input implements KeyListener, MouseListener, InputSystem
 	private static HashMap<Short, Boolean> nextInput; //Input currently being executed
 	private static HashMap<Short, Boolean> currentInput; //Input from the latest frame
 	private static HashMap<Short, Boolean> previousInput; //Input from the previous frame
+	private static LinkedList<KeyEvent> keyEventQueue; //Key Event Queue for updating Nifty with what keys were pressed each frame
 	
 	private static boolean[] nextMouseButtons;
 	private static boolean[] currentMouseButtons;
@@ -60,6 +64,7 @@ public final class Input implements KeyListener, MouseListener, InputSystem
 		currentInput = new HashMap<Short, Boolean>();
 		previousInput = new HashMap<Short, Boolean>();
 		nextInput = new HashMap<Short, Boolean>();
+		keyEventQueue = new LinkedList<KeyEvent>();
 		
 		nextMouseButtons = new boolean[MouseEvent.BUTTON_NUMBER];
 		currentMouseButtons = new boolean[MouseEvent.BUTTON_NUMBER];
@@ -203,28 +208,31 @@ public final class Input implements KeyListener, MouseListener, InputSystem
 			}
 		}
 		
-		//Keyboard events
-		for(Short s : currentInput.keySet())
+		//Keyboard events, for this we need the event queue because we need more than just the keyCode or Symbol, we need the entire event
+		while(!keyEventQueue.isEmpty())
 		{
-			if(getKeyDown(s))
-				inputConsumer.processKeyboardEvent(null);//new KeyboardInputEvent());
+			KeyEvent kEvt = keyEventQueue.pollLast();
+			boolean pressed = (kEvt.getEventType() == KeyEvent.EVENT_KEY_PRESSED);
+			KeyboardInputEvent newEvent = new KeyboardInputEvent(converter.convertToNiftyKeyCode(kEvt.getKeyCode(), 0), kEvt.getKeyChar(), pressed, kEvt.isShiftDown(), kEvt.isControlDown());
+			inputConsumer.processKeyboardEvent(newEvent);
 		}
 	}
 	
 	@Override
 	public void setResourceLoader(NiftyResourceLoader resourceLoader)
 	{
-		System.out.println("SRL");
 	}
 	
 	public void keyPressed(KeyEvent evt)
 	{
+		keyEventQueue.push(evt);
 		if(!evt.isAutoRepeat())
 			Input.nextInput.put(evt.getKeyCode(), true);
 	}
 	
 	public void keyReleased(KeyEvent evt)
 	{
+		keyEventQueue.push(evt);
 		if(!evt.isAutoRepeat())
 			Input.nextInput.put(evt.getKeyCode(), false);
 	}
