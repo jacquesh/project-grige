@@ -37,6 +37,8 @@ public final class Input implements KeyListener, MouseListener, InputSystem
 	private static int screenHeight;
 	private static GLWindow window;
 	
+	private static AwtToNiftyKeyCodeConverter converter;
+	
 	private static Input instance;
 	static Input getInstance()
 	{
@@ -52,6 +54,7 @@ public final class Input implements KeyListener, MouseListener, InputSystem
 		window = screen;
 		mouseLoc = new Vector2I(0,0);
 		screenHeight = window.getHeight();
+		converter = new AwtToNiftyKeyCodeConverter();
 		
 		//Create the input storage structures
 		currentInput = new HashMap<Short, Boolean>();
@@ -89,19 +92,19 @@ public final class Input implements KeyListener, MouseListener, InputSystem
 		}
 	}
 	
-	public static boolean getKey(short keySymbol)
+	public static boolean getKey(short keyCode)
 	{
-		return currentInput.get(keySymbol); 
+		return currentInput.get(keyCode);
 	}
 	
-	public static boolean getKeyDown(short keySymbol)
+	public static boolean getKeyDown(short keyCode)
 	{
-		return currentInput.get(keySymbol) && !previousInput.get(keySymbol);
+		return currentInput.get(keyCode) && !previousInput.get(keyCode);
 	}
 	
-	public static boolean getKeyUp(short keySymbol)
+	public static boolean getKeyUp(short keyCode)
 	{
-		return !currentInput.get(keySymbol) && previousInput.get(keySymbol);
+		return !currentInput.get(keyCode) && previousInput.get(keyCode);
 	}
 	
 	public static int getMouseX() { return mouseLoc.x; }
@@ -128,13 +131,13 @@ public final class Input implements KeyListener, MouseListener, InputSystem
 		return currentMouseWheel;
 	}
 	
-	protected static void consumeKeyDown(short keySymbol)
+	protected static void consumeKeyDown(short keyCode)
 	{
-		previousInput.put(keySymbol, true);
+		previousInput.put(keyCode, true);
 	}
-	protected static void consumeKeyUp(short keySymbol)
+	protected static void consumeKeyUp(short keyCode)
 	{
-		currentInput.put(keySymbol, true);
+		currentInput.put(keyCode, true);
 	}
 	protected static void consumeMouseButtonDown(int buttonID)
 	{
@@ -217,13 +220,13 @@ public final class Input implements KeyListener, MouseListener, InputSystem
 	public void keyPressed(KeyEvent evt)
 	{
 		if(!evt.isAutoRepeat())
-			Input.nextInput.put(evt.getKeySymbol(), true);
+			Input.nextInput.put(evt.getKeyCode(), true);
 	}
 	
 	public void keyReleased(KeyEvent evt)
 	{
 		if(!evt.isAutoRepeat())
-			Input.nextInput.put(evt.getKeySymbol(), false);
+			Input.nextInput.put(evt.getKeyCode(), false);
 	}
 	
 	public void mouseWheelMoved(MouseEvent evt)
