@@ -233,13 +233,17 @@ public final class Input implements KeyListener, MouseListener, InputSystem
 	public void keyPressed(KeyEvent evt)
 	{
 		keyEventQueue.push(evt);
-		if(!evt.isAutoRepeat())
+		//Use this instead of evt.isAutoRepeat() because the system sometimes considers key presses that are not repeats, to be repeats
+		//For example if you hold up and press right, the initial press of right is also considered a repeat, so it doesn't get "pressed"
+		if(!getKey(evt.getKeySymbol()))
 			Input.nextInput.put(evt.getKeySymbol(), true);
 	}
 	
 	public void keyReleased(KeyEvent evt)
 	{
 		keyEventQueue.push(evt);
+		//We still use evt.isAutoRepeat() here because if you hold down a key, the system sends repeated pressed/released messages
+		//If we use our own getKey() then it would pass repeats/releases that shouldnt be passed
 		if(!evt.isAutoRepeat())
 			Input.nextInput.put(evt.getKeySymbol(), false);
 	}
