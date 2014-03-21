@@ -97,19 +97,19 @@ public final class Input implements KeyListener, MouseListener, InputSystem
 		}
 	}
 	
-	public static boolean getKey(short keyCode)
+	public static boolean getKey(short keySymbol)
 	{
-		return currentInput.get(keyCode);
+		return currentInput.get(keySymbol);
 	}
 	
-	public static boolean getKeyDown(short keyCode)
+	public static boolean getKeyDown(short keySymbol)
 	{
-		return currentInput.get(keyCode) && !previousInput.get(keyCode);
+		return currentInput.get(keySymbol) && !previousInput.get(keySymbol);
 	}
 	
-	public static boolean getKeyUp(short keyCode)
+	public static boolean getKeyUp(short keySymbol)
 	{
-		return !currentInput.get(keyCode) && previousInput.get(keyCode);
+		return !currentInput.get(keySymbol) && previousInput.get(keySymbol);
 	}
 	
 	public static int getMouseX() { return mouseLoc.x; }
@@ -136,13 +136,13 @@ public final class Input implements KeyListener, MouseListener, InputSystem
 		return currentMouseWheel;
 	}
 	
-	protected static void consumeKeyDown(short keyCode)
+	protected static void consumeKeyDown(short keySymbol)
 	{
-		previousInput.put(keyCode, true);
+		previousInput.put(keySymbol, true);
 	}
-	protected static void consumeKeyUp(short keyCode)
+	protected static void consumeKeyUp(short keySymbol)
 	{
-		currentInput.put(keyCode, true);
+		currentInput.put(keySymbol, true);
 	}
 	protected static void consumeMouseButtonDown(int buttonID)
 	{
@@ -234,14 +234,14 @@ public final class Input implements KeyListener, MouseListener, InputSystem
 	{
 		keyEventQueue.push(evt);
 		if(!evt.isAutoRepeat())
-			Input.nextInput.put(evt.getKeyCode(), true);
+			Input.nextInput.put(evt.getKeySymbol(), true);
 	}
 	
 	public void keyReleased(KeyEvent evt)
 	{
 		keyEventQueue.push(evt);
 		if(!evt.isAutoRepeat())
-			Input.nextInput.put(evt.getKeyCode(), false);
+			Input.nextInput.put(evt.getKeySymbol(), false);
 	}
 	
 	public void mouseWheelMoved(MouseEvent evt)
