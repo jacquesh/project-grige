@@ -14,11 +14,15 @@ Currently Supported Functionality
 * Object Selection/Picking based on screen position
 * Basic text rendering
 * Sprite animation (using SpriteSheetPacker)
+* Full, interactive UI support via the Nifty library
 
 Yet-to-be-implemented Functionality
 -----------------------------------
 * Sprite normal mapping (because pretteh lights)
 * Sprite self-illumination maps
-* UI elements (buttons/text fields etc)
+* Directional lights
+* Spotlights
 * Basic particles
 * Proper logging (there are currently some rare crashes)
+* Pixel-perfect collision detection
+* Basic multiplayer/network support

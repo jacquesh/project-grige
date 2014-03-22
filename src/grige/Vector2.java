@@ -52,6 +52,16 @@ public class Vector2
 		y *= f;
 	}
 	
+	public void rotate(float theta)
+	{
+		float thetaRadians = theta*FloatUtil.PI/180f;
+		float tempX = x;
+		float tempY = y;
+		
+		x = tempX*FloatUtil.cos(thetaRadians) - tempY*FloatUtil.sin(thetaRadians);
+		y = tempX*FloatUtil.sin(thetaRadians) + tempY*FloatUtil.cos(thetaRadians);
+	}
+	
 	public float dot(Vector2 other)
 	{
 		return x*other.x + y*other.y;

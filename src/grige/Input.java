@@ -3,19 +3,31 @@ package grige;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
+import com.jogamp.newt.opengl.GLWindow;
+
 import com.jogamp.newt.event.KeyListener;
 import com.jogamp.newt.event.MouseListener;
 import com.jogamp.newt.event.KeyEvent;
 import com.jogamp.newt.event.MouseEvent;
 
-import java.util.HashMap;
+import de.lessvoid.nifty.NiftyInputConsumer;
 
-public final class Input implements KeyListener, MouseListener
+import de.lessvoid.nifty.spi.input.InputSystem;
+
+import de.lessvoid.nifty.input.keyboard.KeyboardInputEvent;
+
+import de.lessvoid.nifty.tools.resourceloader.NiftyResourceLoader;
+
+import java.util.HashMap;
+import java.util.LinkedList;
+
+public final class Input implements KeyListener, MouseListener, InputSystem
 {
 	
 	private static HashMap<Short, Boolean> nextInput; //Input currently being executed
 	private static HashMap<Short, Boolean> currentInput; //Input from the latest frame
 	private static HashMap<Short, Boolean> previousInput; //Input from the previous frame
+	private static LinkedList<KeyEvent> keyEventQueue; //Key Event Queue for updating Nifty with what keys were pressed each frame
 	
 	private static boolean[] nextMouseButtons;
 	private static boolean[] currentMouseButtons;
@@ -27,26 +39,32 @@ public final class Input implements KeyListener, MouseListener
 	private static Vector2I mouseLoc;
 	
 	private static int screenHeight;
+	private static GLWindow window;
+	
+	private static AwtToNiftyKeyCodeConverter converter;
 	
 	private static Input instance;
 	static Input getInstance()
 	{
-		if(instance == null)
-			instance = new Input();
 		return instance;
 	}
 	
 	private Input(){}
 	
-	static void initialize(int glScreenHeight)
+	static void initialize(GLWindow screen)
 	{
+		instance = new Input();
+		
+		window = screen;
 		mouseLoc = new Vector2I(0,0);
-		screenHeight = glScreenHeight;
+		screenHeight = window.getHeight();
+		converter = new AwtToNiftyKeyCodeConverter();
 		
 		//Create the input storage structures
 		currentInput = new HashMap<Short, Boolean>();
 		previousInput = new HashMap<Short, Boolean>();
 		nextInput = new HashMap<Short, Boolean>();
+		keyEventQueue = new LinkedList<KeyEvent>();
 		
 		nextMouseButtons = new boolean[MouseEvent.BUTTON_NUMBER];
 		currentMouseButtons = new boolean[MouseEvent.BUTTON_NUMBER];
@@ -81,7 +99,7 @@ public final class Input implements KeyListener, MouseListener
 	
 	public static boolean getKey(short keySymbol)
 	{
-		return currentInput.get(keySymbol); 
+		return currentInput.get(keySymbol);
 	}
 	
 	public static boolean getKeyDown(short keySymbol)
@@ -120,23 +138,19 @@ public final class Input implements KeyListener, MouseListener
 	
 	protected static void consumeKeyDown(short keySymbol)
 	{
-		if(getKeyDown(keySymbol))
-			previousInput.put(keySymbol, true);
+		previousInput.put(keySymbol, true);
 	}
 	protected static void consumeKeyUp(short keySymbol)
 	{
-		if(getKeyUp(keySymbol))
-			currentInput.put(keySymbol, true);
+		currentInput.put(keySymbol, true);
 	}
 	protected static void consumeMouseButtonDown(int buttonID)
 	{
-		if(getMouseButtonDown(buttonID))
-			previousMouseButtons[buttonID] = true;
+		previousMouseButtons[buttonID] = true;
 	}
 	protected static void consumeMouseButtonUp(int buttonID)
 	{
-		if(getMouseButtonUp(buttonID))
-			currentMouseButtons[buttonID] = true;
+		previousMouseButtons[buttonID] = false;
 	}
 	protected static void consumeMouseWheel()
 	{
@@ -164,14 +178,72 @@ public final class Input implements KeyListener, MouseListener
 		nextMouseWheel = 0;
 	}
 	
+	@Override
+	public void setMousePosition(int x, int y)
+	{
+		Log.info("SET MOUSE LOC TO: "+x+";"+y);
+		window.warpPointer(x, Input.screenHeight - y); //Transform the origin from bottom-left to top-left
+	}
+	
+	@Override
+	public void forwardEvents(NiftyInputConsumer inputConsumer)
+	{
+		//Mouse Events
+		//Mouse Position
+		inputConsumer.processMouseEvent(mouseLoc.x, mouseLoc.y, 0, -1, false);
+		
+		//Mouse Buttons
+		for(int i=0; i<currentMouseButtons.length; i++)
+		{
+			if(getMouseButtonDown(i))
+			{
+				if(inputConsumer.processMouseEvent(mouseLoc.x, mouseLoc.y, 0, i, true))
+				{	consumeMouseButtonDown(i); }
+			}
+			
+			else if(getMouseButtonUp(i))
+			{
+				if(inputConsumer.processMouseEvent(mouseLoc.x, mouseLoc.y, 0, i, false))
+				{	consumeMouseButtonUp(i); }
+			}
+		}
+		
+		//Keyboard events, for this we need the event queue because we need more than just the keyCode or Symbol, we need the entire event
+		while(!keyEventQueue.isEmpty())
+		{
+			KeyEvent kEvt = keyEventQueue.pollLast();
+			boolean pressed = (kEvt.getEventType() == KeyEvent.EVENT_KEY_PRESSED);
+			KeyboardInputEvent newEvent = new KeyboardInputEvent(converter.convertToNiftyKeyCode(kEvt.getKeyCode(), 0), kEvt.getKeyChar(), pressed, kEvt.isShiftDown(), kEvt.isControlDown());
+			
+			if(inputConsumer.processKeyboardEvent(newEvent))
+			{
+				if(pressed)
+					consumeKeyDown(kEvt.getKeyCode());
+				else
+					consumeKeyUp(kEvt.getKeyCode());
+			}
+		}
+	}
+	
+	@Override
+	public void setResourceLoader(NiftyResourceLoader resourceLoader)
+	{
+	}
+	
 	public void keyPressed(KeyEvent evt)
 	{
-		if(!evt.isAutoRepeat())
+		keyEventQueue.push(evt);
+		//Use this instead of evt.isAutoRepeat() because the system sometimes considers key presses that are not repeats, to be repeats
+		//For example if you hold up and press right, the initial press of right is also considered a repeat, so it doesn't get "pressed"
+		if(!getKey(evt.getKeySymbol()))
 			Input.nextInput.put(evt.getKeySymbol(), true);
 	}
 	
 	public void keyReleased(KeyEvent evt)
 	{
+		keyEventQueue.push(evt);
+		//We still use evt.isAutoRepeat() here because if you hold down a key, the system sends repeated pressed/released messages
+		//If we use our own getKey() then it would pass repeats/releases that shouldnt be passed
 		if(!evt.isAutoRepeat())
 			Input.nextInput.put(evt.getKeySymbol(), false);
 	}
@@ -196,7 +268,7 @@ public final class Input implements KeyListener, MouseListener
 	public void mouseMoved(MouseEvent evt)
 	{
 		Input.mouseLoc.x = evt.getX();
-		Input.mouseLoc.y = Input.screenHeight - evt.getY();
+		Input.mouseLoc.y = Input.screenHeight - evt.getY(); //Transform the origin form top-left to bottom-left
 	}
 	
 	public void mouseDragged(MouseEvent evt)

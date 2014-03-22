@@ -7,8 +7,6 @@ import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 
 import com.jogamp.opengl.math.FloatUtil;
-import com.jogamp.opengl.util.glsl.ShaderProgram;
-import com.jogamp.opengl.util.texture.Texture;
 
 public abstract class GameObject extends Animatable
 {
@@ -59,6 +57,66 @@ public abstract class GameObject extends Animatable
 	protected Material getMaterial()
 	{
 		return material;
+	}
+	
+	public boolean collidesWith(GameObject other)
+	{
+		//SAT - http://www.codezealot.org/archives/55
+		Vector2[] axes = new Vector2[4];
+		int axisCount = 2;
+		
+		axes[0] = new Vector2(1,0);
+		axes[0].rotate(rotation);
+		
+		axes[1] = new Vector2(0,1);
+		axes[1].rotate(rotation);
+		
+		if(FloatUtil.abs(other.rotation - rotation) > 1f)
+		{
+			axisCount = 4;
+			axes[2] = new Vector2(1,0);
+			axes[2].rotate(other.rotation);
+			
+			axes[3] = new Vector2(0,1);
+			axes[3].rotate(other.rotation);
+		}
+		
+		float[] verts = getVertices();
+		float[] otherVerts = other.getVertices();
+		
+		for(int i=0; i<axisCount; i++)
+		{
+			float thisMin = 1000000;
+			float thisMax = -1000000;
+			float otherMin = 1000000;
+			float otherMax = -1000000;
+			
+			for(int vert=0; vert<8; vert+=2)
+			{
+				float dot = verts[vert]*axes[i].x + verts[vert+1]*axes[i].y;
+				float otherDot = otherVerts[vert]*axes[i].x + otherVerts[vert+1]*axes[i].y;
+				
+				if(dot < thisMin)
+					thisMin = dot;
+				if(dot > thisMax)
+					thisMax = dot;
+				
+				if(otherDot < otherMin)
+					otherMin = otherDot;
+				if(otherDot > otherMax)
+					otherMax = otherDot;
+			}
+			
+			boolean intersects = (
+					(thisMin < otherMin && thisMax > otherMin) ||
+					(thisMin < otherMax && thisMax > otherMax) ||
+					(thisMin > otherMin && thisMax < otherMax)
+			);
+			if(!intersects)
+				return false;
+		}
+		
+		return true;
 	}
 	
 	public float width()
@@ -140,7 +198,7 @@ public abstract class GameObject extends Animatable
 		shaderProgram = shader;
 		gl.glUseProgram(shader);
 		
-		int[] buffers = new int[4];
+		int[] buffers = new int[3];
 		
 		//Create the vertex array
 		gl.glGenVertexArrays(1, buffers, 0);
@@ -148,10 +206,9 @@ public abstract class GameObject extends Animatable
 		gl.glBindVertexArray(geometryVAO);
 		
 		//Generate and store the required buffers
-		gl.glGenBuffers(3, buffers,0);
+		gl.glGenBuffers(2, buffers,0);
 		int indexBuffer = buffers[0];
 		int vertexBuffer = buffers[1];
-		int colourBuffer = buffers[2];
 		
 		//Generate and store the buffers that we may have generated previously
 		if(texCoordBuffer == 0)
@@ -171,15 +228,7 @@ public abstract class GameObject extends Animatable
 		gl.glEnableVertexAttribArray(positionIndex);
 		gl.glVertexAttribPointer(positionIndex, 3, GL.GL_FLOAT, false, 0, 0);
 		
-		//Buffer the tint colour
-		int colourIndex = gl.glGetAttribLocation(shaderProgram, "tintColour");
-		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, colourBuffer);
-		gl.glBufferData(GL.GL_ARRAY_BUFFER, quadTintColours.length*(Float.SIZE/8), FloatBuffer.wrap(quadTintColours), GL.GL_STATIC_DRAW);
-		gl.glEnableVertexAttribArray(colourIndex);
-		gl.glVertexAttribPointer(colourIndex, 4, GL.GL_FLOAT, false, 0, 0);
-		
 		gl.glBindVertexArray(0);
-		
 		gl.glUseProgram(0);
 	}
 	
@@ -259,14 +308,11 @@ public abstract class GameObject extends Animatable
 		gl.glUniformMatrix4fv(geometryObjTransformIndex, 1, false, objectTransformMatrix, 0);
 		
 		int objTex = getMaterial().getDiffuseMap();
-		gl.glEnable(objTex);
 		gl.glBindTexture(GL.GL_TEXTURE_2D, objTex);
-
+		
 		gl.glDrawElements(GL.GL_TRIANGLE_STRIP, quadIndices.length, GL.GL_UNSIGNED_INT, 0);
 		
-		gl.glDisable(objTex);
 		gl.glBindTexture(GL.GL_TEXTURE_2D, 0);
-		
 		gl.glDisable(GL.GL_BLEND);
 		
 		gl.glDepthMask(false);
