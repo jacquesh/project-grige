@@ -28,13 +28,6 @@ public abstract class GameObject extends Animatable
 			1.0f, 1.0f,
 	};
 	
-	private final float[] quadTintColours = {
-			1f, 1f, 1f, 1f,
-			1f, 1f, 1f, 1f,
-			1f, 1f, 1f, 1f,
-			1f, 1f, 1f, 1f,
-	};
-	
 	private final int[] quadIndices = {
 			0, 1, 2, 3,
 	};
