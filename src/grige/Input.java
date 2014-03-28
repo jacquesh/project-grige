@@ -21,8 +21,11 @@ import de.lessvoid.nifty.tools.resourceloader.NiftyResourceLoader;
 import java.util.HashMap;
 import java.util.LinkedList;
 
+import java.util.logging.Logger;
+
 public final class Input implements KeyListener, MouseListener, InputSystem
 {
+	private static final Logger log = Logger.getLogger(Input.class.getName());
 	
 	private static HashMap<Short, Boolean> nextInput; //Input currently being executed
 	private static HashMap<Short, Boolean> currentInput; //Input from the latest frame
@@ -181,7 +184,7 @@ public final class Input implements KeyListener, MouseListener, InputSystem
 	@Override
 	public void setMousePosition(int x, int y)
 	{
-		Log.info("SET MOUSE LOC TO: "+x+";"+y);
+		log.info("SET MOUSE LOC TO: "+x+";"+y);
 		window.warpPointer(x, Input.screenHeight - y); //Transform the origin from bottom-left to top-left
 	}
 	

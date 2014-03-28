@@ -8,6 +8,8 @@ import java.io.IOException;
 
 import java.util.ArrayList;
 
+import java.util.logging.Logger;
+
 
 /*
  * Represents  a material/texture-agnostic animation that can be applied to any number of objects simultaneously.
@@ -28,6 +30,8 @@ import java.util.ArrayList;
  */
 public class Animation
 {
+	private static final Logger log = Logger.getLogger(Animation.class.getName());
+	
 	public static final int PLAY_MODE_NONE = 0;
 	public static final int PLAY_MODE_LOOP = 1;
 	public static final int PLAY_MODE_PINGPONG = 2;
@@ -61,10 +65,10 @@ public class Animation
 	{
 		File sourceFile = new File(filepath);
 		
-		Log.info("Loading animation "+sourceFile.getAbsolutePath());
+		log.info("Loading animation "+sourceFile.getAbsolutePath());
 		if(!sourceFile.exists())
 		{
-			Log.warn("Error, attempt to load non-existant file: "+filepath);
+			log.warning("Error, attempt to load non-existant file: "+filepath);
 			return null;
 		}
 		

@@ -1,5 +1,7 @@
 package grige;
 
+import java.util.logging.Logger;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -14,6 +16,8 @@ import com.jogamp.opengl.util.texture.TextureIO;
 
 public class Material
 {
+	private static final Logger log = Logger.getLogger(Material.class.getName());
+	
 	private int diffuseMap;
 	private int normalMap;
 	private int selfIlluminationMap;
@@ -106,10 +110,10 @@ public class Material
 	{
 		File sourceFile = new File(filepath);
 		
-		Log.info("Loading texture "+sourceFile.getAbsolutePath());
+		log.info("Loading texture "+sourceFile.getAbsolutePath());
 		if(!sourceFile.exists())
 		{
-			Log.warn("Error, attempt to load non-existant file: "+filepath);
+			log.warning("Error, attempt to load non-existant file: "+filepath);
 			return null;
 		}
 		
