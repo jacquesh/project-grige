@@ -14,8 +14,6 @@ import com.jogamp.opengl.FBObject;
 import com.jogamp.opengl.FBObject.TextureAttachment;
 import com.jogamp.opengl.math.FloatUtil;
 
-import com.jogamp.opengl.util.glsl.ShaderProgram;
-
 import java.awt.Font;
 import com.jogamp.opengl.util.awt.TextRenderer;
 
