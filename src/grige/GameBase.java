@@ -24,7 +24,18 @@ import de.lessvoid.nifty.batch.BatchRenderDevice;
 
 import java.util.ArrayList;
 
-public abstract class GameBase implements GLEventListener, WindowListener{
+import java.util.logging.Logger;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+
+import java.io.InputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
+public abstract class GameBase implements GLEventListener, WindowListener
+{
+
+	private static final Logger log = Logger.getLogger(GameBase.class.getName());
 	
 	static GameBase instance;
 	
@@ -53,6 +64,24 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	protected abstract void update(float deltaTime);
 	protected abstract void display();
 	
+	static
+	{
+		//Load the Log configuration file
+		try
+		{
+			InputStream is = GameBase.class.getResourceAsStream("../config/logging.properties");
+			LogManager.getLogManager().readConfiguration(is);
+		}
+		catch(FileNotFoundException fnfe)
+		{
+			log.log(Level.SEVERE, "", fnfe);
+		}
+		catch(IOException ioe)
+		{
+			log.log(Level.SEVERE, "", ioe);
+		}
+	}
+	
 	public GameBase()
 	{
 		GameBase.instance = this;
@@ -75,7 +104,7 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		}
 		catch(Exception ex)
 		{
-			ex.printStackTrace();
+			log.log(Level.SEVERE, "", ex);
 		}
 		finally
 		{
