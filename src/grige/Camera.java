@@ -62,8 +62,8 @@ public class Camera {
 	private FBObject interfaceFBO;
 	
 	//Shader Data
-	private ShaderProgram screenCanvasShader;
-	private ShaderProgram shadowGeometryShader;
+	private int screenCanvasShader;
+	private int shadowGeometryShader;
 	
 	//Text Rendering Data
 	private HashMap<Font, TextRenderer> textFonts;
@@ -264,7 +264,7 @@ public class Camera {
 	{
 		//Load the shader
 		screenCanvasShader = Graphics.loadShader(gl, "Canvas.vsh", "Canvas.fsh");
-		screenCanvasShader.useProgram(gl, true);
+		gl.glUseProgram(screenCanvasShader);
 		
 		int[] buffers = new int[4];
 		
@@ -284,29 +284,29 @@ public class Camera {
 		gl.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, screenCanvasIndices.length*(Integer.SIZE/8), IntBuffer.wrap(screenCanvasIndices), GL.GL_STATIC_DRAW);
 		
 		//Buffer the vertex locations
-		int positionIndex = gl.glGetAttribLocation(screenCanvasShader.program(), "position");
+		int positionIndex = gl.glGetAttribLocation(screenCanvasShader, "position");
 		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, vertexBuffer);
 		gl.glBufferData(GL.GL_ARRAY_BUFFER, screenCanvasVertices.length*(Float.SIZE/8), FloatBuffer.wrap(screenCanvasVertices), GL.GL_STATIC_DRAW);
 		gl.glEnableVertexAttribArray(positionIndex);
 		gl.glVertexAttribPointer(positionIndex, 3, GL.GL_FLOAT, false, 0, 0);
 		
 		//Buffer the vertex texture coordinates
-		int texCoordIndex = gl.glGetAttribLocation(screenCanvasShader.program(), "texCoord");
+		int texCoordIndex = gl.glGetAttribLocation(screenCanvasShader, "texCoord");
 		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, texCoordBuffer);
 		gl.glBufferData(GL.GL_ARRAY_BUFFER, screenCanvasTextureCoords.length*(Float.SIZE/8), FloatBuffer.wrap(screenCanvasTextureCoords), GL.GL_STATIC_DRAW);
 		gl.glEnableVertexAttribArray(texCoordIndex);
 		gl.glVertexAttribPointer(texCoordIndex, 2, GL.GL_FLOAT, false, 0, 0);
 		
 		//Assign to the samplers, the textures used by the geometry and lighting respectively
-		int geometryTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader.program(), "geometryTextureUnit");
+		int geometryTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader, "geometryTextureUnit");
 		gl.glUniform1i(geometryTextureSamplerIndex, 0);
-		int lightingTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader.program(), "lightingTextureUnit");
+		int lightingTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader, "lightingTextureUnit");
 		gl.glUniform1i(lightingTextureSamplerIndex, 1);
-		int interfaceTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader.program(), "interfaceTextureUnit");
+		int interfaceTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader, "interfaceTextureUnit");
 		gl.glUniform1i(interfaceTextureSamplerIndex, 2);
 		
 		gl.glBindVertexArray(0);
-		screenCanvasShader.useProgram(gl, false);
+		gl.glUseProgram(0);
 	}
 	
 	private void rebufferViewingMatrix()
@@ -314,10 +314,10 @@ public class Camera {
 		int viewMatrixIndex;
 		
 		//Shadow Geometry Shader
-		shadowGeometryShader.useProgram(gl, true);
-		viewMatrixIndex = gl.glGetUniformLocation(shadowGeometryShader.program(), "viewingMatrix");
+		gl.glUseProgram(shadowGeometryShader);
+		viewMatrixIndex = gl.glGetUniformLocation(shadowGeometryShader, "viewingMatrix");
 		gl.glUniformMatrix4fv(viewMatrixIndex, 1, false, viewingMatrix, 0);
-		shadowGeometryShader.useProgram(gl, false);
+		gl.glUseProgram(0);
 	}
 	
 	private void rebufferProjectionMatrix()
@@ -325,10 +325,10 @@ public class Camera {
 		int projMatrixIndex;
 		
 		//Shadow Geometry shader
-		shadowGeometryShader.useProgram(gl, true);
-		projMatrixIndex = gl.glGetUniformLocation(shadowGeometryShader.program(), "projectionMatrix");
+		gl.glUseProgram(shadowGeometryShader);
+		projMatrixIndex = gl.glGetUniformLocation(shadowGeometryShader, "projectionMatrix");
 		gl.glUniformMatrix4fv(projMatrixIndex, 1, false, projectionMatrix, 0);
-		shadowGeometryShader.useProgram(gl, false);
+		gl.glUseProgram(0);
 	}
 	
 	protected void refresh(GL glContext)
@@ -373,9 +373,9 @@ public class Camera {
 	
 	private void drawShadow(float[] shadowVerts)
 	{
-		shadowGeometryShader.useProgram(gl, true);
+		gl.glUseProgram(shadowGeometryShader);
 		
-		int positionIndex = gl.glGetAttribLocation(shadowGeometryShader.program(), "position");
+		int positionIndex = gl.glGetAttribLocation(shadowGeometryShader, "position");
 		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, shadowVertexBuffer);
 		gl.glBufferData(GL.GL_ARRAY_BUFFER, shadowVerts.length*(Float.SIZE/8), FloatBuffer.wrap(shadowVerts), GL.GL_DYNAMIC_DRAW);
 		gl.glEnableVertexAttribArray(positionIndex);
@@ -384,7 +384,7 @@ public class Camera {
 		gl.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, shadowVerts.length/3);
 		gl.glDisableVertexAttribArray(positionIndex);
 		
-		shadowGeometryShader.useProgram(gl, false);
+		gl.glUseProgram(0);
 	}
 	
 	protected void drawShadowsToStencil(ArrayList<float[]> vertexArrays)
@@ -447,7 +447,7 @@ public class Camera {
 	
 	protected void commitDraw()
 	{
-		screenCanvasShader.useProgram(gl, true);
+		gl.glUseProgram(screenCanvasShader);
 		gl.glBindVertexArray(screenCanvasVAO);
 		
 		//Bind the different buffer textures to the relevant GL textures so we can use it in our canvas shader
@@ -466,7 +466,7 @@ public class Camera {
 		gl.glDrawElements(GL.GL_TRIANGLE_STRIP, screenCanvasIndices.length, GL.GL_UNSIGNED_INT, 0);
 		
 		gl.glBindVertexArray(0);
-		screenCanvasShader.useProgram(gl, false);
+		gl.glUseProgram(0);
 	}
 	
 	/*
