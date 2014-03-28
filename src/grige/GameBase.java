@@ -263,6 +263,31 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		return objList.toArray(new GameObject[objList.size()]);
 	}
 	
+	public boolean raycast(Vector2 origin, Vector2 direction)
+	{
+		for(GameObject obj : worldObjects)
+		{
+			float[] verts = obj.getVertices();
+			for(int i=0; i<verts.length; i+=2)
+			{
+				float x1 = verts[i]-origin.x;
+				float y1 = verts[i+1]-origin.y;
+				
+				float x2 = verts[(i+2)%verts.length]-origin.x;
+				float y2 = verts[(i+3)%verts.length]-origin.y;
+				
+				//v1 cross direction and v2 cross direction (they must have opposite sign
+				float cross1 = direction.x*y1 - direction.y*x1;
+				float cross2 = direction.x*y2 - direction.y*x2;
+				
+				if(cross1*cross2 <= 0)
+					return true;
+			}
+		}
+		
+		return false;
+	}
+	
 	public void destroy(GameObject obj)
 	{
 		obj.markedForDeath = true;
