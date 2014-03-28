@@ -60,18 +60,27 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	
 	public final void start()
 	{
-		internalSetup();
-		gameWindow.display(); //Draw once before looping to initalize the screen/opengl
-		
-		running = true;
-		startTime = System.nanoTime();
-		lastFrameTime = startTime;
-		
-		while(running)
-		{	
-			gameWindow.display();
+		try{
+			internalSetup();
+			gameWindow.display(); //Draw once before looping to initalize the screen/opengl
+			
+			running = true;
+			startTime = System.nanoTime();
+			lastFrameTime = startTime;
+			
+			while(running)
+			{
+				gameWindow.display();
+			}
 		}
-		cleanup();
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		finally
+		{
+			cleanup();
+		}
 	}
 	
 	protected void internalSetup()
@@ -295,9 +304,10 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	
 	protected void cleanup()
 	{
-		Audio.cleanup();
+		if(gameWindow != null)
+			gameWindow.destroy();
 		
-		gameWindow.destroy();
+		Audio.cleanup();
 		GLProfile.shutdown();
 	}
 	
