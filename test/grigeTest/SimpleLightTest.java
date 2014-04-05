@@ -17,8 +17,8 @@ public class SimpleLightTest extends GameBase
 	@Override
 	public void initialize(GL2 gl)
 	{
-		int shader = Graphics.loadShader(gl, "SimpleVertexShader.vsh", "SimpleFragmentShader.fsh").program();
-		int lightingShader = Graphics.loadShader(gl, "LightVertexShader.vsh", "LightFragmentShader.fsh").program();
+		int shader = Graphics.loadShader(gl, "SimpleVertexShader.vsh", "SimpleFragmentShader.fsh");
+		int lightingShader = Graphics.loadShader(gl, "LightVertexShader.vsh", "LightFragmentShader.fsh");
 		camera.setAmbientLightAlpha(0);
 		
 		Material spriteMaterial = Material.load(gl, "test/grigeTest/bluegreengrid.png");

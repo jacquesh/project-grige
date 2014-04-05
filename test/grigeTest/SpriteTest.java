@@ -20,7 +20,7 @@ public class SpriteTest extends GameBase
 	@Override
 	public void initialize(GL2 gl)
 	{
-		shader = Graphics.loadShader(gl, "SimpleVertexShader.vsh", "SimpleFragmentShader.fsh").program();
+		shader = Graphics.loadShader(gl, "SimpleVertexShader.vsh", "SimpleFragmentShader.fsh");
 		camera.setAmbientLightAlpha(1);
 		
 		spriteMaterial = Material.load(gl, "test/grigeTest/bluegreengrid.png");

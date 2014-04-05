@@ -1,5 +1,7 @@
 package grige;
 
+import java.util.logging.Logger;
+
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
@@ -8,6 +10,8 @@ import javax.media.opengl.GL2;
 
 public class PointLight extends Light
 {
+	private static final Logger log = Logger.getLogger(PointLight.class.getName());
+	
 	private final float[] screenCanvasVertices = {
 			-1.0f, -1.0f, 0.0f,
 			-1.0f, 1.0f, 0.0f,
@@ -75,7 +79,7 @@ public class PointLight extends Light
 	{
 		if(shaderProgram == 0)
 		{
-			Log.fatal("Attempting to render a shaderless light. Skipping...");
+			log.severe("Attempting to render a shaderless light. Skipping...");
 			return;
 		}
 		

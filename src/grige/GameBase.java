@@ -24,7 +24,18 @@ import de.lessvoid.nifty.batch.BatchRenderDevice;
 
 import java.util.ArrayList;
 
-public abstract class GameBase implements GLEventListener, WindowListener{
+import java.util.logging.Logger;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+
+import java.io.InputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
+public abstract class GameBase implements GLEventListener, WindowListener
+{
+
+	private static final Logger log = Logger.getLogger(GameBase.class.getName());
 	
 	static GameBase instance;
 	
@@ -53,6 +64,24 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	protected abstract void update(float deltaTime);
 	protected abstract void display();
 	
+	static
+	{
+		//Load the Log configuration file
+		try
+		{
+			InputStream is = GameBase.class.getResourceAsStream("../config/logging.properties");
+			LogManager.getLogManager().readConfiguration(is);
+		}
+		catch(FileNotFoundException fnfe)
+		{
+			log.log(Level.SEVERE, "", fnfe);
+		}
+		catch(IOException ioe)
+		{
+			log.log(Level.SEVERE, "", ioe);
+		}
+	}
+	
 	public GameBase()
 	{
 		GameBase.instance = this;
@@ -60,18 +89,27 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	
 	public final void start()
 	{
-		internalSetup();
-		gameWindow.display(); //Draw once before looping to initalize the screen/opengl
-		
-		running = true;
-		startTime = System.nanoTime();
-		lastFrameTime = startTime;
-		
-		while(running)
-		{	
-			gameWindow.display();
+		try{
+			internalSetup();
+			gameWindow.display(); //Draw once before looping to initalize the screen/opengl
+			
+			running = true;
+			startTime = System.nanoTime();
+			lastFrameTime = startTime;
+			
+			while(running)
+			{
+				gameWindow.display();
+			}
 		}
-		cleanup();
+		catch(Exception ex)
+		{
+			log.log(Level.SEVERE, "", ex);
+		}
+		finally
+		{
+			cleanup();
+		}
 	}
 	
 	protected void internalSetup()
@@ -263,6 +301,31 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		return objList.toArray(new GameObject[objList.size()]);
 	}
 	
+	public boolean raycast(Vector2 origin, Vector2 direction)
+	{
+		for(GameObject obj : worldObjects)
+		{
+			float[] verts = obj.getVertices();
+			for(int i=0; i<verts.length; i+=2)
+			{
+				float x1 = verts[i]-origin.x;
+				float y1 = verts[i+1]-origin.y;
+				
+				float x2 = verts[(i+2)%verts.length]-origin.x;
+				float y2 = verts[(i+3)%verts.length]-origin.y;
+				
+				//v1 cross direction and v2 cross direction (they must have opposite sign
+				float cross1 = direction.x*y1 - direction.y*x1;
+				float cross2 = direction.x*y2 - direction.y*x2;
+				
+				if(cross1*cross2 <= 0)
+					return true;
+			}
+		}
+		
+		return false;
+	}
+	
 	public void destroy(GameObject obj)
 	{
 		obj.markedForDeath = true;
@@ -270,9 +333,10 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 	
 	protected void cleanup()
 	{
-		Audio.cleanup();
+		if(gameWindow != null)
+			gameWindow.destroy();
 		
-		gameWindow.destroy();
+		Audio.cleanup();
 		GLProfile.shutdown();
 	}
 	
@@ -331,31 +395,31 @@ public abstract class GameBase implements GLEventListener, WindowListener{
 		{
 		case(GL.GL_NO_ERROR):
 			if(displayNoError)
-				Log.info("No Error");
+				log.info("No OpenGL Error");
 			break;
 		
 		case(GL.GL_INVALID_ENUM):
-			Log.info("Invalid Enum");
+			log.warning("OpenGL Error: Invalid Enum");
 			break;
 		
 		case(GL.GL_INVALID_VALUE):
-			Log.info("Invalid Value");
+			log.warning("OpenGL Error: Invalid Value");
 			break;
 			
 		case(GL.GL_INVALID_OPERATION):
-			Log.info("Invalid Operation");
+			log.warning("OpenGL Error: Invalid Operation");
 			break;
 			
 		case(GL.GL_INVALID_FRAMEBUFFER_OPERATION):
-			Log.info("Invalid Framebuffer Operation");
+			log.warning("OpenGL Error: Invalid Framebuffer Operation");
 			break;
 			
 		case(GL.GL_OUT_OF_MEMORY):
-			Log.info("Out of Memory");
+			log.warning("OpenGL Error: Out of Memory");
 			break;
 			
 		default:
-			Log.info("UNKNOWN OPENGL ERROR: "+error);
+			log.warning("UNKNOWN OPENGL ERROR: "+error);
 		}
 	}
 }

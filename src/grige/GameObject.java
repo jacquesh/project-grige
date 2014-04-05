@@ -3,6 +3,8 @@ package grige;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
+import java.util.logging.Logger;
+
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 
@@ -10,6 +12,8 @@ import com.jogamp.opengl.math.FloatUtil;
 
 public abstract class GameObject extends Animatable
 {
+	private static final Logger log = Logger.getLogger(GameObject.class.getName());
+	
 	private final float[] quadVertices = {
 			-0.5f, -0.5f, 0.0f,
 			-0.5f, 0.5f, 0.0f,
@@ -22,13 +26,6 @@ public abstract class GameObject extends Animatable
 			0.0f, 1.0f,
 			1.0f, 0.0f,
 			1.0f, 1.0f,
-	};
-	
-	private final float[] quadTintColours = {
-			1f, 1f, 1f, 1f,
-			1f, 1f, 1f, 1f,
-			1f, 1f, 1f, 1f,
-			1f, 1f, 1f, 1f,
 	};
 	
 	private final int[] quadIndices = {
@@ -237,7 +234,7 @@ public abstract class GameObject extends Animatable
 	{
 		if(shaderProgram == 0)
 		{
-			Log.fatal("Attempting to render a shaderless object. Skipping...");
+			log.severe("Attempting to render a shaderless object. Skipping...");
 			return;
 		}
 		

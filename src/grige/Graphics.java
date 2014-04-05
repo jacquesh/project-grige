@@ -7,7 +7,7 @@ import com.jogamp.opengl.util.glsl.ShaderProgram;
 
 public class Graphics
 {
-	public static ShaderProgram loadShader(GL2 gl, String vertexShader, String fragmentShader)
+	public static int loadShader(GL2 gl, String vertexShader, String fragmentShader)
 	{
 		ShaderCode vertShader = ShaderCode.create(gl, GL2.GL_VERTEX_SHADER, 1, Graphics.class, new String[]{"/shaders/"+vertexShader},false);
 		vertShader.compile(gl);
@@ -25,6 +25,6 @@ public class Graphics
 		vertShader.destroy(gl);
 		fragShader.destroy(gl);
 
-		return newShader;
+		return newShader.program();
 	}
 }
