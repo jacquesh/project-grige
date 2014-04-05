@@ -9,7 +9,7 @@ uniform float radius;
 
 void main(){
 	float distanceToLight = length(gl_FragCoord.xy - lightLoc.xy);
-	float attenuation = 10f/(1 + 2*distanceToLight/radius);
+	float attenuation = intensity/(1 + 2*distanceToLight/radius);
 
 	colour = attenuation * vec4(lightColour, 1);
 }

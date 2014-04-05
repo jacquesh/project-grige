@@ -120,7 +120,7 @@ public class PointLight extends Light
 		gl.glUniform3fv(colourIndex, 1, getColour().toFloat3Array(), 0);
 		
 		int intensityIndex = gl.glGetUniformLocation(shaderProgram, "intensity");
-		gl.glUniform1f(intensityIndex, 1f);
+		gl.glUniform1f(intensityIndex, getIntensity());
 		
 		int viewMatrixIndex = gl.glGetUniformLocation(shaderProgram, "viewingMatrix");
 		gl.glUniformMatrix4fv(viewMatrixIndex, 1, false, cam.getViewingMatrix(), 0);
