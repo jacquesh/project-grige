@@ -326,6 +326,31 @@ public abstract class GameBase implements GLEventListener, WindowListener
 		return false;
 	}
 	
+	public Vector2 raycastToScreenBorder(Vector2 origin, Vector2 direction)
+	{
+		if(direction.sqrMagnitude() == 0)
+			throw new IllegalArgumentException("Cannot cast a ray with 0 direction");
+		
+		Vector2 intersectionPoint = null;
+		intersectionPoint = raylineIntersectionPoint(camera.getBottomLeft(), camera.getTopLeft(), origin, direction);
+		if(intersectionPoint != null)
+				return intersectionPoint;
+		
+		intersectionPoint = raylineIntersectionPoint(camera.getTopLeft(), camera.getTopRight(), origin, direction);
+		if(intersectionPoint != null)
+				return intersectionPoint;
+		
+		intersectionPoint = raylineIntersectionPoint(camera.getTopRight(), camera.getBottomRight(), origin, direction);
+		if(intersectionPoint != null)
+				return intersectionPoint;
+		
+		intersectionPoint = raylineIntersectionPoint(camera.getBottomRight(), camera.getBottomLeft(), origin, direction);
+		if(intersectionPoint != null)
+				return intersectionPoint;
+		
+		return null;
+	}
+	
 	/*
 	 * Returns the point of intersection of the lines (p1, p2) and (p3, p4)
 	 */
