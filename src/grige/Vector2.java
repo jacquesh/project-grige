@@ -93,4 +93,42 @@ public class Vector2
 	{
 		return "("+x+"; "+y+")";
 	}
+	
+	public static Vector2 add(Vector2 a, Vector2 b)
+	{
+		return new Vector2(a.x+b.x, a.y+b.y);
+	}
+	
+	public static Vector2 subtract(Vector2 a, Vector2 b)
+	{
+		return new Vector2(a.x-b.x, a.y-b.y);
+	}
+	
+	public static Vector2 multiply(Vector2 v, float f)
+	{
+		return new Vector2(v.x*f, v.y*f);
+	}
+	
+	public static Vector2 rotate(Vector2 v, float theta)
+	{
+		float thetaRadians = theta*FloatUtil.PI/180f;
+		float tempX = v.x;
+		float tempY = v.y;
+		Vector2 result = new Vector2(0,0);
+		
+		result.x = tempX*FloatUtil.cos(thetaRadians) - tempY*FloatUtil.sin(thetaRadians);
+		result.y = tempX*FloatUtil.sin(thetaRadians) + tempY*FloatUtil.cos(thetaRadians);
+		
+		return result;
+	}
+	
+	public static float dot(Vector2 a, Vector2 b)
+	{
+		return a.x*b.x + a.y*b.y;
+	}
+	
+	public static float cross(Vector2 a, Vector2 b)
+	{
+		return a.x*b.y - a.y*b.x;
+	}
 }
