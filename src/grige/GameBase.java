@@ -198,7 +198,7 @@ public abstract class GameBase implements GLEventListener, WindowListener
 			for(GameObject obj : worldObjects)
 			{
 				//Compute/store the vertices of the shadow of this objected, as a result of the current light
-				float[] vertices = camera.generateShadowVertices(l, obj);
+				float[] vertices = l.generateShadowVertices(obj);
 				vertexArrays.add(vertices);
 			}
 			
