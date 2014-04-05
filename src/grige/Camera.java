@@ -115,6 +115,10 @@ public class Camera {
 	public void setAmbientLightAlpha(float newAlpha) { ambientLightAlpha = newAlpha; }
 	public void setClearColor(float r, float g, float b){ clearColour = new Color(r, g, b, 1); }
 	
+	public Vector2 getBottomLeft() { return new Vector2(position.x, position.y); }
+	public Vector2 getTopLeft() { return new Vector2(position.x, position.y + size.y); }
+	public Vector2 getTopRight() { return new Vector2(position.x + size.x, position.y + size.y); }
+	public Vector2 getBottomRight() { return new Vector2(position.x + size.x, position.y); }
 	public float getX() { return position.x; }
 	public float getY() { return position.y; }
 	public float getWidth() { return size.x; }
