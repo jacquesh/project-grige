@@ -6,10 +6,10 @@ import grige.*;
 
 import javax.media.opengl.GL2;
 
-public class SimpleLightTest extends GameBase
+public class PointLightTest extends GameBase
 {
 	
-	public SimpleLightTest()
+	public PointLightTest()
 	{
 		super();
 	}
@@ -56,7 +56,7 @@ public class SimpleLightTest extends GameBase
 	
 	public static void main(String[] args)
 	{
-		SimpleLightTest game = new SimpleLightTest();
+		PointLightTest game = new PointLightTest();
 		game.start();
 	}
 
