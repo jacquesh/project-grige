@@ -326,6 +326,54 @@ public abstract class GameBase implements GLEventListener, WindowListener
 		return false;
 	}
 	
+	/*
+	 * Returns the point of intersection of the lines (p1, p2) and (p3, p4)
+	 */
+	public Vector2 linelineIntersectionPoint(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4)
+	{
+		//Line 1 = p1 + t*offsetA
+		//Line 2 = p3 + u*offsetB
+		Vector2 offsetA = Vector2.subtract(p2,p1);
+		Vector2 offsetB = Vector2.subtract(p4,p3);
+		float offsetCross = Vector2.cross(offsetA, offsetB);
+		
+		if(offsetCross == 0)
+			return null; //offsetA x offsetB = 0 => they're parallel => No collision
+		Vector2 startOffset = Vector2.subtract(p3, p1);
+		
+		//If they intersect then p1 + t*offset1 = p3 + u*offset2
+		//=> (p1 + t*o1) x o2 = (p3 + u*o2) x o2
+		//=> t*(o1 x o2) = (p3 - p1) x o2
+		float t = Vector2.cross(startOffset,offsetB)/offsetCross;
+		float u = Vector2.cross(startOffset,offsetA)/offsetCross;
+		
+		if(t >= 0 && t <= 1 && u >= 0 && u <= 1) //Check that the intersection falls between the endpoints of both lines
+			return new Vector2(p1.x + t*offsetA.x, p1.y +t*offsetA.y);
+		
+		return null;
+	}
+	
+	/*
+	 * Returns the point of intersection of the lines (p1, p2) and (p3, p4)
+	 */
+	public Vector2 raylineIntersectionPoint(Vector2 p1, Vector2 p2, Vector2 rayOrigin, Vector2 rayDirection)
+	{
+		Vector2 offsetA = Vector2.subtract(p2,p1);
+		float offsetCross = Vector2.cross(offsetA, rayDirection);
+		
+		if(offsetCross == 0)
+			return null; //offsetA x offsetB = 0 => they're parallel => No collision
+		Vector2 startOffset = Vector2.subtract(rayOrigin, p1);
+		
+		float t = Vector2.cross(startOffset,rayDirection)/offsetCross;
+		float u = Vector2.cross(startOffset,offsetA)/offsetCross;
+		
+		if(t >= 0 && t <= 1 && u >= 0) //Check that the intersection falls on the line and after the start of the ray
+			return new Vector2(p1.x + t*offsetA.x, p1.y +t*offsetA.y);
+		
+		return null;
+	}
+	
 	public void destroy(GameObject obj)
 	{
 		obj.markedForDeath = true;
