@@ -41,7 +41,11 @@ public class SpotLight extends Light
 	
 	public void setSpotAngle(float angle)
 	{
-		spotAngle = angle*FloatUtil.PI/180;
+		if(angle > FloatUtil.PI*2)
+			angle = FloatUtil.PI*2;
+		else if(angle < 0)
+			angle = 0;
+		spotAngle = angle;
 	}
 	
 	@Override
