@@ -34,6 +34,11 @@ public class SpotLight extends Light
 		return 0;
 	}
 	
+	public float getSpotAngle()
+	{
+		return spotAngle;
+	}
+	
 	public void setSpotAngle(float angle)
 	{
 		spotAngle = angle*FloatUtil.PI/180;
