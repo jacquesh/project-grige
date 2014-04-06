@@ -33,10 +33,9 @@ public class SpotLightTest extends GameBase
 		testSprite.setShader(gl, shader);
 		testSprite.setDepth(2);
 		
-		sl = new SpotLight(FloatUtil.PI/4);
+		sl = new SpotLight(90);
 		sl.setRadius(1.5f);
 		sl.setPosition(160,140);
-		sl.setSpotAngle(90);
 		sl.setIntensity(20);
 		sl.setShader(gl, lightingShader);
 		
