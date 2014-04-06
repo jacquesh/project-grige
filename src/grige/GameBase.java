@@ -180,15 +180,17 @@ public abstract class GameBase implements GLEventListener, WindowListener
 		camera.refresh(gl);
 		
 		camera.drawLightingStart();
+		
 		//Draw all our objects into the depth buffer so that our shadows can get depth-tested correctly against objects at the same depth
+		gl.glDepthMask(true);
+		gl.glColorMask(false, false, false, true);
+		
 		for(GameObject obj : worldObjects)
 		{
-			gl.glDepthMask(true);
-			gl.glColorMask(false, false, false, false);
-			obj.onDraw(gl, camera);
-			gl.glColorMask(true, true, true, true);
-			gl.glDepthMask(false);
+			obj.onDrawToLighting(gl, camera);
 		}
+		gl.glColorMask(true, true, true, true);
+		gl.glDepthMask(false);
 		
 		//Draw *all* the lights
 		gl.glEnable(GL.GL_STENCIL_TEST); //We need to stencil out bits of light, so enable stencil test while we're drawing lights
