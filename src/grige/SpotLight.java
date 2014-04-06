@@ -41,8 +41,8 @@ public class SpotLight extends Light
 	
 	public void setSpotAngle(float angle)
 	{
-		if(angle > FloatUtil.PI*2)
-			angle = FloatUtil.PI*2;
+		if(angle > 360)
+			angle = 360;
 		else if(angle < 0)
 			angle = 0;
 		spotAngle = angle;
@@ -78,11 +78,26 @@ public class SpotLight extends Light
 		//Compute the transformed light location (for lighting)
 		Vector3 transformedLightLoc = cam.worldToScreenLoc(x(), y(), depth());
 
+		Vector2 lightEdge1 = new Vector2(1, 0);
+		Vector2 lightEdge2 = new Vector2(1, 0);
+		lightEdge1.rotate(spotAngle/2);
+		lightEdge2.rotate(-spotAngle/2);
+		
+		//Compute the object transform matrix
+		float rotationSin = FloatUtil.sin(FloatUtil.PI/180 * rotation);
+		float rotationCos = FloatUtil.cos(FloatUtil.PI/180 * rotation);
+		
+		float[] objectTransformMatrix = new float[]{
+				 rotationCos, rotationSin,0,0,
+				-rotationSin, rotationCos,0,0,
+				0,0,1,0,
+				x(), y(), -depth(), 1
+		};
+		
 		float[] lightVertices = {
-				-1.0f, -1.0f, -depth(),
-				-1.0f, 1.0f, -depth(),
-				1.0f, -1.0f, -depth(),
-				1.0f,  1.0f, -depth(),
+				0, 0, -depth(),
+				1000*lightEdge1.x, 1000*lightEdge1.y, -depth(),
+				1000*lightEdge2.x, 1000*lightEdge2.y, -depth(),
 		};
 		
 		//Draw the light
@@ -104,12 +119,6 @@ public class SpotLight extends Light
 		int lightLocIndex = gl.glGetUniformLocation(shaderProgram, "lightLoc");
 		gl.glUniform3f(lightLocIndex, transformedLightLoc.x, transformedLightLoc.y, transformedLightLoc.z);
 		
-		int lightRotationIndex = gl.glGetUniformLocation(shaderProgram, "rotation");
-		gl.glUniform1f(lightRotationIndex, rotation());
-		
-		int spotAngleIndex = gl.glGetUniformLocation(shaderProgram, "spotAngle");
-		gl.glUniform1f(spotAngleIndex, spotAngle);
-		
 		int radiusIndex = gl.glGetUniformLocation(shaderProgram, "radius");
 		gl.glUniform1f(radiusIndex, getRadius());
 		
@@ -119,13 +128,16 @@ public class SpotLight extends Light
 		int intensityIndex = gl.glGetUniformLocation(shaderProgram, "intensity");
 		gl.glUniform1f(intensityIndex, getIntensity());
 		
+		int objectTransformIndex = gl.glGetUniformLocation(shaderProgram, "objectTransform");
+		gl.glUniformMatrix4fv(objectTransformIndex, 1, false, objectTransformMatrix, 0);
+		
 		int viewMatrixIndex = gl.glGetUniformLocation(shaderProgram, "viewingMatrix");
 		gl.glUniformMatrix4fv(viewMatrixIndex, 1, false, cam.getViewingMatrix(), 0);
 		
 		int projMatrixIndex = gl.glGetUniformLocation(shaderProgram, "projectionMatrix");
 		gl.glUniformMatrix4fv(projMatrixIndex, 1, false, cam.getProjectionMatrix(), 0);
 		
-		gl.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, 4);
+		gl.glDrawArrays(GL.GL_TRIANGLES, 0, 3);
 		
 		gl.glDisable(GL.GL_BLEND);
 		
