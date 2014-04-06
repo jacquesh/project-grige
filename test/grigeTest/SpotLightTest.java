@@ -22,7 +22,7 @@ public class SpotLightTest extends GameBase
 	public void initialize(GL2 gl)
 	{
 		int shader = Graphics.loadShader(gl, "SimpleVertexShader.vsh", "SimpleFragmentShader.fsh");
-		int lightingShader = Graphics.loadShader(gl, "SpotLightVertexShader.vsh", "NonAttenuatingLight.fsh");
+		int lightingShader = Graphics.loadShader(gl, "SpotLightVertexShader.vsh", "HyperbolicAttenuatingLight.fsh");
 		camera.setAmbientLightAlpha(0);
 		
 		Material spriteMaterial = Material.load(gl, "test/grigeTest/bluegreengrid.png");
@@ -37,6 +37,7 @@ public class SpotLightTest extends GameBase
 		sl.setRadius(1.5f);
 		sl.setPosition(160,140);
 		sl.setSpotAngle(90);
+		sl.setIntensity(20);
 		sl.setShader(gl, lightingShader);
 		
 		addObject(testSprite);
