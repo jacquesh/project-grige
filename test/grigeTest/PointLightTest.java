@@ -9,6 +9,8 @@ import javax.media.opengl.GL2;
 public class PointLightTest extends GameBase
 {
 	
+	private PointLight pl;
+	
 	public PointLightTest()
 	{
 		super();
@@ -18,7 +20,7 @@ public class PointLightTest extends GameBase
 	public void initialize(GL2 gl)
 	{
 		int shader = Graphics.loadShader(gl, "SimpleVertexShader.vsh", "SimpleFragmentShader.fsh");
-		int lightingShader = Graphics.loadShader(gl, "LightVertexShader.vsh", "LightFragmentShader.fsh");
+		int lightingShader = Graphics.loadShader(gl, "LightVertexShader.vsh", "HyperbolicAttenuatingLight.fsh");
 		camera.setAmbientLightAlpha(0);
 		
 		Material spriteMaterial = Material.load(gl, "test/grigeTest/bluegreengrid.png");
@@ -29,8 +31,9 @@ public class PointLightTest extends GameBase
 		testSprite.setShader(gl, shader);
 		testSprite.setDepth(2);
 		
-		PointLight pl = new PointLight();
+		pl = new PointLight();
 		pl.setRadius(1.5f);
+		pl.setIntensity(20f);
 		pl.setPosition(160,140);
 		pl.setShader(gl, lightingShader);
 		
@@ -49,6 +52,11 @@ public class PointLightTest extends GameBase
 			camera.setPosition(camera.getX(), camera.getY()+100f*deltaTime);
 		if(Input.getKey(KeyEvent.VK_DOWN))
 			camera.setPosition(camera.getX(), camera.getY()-100f*deltaTime);
+		
+		Vector2I mouseLoc = Input.getMouseLoc();
+		Vector3 lightLoc = camera.screenToWorldLoc(mouseLoc.x, mouseLoc.y, 0);
+		pl.setX(lightLoc.x);
+		pl.setY(lightLoc.y);
 	}
 	
 	@Override
