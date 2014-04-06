@@ -8,6 +8,8 @@ Currently Supported Functionality
 ---------------------------------
 * Rendering of any reasonable number of textured sprites
 * Basic 2D lighting, with hard shadows (still to be improved, but it works)
+* Directional lights
+* Spotlights
 * Simultaneous playing of multiple audio sources
 * Keyboard and mouse input polling
 * Easy camera movement
@@ -20,8 +22,6 @@ Yet-to-be-(maybe)-implemented Functionality
 -----------------------------------
 * Sprite normal mapping (because pretteh lights)
 * Sprite self-illumination maps
-* Directional lights
-* Spotlights
 * Basic particles
 * Pixel-perfect collision detection
 * Basic multiplayer/network support
