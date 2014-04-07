@@ -101,11 +101,14 @@ public class PointLight extends Light
 		int radiusIndex = gl.glGetUniformLocation(shaderProgram, "radius");
 		gl.glUniform1f(radiusIndex, getRadius());
 		
-		int colourIndex = gl.glGetUniformLocation(shaderProgram, "lightColour");
-		gl.glUniform3fv(colourIndex, 1, getColour().toFloat3Array(), 0);
+		int colourIndex = gl.glGetUniformLocation(shaderProgram, "lightColor");
+		gl.glUniform4fv(colourIndex, 1, getColour().toFloat4Array(), 0);
 		
-		int intensityIndex = gl.glGetUniformLocation(shaderProgram, "intensity");
-		gl.glUniform1f(intensityIndex, getIntensity());
+		int ambienceIndex = gl.glGetUniformLocation(shaderProgram, "ambientLight");
+		gl.glUniform4fv(ambienceIndex, 1, cam.getAmbientLight().toFloat4Array(), 0);
+		
+		int falloffIndex = gl.glGetUniformLocation(shaderProgram, "falloff");
+		gl.glUniform3f(falloffIndex, 0.4f, 3, 20);
 		
 		int geometrySamplerIndex = gl.glGetUniformLocation(shaderProgram, "geometrySampler");
 		gl.glUniform1i(geometrySamplerIndex, 0);

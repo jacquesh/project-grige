@@ -22,7 +22,7 @@ public class AnimationTest extends GameBase
 	public void initialize(GL2 gl)
 	{
 		shader = Graphics.loadShader(gl, "SimpleVertexShader.vsh", "SimpleFragmentShader.fsh");
-		camera.setAmbientLightAlpha(1);
+		camera.setAmbientLight(1,1,1,1);
 		
 		walkMaterial = Material.load(gl, "test/grigeTest/playerWalk.png");
 		walkAnimation = Animation.load("test/grigeTest/playerWalk.txt");

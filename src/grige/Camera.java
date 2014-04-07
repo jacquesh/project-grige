@@ -43,7 +43,7 @@ public class Camera {
 	private float depth;
 	
 	private Color clearColour;
-	private float ambientLightAlpha;
+	private Color ambientLight;
 	
 	//Current transformation matrices
 	private float[] projectionMatrix;
@@ -74,7 +74,7 @@ public class Camera {
 		size = new Vector2I(startWidth, startHeight);
 		depth = startDepth;
 		
-		ambientLightAlpha = 0;
+		ambientLight = new Color(0,0,0,0);
 		clearColour = new Color(0,0,0,1);
 	}
 	
@@ -111,7 +111,7 @@ public class Camera {
 		setPosition(position.x,position.y); //Update the viewing matrix as well, because the size has changed (so we need to translate (0,0) differently)
 	}
 	
-	public void setAmbientLightAlpha(float newAlpha) { ambientLightAlpha = newAlpha; }
+	public void setAmbientLight(float r, float g, float b, float a) { ambientLight = new Color(r, g, b, a); }
 	public void setClearColor(float r, float g, float b){ clearColour = new Color(r, g, b, 1); }
 	
 	public Vector2 getBottomLeft() { return new Vector2(position.x, position.y); }
@@ -123,7 +123,7 @@ public class Camera {
 	public float getWidth() { return size.x; }
 	public float getHeight() { return size.y; }
 	public float getDepth() { return depth; }
-	public float getAmbientLightAlpha() { return ambientLightAlpha; }
+	public Color getAmbientLight() { return ambientLight; }
 	public Color getClearColor() { return clearColour; }
 	public float[] getProjectionMatrix() { return projectionMatrix; }
 	public float[] getViewingMatrix() { return viewingMatrix; }
@@ -355,7 +355,7 @@ public class Camera {
 		
 		//Clear the lighting buffer
 		lightingFBO.bind(gl);
-		gl.glClearColor(0, 0, 0, ambientLightAlpha);
+		gl.glClearColor(0, 0, 0, 1);
 		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT | GL.GL_STENCIL_BUFFER_BIT);
 		lightingFBO.unbind(gl);
 		
