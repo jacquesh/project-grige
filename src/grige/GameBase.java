@@ -72,7 +72,7 @@ public abstract class GameBase implements GLEventListener, WindowListener
 		//Load the Log configuration file
 		try
 		{
-			InputStream is = GameBase.class.getResourceAsStream("../config/logging.properties");
+			InputStream is = GameBase.class.getResourceAsStream("/config/logging.properties");
 			LogManager.getLogManager().readConfiguration(is);
 		}
 		catch(FileNotFoundException fnfe)
