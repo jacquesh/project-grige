@@ -51,7 +51,6 @@ public class Camera {
 	
 	//Vertex Buffers
 	private int screenCanvasVAO;
-	
 	private int shadowVertexBuffer;
 	
 	//Frame Buffers
@@ -227,6 +226,9 @@ public class Camera {
 		geometryFBO.attachTexture2D(gl, 0, true);
 		geometryFBO.attachTexture2D(gl, 1, false);
 		geometryFBO.attachRenderbuffer(gl, FBObject.Attachment.Type.DEPTH, 6);
+		
+		IntBuffer geometryRenderTargets = IntBuffer.wrap(new int[]{GL.GL_COLOR_ATTACHMENT0, GL.GL_COLOR_ATTACHMENT0+1});
+		gl.glDrawBuffers(2, geometryRenderTargets);
 		geometryFBO.unbind(gl);
 	}
 	

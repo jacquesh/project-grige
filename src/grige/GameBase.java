@@ -180,10 +180,8 @@ public abstract class GameBase implements GLEventListener, WindowListener
 		//Reset the camera for this draw call
 		camera.refresh(gl);
 		
+		//Draw all the objects to the Geometry Buffer
 		camera.drawGeometryStart();
-		IntBuffer ib = IntBuffer.wrap(new int[]{GL.GL_COLOR_ATTACHMENT0, GL.GL_COLOR_ATTACHMENT0+1});
-		gl.glDrawBuffers(2, ib);
-		//Draw all the objects now that we've finalized our lighting
 		for(GameObject obj : worldObjects)
 			obj.onDraw(gl, camera);
 		camera.drawGeometryEnd();
