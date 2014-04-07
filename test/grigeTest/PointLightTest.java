@@ -20,7 +20,7 @@ public class PointLightTest extends GameBase
 	public void initialize(GL2 gl)
 	{
 		int shader = Graphics.loadShader(gl, "SimpleVertexShader.vsh", "SimpleFragmentShader.fsh");
-		int lightingShader = Graphics.loadShader(gl, "LightVertexShader.vsh", "AttenuatingLight.fsh");
+		int lightingShader = Graphics.loadShader(gl, "Light.vsh", "AttenuatingLight.fsh");
 		
 		Material spriteMaterial = Material.load(gl, "test/grigeTest/bluegreengrid.png");
 		
