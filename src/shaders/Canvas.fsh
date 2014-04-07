@@ -1,5 +1,4 @@
 #version 330 core
-layout(location = 0) out vec4 colour;
 
 uniform sampler2D geometryTextureUnit;
 uniform sampler2D lightingTextureUnit;
@@ -14,5 +13,5 @@ void main(){
     
     vec3 worldColour = (geometryColour.rgb + lightingColour.rgb) * lightingColour.a + interfaceColour.rgb;
     
-    colour.rgb = interfaceColour.rgb*interfaceColour.a + worldColour*(1-interfaceColour.a);
+    gl_FragColor.rgb = interfaceColour.rgb*interfaceColour.a + worldColour*(1-interfaceColour.a);
 }
