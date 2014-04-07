@@ -180,19 +180,15 @@ public abstract class GameBase implements GLEventListener, WindowListener
 		//Reset the camera for this draw call
 		camera.refresh(gl);
 		
-		camera.drawLightingStart();
-		
-		//Draw all our objects into the depth buffer so that our shadows can get depth-tested correctly against objects at the same depth
-		gl.glDepthMask(true);
-		gl.glColorMask(false, false, false, true);
-		
+		camera.drawGeometryStart();
+		IntBuffer ib = IntBuffer.wrap(new int[]{GL.GL_COLOR_ATTACHMENT0, GL.GL_COLOR_ATTACHMENT0+1});
+		gl.glDrawBuffers(2, ib);
+		//Draw all the objects now that we've finalized our lighting
 		for(GameObject obj : worldObjects)
-		{
-			obj.onDrawToLighting(gl, camera);
-		}
-		gl.glColorMask(true, true, true, true);
-		gl.glDepthMask(false);
+			obj.onDraw(gl, camera);
+		camera.drawGeometryEnd();
 		
+		camera.drawLightingStart();
 		//Draw *all* the lights
 		gl.glEnable(GL.GL_STENCIL_TEST); //We need to stencil out bits of light, so enable stencil test while we're drawing lights
 		for(Light l : worldLights)
@@ -213,14 +209,6 @@ public abstract class GameBase implements GLEventListener, WindowListener
 		}
 		gl.glDisable(GL.GL_STENCIL_TEST); //We only use stencil test for rendering lights
 		camera.drawLightingEnd();
-		
-		camera.drawGeometryStart();
-		IntBuffer ib = IntBuffer.wrap(new int[]{GL.GL_COLOR_ATTACHMENT0, GL.GL_COLOR_ATTACHMENT0+1});
-		gl.glDrawBuffers(2, ib);
-		//Draw all the objects now that we've finalized our lighting
-		for(GameObject obj : worldObjects)
-			obj.onDraw(gl, camera);
-		camera.drawGeometryEnd();
 		
 		//Let the child game class draw any required UI
 		camera.drawInterfaceStart();

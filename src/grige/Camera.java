@@ -371,7 +371,18 @@ public class Camera {
 	
 	public void drawGeometryStart() { geometryFBO.bind(gl); }
 	public void drawGeometryEnd() { geometryFBO.unbind(gl); }
-	public void drawLightingStart() { lightingFBO.bind(gl); }
+	public void drawLightingStart()
+	{
+		lightingFBO.bind(gl);
+		
+		TextureAttachment geometryTexture = (TextureAttachment)geometryFBO.getColorbuffer(0);
+		gl.glActiveTexture(GL.GL_TEXTURE0);
+		gl.glBindTexture(GL.GL_TEXTURE_2D, geometryTexture.getName());
+		
+		TextureAttachment normalTexture = (TextureAttachment)geometryFBO.getColorbuffer(1);
+		gl.glActiveTexture(GL.GL_TEXTURE1);
+		gl.glBindTexture(GL.GL_TEXTURE_2D, normalTexture.getName());
+	}
 	public void drawLightingEnd() { lightingFBO.unbind(gl); }
 	public void drawInterfaceStart() { interfaceFBO.bind(gl); }
 	public void drawInterfaceEnd() { interfaceFBO.unbind(gl); }
