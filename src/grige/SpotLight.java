@@ -125,9 +125,6 @@ public class SpotLight extends Light
 		int colourIndex = gl.glGetUniformLocation(shaderProgram, "lightColour");
 		gl.glUniform3fv(colourIndex, 1, getColour().toFloat3Array(), 0);
 		
-		int intensityIndex = gl.glGetUniformLocation(shaderProgram, "intensity");
-		gl.glUniform1f(intensityIndex, getIntensity());
-		
 		int objectTransformIndex = gl.glGetUniformLocation(shaderProgram, "objectTransform");
 		gl.glUniformMatrix4fv(objectTransformIndex, 1, false, objectTransformMatrix, 0);
 		
