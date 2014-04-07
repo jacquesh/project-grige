@@ -31,6 +31,7 @@ import java.util.logging.LogManager;
 import java.io.InputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.IntBuffer;
 
 public abstract class GameBase implements GLEventListener, WindowListener
 {
@@ -214,6 +215,8 @@ public abstract class GameBase implements GLEventListener, WindowListener
 		camera.drawLightingEnd();
 		
 		camera.drawGeometryStart();
+		IntBuffer ib = IntBuffer.wrap(new int[]{GL.GL_COLOR_ATTACHMENT0, GL.GL_COLOR_ATTACHMENT0+1});
+		gl.glDrawBuffers(2, ib);
 		//Draw all the objects now that we've finalized our lighting
 		for(GameObject obj : worldObjects)
 			obj.onDraw(gl, camera);

@@ -276,7 +276,6 @@ public abstract class GameObject extends Animatable
 			return;
 		
 		gl.glUseProgram(shaderProgram);
-		gl.glActiveTexture(GL.GL_TEXTURE0);
 		gl.glBindVertexArray(geometryVAO);
 		gl.glDepthMask(true);
 		
@@ -286,6 +285,9 @@ public abstract class GameObject extends Animatable
 		//Texture specification
 		int textureSamplerIndex = gl.glGetUniformLocation(shaderProgram, "textureUnit");
 		gl.glUniform1i(textureSamplerIndex, 0);
+		
+		int normalSamplerIndex = gl.glGetUniformLocation(shaderProgram, "normalUnit");
+		gl.glUniform1i(normalSamplerIndex, 1);
 		
 		//Texture coordinates
 		int texCoordIndex = gl.glGetAttribLocation(shaderProgram, "texCoord");
@@ -305,11 +307,14 @@ public abstract class GameObject extends Animatable
 		gl.glUniformMatrix4fv(geometryObjTransformIndex, 1, false, objectTransformMatrix, 0);
 		
 		int objTex = getMaterial().getDiffuseMap();
+		int objNormal = getMaterial().getNormalMap();
+		gl.glActiveTexture(GL.GL_TEXTURE0);
 		gl.glBindTexture(GL.GL_TEXTURE_2D, objTex);
+		gl.glActiveTexture(GL.GL_TEXTURE1);
+		gl.glBindTexture(GL.GL_TEXTURE_2D, objNormal);
 		
 		gl.glDrawElements(GL.GL_TRIANGLE_STRIP, quadIndices.length, GL.GL_UNSIGNED_INT, 0);
 		
-		gl.glBindTexture(GL.GL_TEXTURE_2D, 0);
 		gl.glDisable(GL.GL_BLEND);
 		
 		gl.glDepthMask(false);
