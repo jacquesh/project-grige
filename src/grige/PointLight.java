@@ -11,6 +11,13 @@ public class PointLight extends Light
 {
 	private static final Logger log = Logger.getLogger(PointLight.class.getName());
 	
+	private final float[] defaultTextureCoords = {
+			0.0f, 0.0f,
+			0.0f, 1.0f,
+			1.0f, 0.0f,
+			1.0f, 1.0f,
+	};
+	
 	private int shaderProgram;
 	private int lightingVAO;
 	
@@ -73,14 +80,20 @@ public class PointLight extends Light
 		gl.glEnable(GL.GL_BLEND);
 		gl.glBlendFunc(GL.GL_ONE, GL.GL_ONE);
 		
-		int[] buffer = new int[1];
-		gl.glGenBuffers(1, buffer, 0);
+		int[] buffer = new int[2];
+		gl.glGenBuffers(2, buffer, 0);
 		
 		int positionIndex = gl.glGetAttribLocation(shaderProgram, "position");
 		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, buffer[0]);
 		gl.glBufferData(GL.GL_ARRAY_BUFFER, lightVertices.length*(Float.SIZE/8), FloatBuffer.wrap(lightVertices), GL.GL_STATIC_DRAW);
 		gl.glEnableVertexAttribArray(positionIndex);
 		gl.glVertexAttribPointer(positionIndex, 3, GL.GL_FLOAT, false, 0, 0);
+		
+		int texCoordIndex = gl.glGetAttribLocation(shaderProgram, "texCoord");
+		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, buffer[1]);
+		gl.glBufferData(GL.GL_ARRAY_BUFFER, defaultTextureCoords.length*(Float.SIZE/8), FloatBuffer.wrap(defaultTextureCoords), GL.GL_STATIC_DRAW);
+		gl.glEnableVertexAttribArray(texCoordIndex);
+		gl.glVertexAttribPointer(texCoordIndex, 2, GL.GL_FLOAT, false, 0, 0);
 		
 		int lightLocIndex = gl.glGetUniformLocation(shaderProgram, "lightLoc");
 		gl.glUniform3f(lightLocIndex, transformedLightLoc.x, transformedLightLoc.y, transformedLightLoc.z);
@@ -93,6 +106,12 @@ public class PointLight extends Light
 		
 		int intensityIndex = gl.glGetUniformLocation(shaderProgram, "intensity");
 		gl.glUniform1f(intensityIndex, getIntensity());
+		
+		int geometrySamplerIndex = gl.glGetUniformLocation(shaderProgram, "geometrySampler");
+		gl.glUniform1i(geometrySamplerIndex, 0);
+		
+		int normalSamplerIndex = gl.glGetUniformLocation(shaderProgram, "normalSampler");
+		gl.glUniform1i(normalSamplerIndex, 1);
 		
 		int viewMatrixIndex = gl.glGetUniformLocation(shaderProgram, "viewingMatrix");
 		gl.glUniformMatrix4fv(viewMatrixIndex, 1, false, cam.getViewingMatrix(), 0);
