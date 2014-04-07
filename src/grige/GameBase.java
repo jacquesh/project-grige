@@ -214,7 +214,8 @@ public abstract class GameBase implements GLEventListener, WindowListener
 		camera.drawInterfaceEnd();
 		
 		//Commit all drawing thats happened, combining them via their respective framebuffers as needed
-		camera.commitDraw();
+		boolean hasLighting = (worldLights.size() > 0);
+		camera.commitDraw(hasLighting);
 		
 		//To render the UI on top of all of that, we need to set the 0-texture to be active and enable blending
 		gl.glActiveTexture(GL.GL_TEXTURE0);

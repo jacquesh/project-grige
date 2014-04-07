@@ -302,16 +302,6 @@ public class Camera {
 		gl.glEnableVertexAttribArray(texCoordIndex);
 		gl.glVertexAttribPointer(texCoordIndex, 2, GL.GL_FLOAT, false, 0, 0);
 		
-		//Assign to the samplers, the textures used by the geometry and lighting respectively
-		int geometryTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader, "geometryTextureUnit");
-		gl.glUniform1i(geometryTextureSamplerIndex, 0);
-		int normalTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader, "normalTextureUnit");
-		gl.glUniform1i(normalTextureSamplerIndex, 1);
-		int lightingTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader, "lightingTextureUnit");
-		gl.glUniform1i(lightingTextureSamplerIndex, 2);
-		int interfaceTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader, "interfaceTextureUnit");
-		gl.glUniform1i(interfaceTextureSamplerIndex, 3);
-		
 		gl.glBindVertexArray(0);
 		gl.glUseProgram(0);
 	}
@@ -463,27 +453,33 @@ public class Camera {
 		renderer.end3DRendering();
 	}
 	
-	protected void commitDraw()
+	protected void commitDraw(boolean lit)
 	{
 		gl.glUseProgram(screenCanvasShader);
 		gl.glBindVertexArray(screenCanvasVAO);
 		
 		//Bind the different buffer textures to the relevant GL textures so we can use it in our canvas shader
-		TextureAttachment geometryTexture = (TextureAttachment)geometryFBO.getColorbuffer(0);
 		gl.glActiveTexture(GL.GL_TEXTURE0);
-		gl.glBindTexture(GL.GL_TEXTURE_2D, geometryTexture.getName());
 		
-		TextureAttachment normalTexture = (TextureAttachment)geometryFBO.getColorbuffer(1);
+		if(lit)
+		{
+			TextureAttachment lightingTexture = (TextureAttachment)lightingFBO.getColorbuffer(0);
+			gl.glBindTexture(GL.GL_TEXTURE_2D, lightingTexture.getName());
+		}
+		else
+		{
+			TextureAttachment geometryTexture = (TextureAttachment)geometryFBO.getColorbuffer(0);
+			gl.glBindTexture(GL.GL_TEXTURE_2D, geometryTexture.getName());
+		}
+		
 		gl.glActiveTexture(GL.GL_TEXTURE1);
-		gl.glBindTexture(GL.GL_TEXTURE_2D, normalTexture.getName());
-		
-		TextureAttachment lightingTexture = (TextureAttachment)lightingFBO.getColorbuffer(0);
-		gl.glActiveTexture(GL.GL_TEXTURE2);
-		gl.glBindTexture(GL.GL_TEXTURE_2D, lightingTexture.getName());
-		
 		TextureAttachment interfaceTexture = (TextureAttachment)interfaceFBO.getColorbuffer(0);
-		gl.glActiveTexture(GL.GL_TEXTURE3);
 		gl.glBindTexture(GL.GL_TEXTURE_2D, interfaceTexture.getName());
+		
+		int lightingTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader, "lightingTextureUnit");
+		gl.glUniform1i(lightingTextureSamplerIndex, 0);
+		int interfaceTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader, "interfaceTextureUnit");
+		gl.glUniform1i(interfaceTextureSamplerIndex, 1);
 		
 		gl.glDrawElements(GL.GL_TRIANGLE_STRIP, screenCanvasIndices.length, GL.GL_UNSIGNED_INT, 0);
 		
