@@ -12,6 +12,13 @@ public class DirectionalLight extends Light
 {
 	private static final Logger log = Logger.getLogger(DirectionalLight.class.getName());
 	
+	private final float[] defaultTextureCoords = {
+			0.0f, 0.0f,
+			0.0f, 1.0f,
+			1.0f, 0.0f,
+			1.0f, 1.0f,
+	};
+	
 	private Vector2 direction;
 	
 	private int shaderProgram;
@@ -63,6 +70,7 @@ public class DirectionalLight extends Light
 	@Override
 	protected void onDraw(GL2 gl, Camera cam)
 	{
+		GameBase.printOpenGLError(gl, true);
 		if(shaderProgram == 0)
 		{
 			log.severe("Attempting to render a shaderless light. Skipping...");
@@ -86,8 +94,8 @@ public class DirectionalLight extends Light
 		gl.glEnable(GL.GL_BLEND);
 		gl.glBlendFunc(GL.GL_ONE, GL.GL_ONE);
 		
-		int[] buffer = new int[1];
-		gl.glGenBuffers(1, buffer, 0);
+		int[] buffer = new int[2];
+		gl.glGenBuffers(2, buffer, 0);
 		
 		int positionIndex = gl.glGetAttribLocation(shaderProgram, "position");
 		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, buffer[0]);
@@ -95,14 +103,35 @@ public class DirectionalLight extends Light
 		gl.glEnableVertexAttribArray(positionIndex);
 		gl.glVertexAttribPointer(positionIndex, 3, GL.GL_FLOAT, false, 0, 0);
 		
+		int texCoordIndex = gl.glGetAttribLocation(shaderProgram, "texCoord");
+		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, buffer[1]);
+		gl.glBufferData(GL.GL_ARRAY_BUFFER, defaultTextureCoords.length*(Float.SIZE/8), FloatBuffer.wrap(defaultTextureCoords), GL.GL_STATIC_DRAW);
+		gl.glEnableVertexAttribArray(texCoordIndex);
+		GameBase.printOpenGLError(gl, true);
+		gl.glVertexAttribPointer(texCoordIndex, 2, GL.GL_FLOAT, false, 0, 0);
+		
+		GameBase.printOpenGLError(gl, true);
+		
 		int lightLocIndex = gl.glGetUniformLocation(shaderProgram, "lightLoc");
 		gl.glUniform3f(lightLocIndex, transformedLightLoc.x, transformedLightLoc.y, transformedLightLoc.z);
 		
 		int radiusIndex = gl.glGetUniformLocation(shaderProgram, "radius");
 		gl.glUniform1f(radiusIndex, getRadius());
 		
-		int colourIndex = gl.glGetUniformLocation(shaderProgram, "lightColour");
-		gl.glUniform3fv(colourIndex, 1, getColour().toFloat3Array(), 0);
+		int colourIndex = gl.glGetUniformLocation(shaderProgram, "lightColor");
+		gl.glUniform4fv(colourIndex, 1, getColour().toFloat4Array(), 0);
+		
+		int ambienceIndex = gl.glGetUniformLocation(shaderProgram, "ambientLight");
+		gl.glUniform4fv(ambienceIndex, 1, cam.getAmbientLight().toFloat4Array(), 0);
+		
+		int falloffIndex = gl.glGetUniformLocation(shaderProgram, "falloff");
+		gl.glUniform3f(falloffIndex, 0.4f, 3, 20);
+		
+		int geometrySamplerIndex = gl.glGetUniformLocation(shaderProgram, "geometrySampler");
+		gl.glUniform1i(geometrySamplerIndex, 0);
+		
+		int normalSamplerIndex = gl.glGetUniformLocation(shaderProgram, "normalSampler");
+		gl.glUniform1i(normalSamplerIndex, 1);
 		
 		int viewMatrixIndex = gl.glGetUniformLocation(shaderProgram, "viewingMatrix");
 		gl.glUniformMatrix4fv(viewMatrixIndex, 1, false, cam.getViewingMatrix(), 0);
