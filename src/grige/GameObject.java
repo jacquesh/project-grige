@@ -309,17 +309,17 @@ public abstract class GameObject extends Animatable
 		gl.glBindTexture(GL.GL_TEXTURE_2D, objTex);
 		
 		//Normal Texture
-		int normalSamplerIndex = gl.glGetUniformLocation(shaderProgram, "normalUnit");
 		int objNormal = getMaterial().getNormalMap();
 		if(objNormal != 0)
 		{
+			int normalSamplerIndex = gl.glGetUniformLocation(shaderProgram, "normalUnit");
 			gl.glUniform1i(normalSamplerIndex, 1);
 			
 			gl.glActiveTexture(GL.GL_TEXTURE1);
 			gl.glBindTexture(GL.GL_TEXTURE_2D, objNormal);
 		}
-		else
-			gl.glUniform1i(normalSamplerIndex, -1);
+		int hasNormalsIndex = gl.glGetUniformLocation(shaderProgram, "hasNormals");
+		gl.glUniform1i(hasNormalsIndex, objNormal != 0 ? 1 : 0);
 		
 		gl.glDrawElements(GL.GL_TRIANGLE_STRIP, quadIndices.length, GL.GL_UNSIGNED_INT, 0);
 		
