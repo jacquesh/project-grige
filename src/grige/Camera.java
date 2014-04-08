@@ -51,6 +51,7 @@ public class Camera {
 	
 	//Vertex Buffers
 	private int screenCanvasVAO;
+	private int ambienceVAO;
 	private int shadowVertexBuffer;
 	
 	//Frame Buffers
@@ -60,6 +61,8 @@ public class Camera {
 	
 	//Shader Data
 	private int screenCanvasShader;
+	private int ambienceShader;
+	private int selfIlluShader;
 	private int shadowGeometryShader;
 	
 	//Text Rendering Data
@@ -228,6 +231,7 @@ public class Camera {
 		geometryFBO.attachTexture2D(gl, 2, true);
 		geometryFBO.attachRenderbuffer(gl, FBObject.Attachment.Type.DEPTH, 6);
 		
+		//Specify all the render targets
 		IntBuffer geometryRenderTargets = IntBuffer.wrap(new int[]{GL.GL_COLOR_ATTACHMENT0, GL.GL_COLOR_ATTACHMENT0+1, GL.GL_COLOR_ATTACHMENT0+2});
 		gl.glDrawBuffers(3, geometryRenderTargets);
 		geometryFBO.unbind(gl);
@@ -241,6 +245,41 @@ public class Camera {
 		lightingFBO.attachTexture2D(gl, 0, true);
 		lightingFBO.attachRenderbuffer(gl, FBObject.Attachment.Type.DEPTH_STENCIL, 6);
 		lightingFBO.unbind(gl);
+		
+		//Setup the ambience and self illumination passes
+		ambienceShader = Graphics.loadShader(gl, "Canvas.vsh", "Ambience.fsh");
+		selfIlluShader = Graphics.loadShader(gl, "Canvas.vsh", "SelfIllumination.fsh");
+		
+		int[] buffer = new int[3];
+		gl.glGenVertexArrays(1, buffer, 0);
+		ambienceVAO = buffer[0];
+		gl.glBindVertexArray(ambienceVAO);
+		
+		gl.glGenBuffers(3, buffer, 0);
+		
+		gl.glUseProgram(ambienceShader);
+		int positionIndex = gl.glGetAttribLocation(ambienceShader, "position");
+		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, buffer[0]);
+		gl.glBufferData(GL.GL_ARRAY_BUFFER, screenCanvasVertices.length*(Float.SIZE/8), FloatBuffer.wrap(screenCanvasVertices), GL.GL_STATIC_DRAW);
+		gl.glEnableVertexAttribArray(positionIndex);
+		gl.glVertexAttribPointer(positionIndex, 3, GL.GL_FLOAT, false, 0, 0);
+		gl.glUseProgram(0);
+		
+		gl.glUseProgram(selfIlluShader);
+		positionIndex = gl.glGetAttribLocation(selfIlluShader, "position");
+		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, buffer[1]);
+		gl.glBufferData(GL.GL_ARRAY_BUFFER, screenCanvasVertices.length*(Float.SIZE/8), FloatBuffer.wrap(screenCanvasVertices), GL.GL_STATIC_DRAW);
+		gl.glEnableVertexAttribArray(positionIndex);
+		gl.glVertexAttribPointer(positionIndex, 3, GL.GL_FLOAT, false, 0, 0);
+		
+		int texCoordIndex = gl.glGetAttribLocation(selfIlluShader, "texCoord");
+		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, buffer[2]);
+		gl.glBufferData(GL.GL_ARRAY_BUFFER, screenCanvasTextureCoords.length*(Float.SIZE/8), FloatBuffer.wrap(screenCanvasTextureCoords), GL.GL_STATIC_DRAW);
+		gl.glEnableVertexAttribArray(texCoordIndex);
+		gl.glVertexAttribPointer(texCoordIndex, 2, GL.GL_FLOAT, false, 0, 0);
+		gl.glUseProgram(0);
+		
+		gl.glBindVertexArray(0);
 	}
 
 	private void initializeShadowData()
@@ -343,6 +382,7 @@ public class Camera {
 		gl.glClearColor(clearColour.getRed(), clearColour.getGreen(), clearColour.getBlue(), clearColour.getAlpha());
 		gl.glClearBufferfv(GL2.GL_COLOR, 0, new float[]{0, 0, 0, 1}, 0);
 		gl.glClearBufferfv(GL2.GL_COLOR, 1, new float[]{0.5f, 0.5f, 1, 1}, 0);
+		gl.glClearBufferfv(GL2.GL_COLOR, 2, new float[]{0, 0, 0, 0}, 0);
 		gl.glClear(GL.GL_DEPTH_BUFFER_BIT);
 		geometryFBO.unbind(gl);
 		
@@ -385,6 +425,53 @@ public class Camera {
 	public void drawLightingEnd() { lightingFBO.unbind(gl); }
 	public void drawInterfaceStart() { interfaceFBO.bind(gl); }
 	public void drawInterfaceEnd() { interfaceFBO.unbind(gl); }
+	
+	protected void drawAmbience()
+	{
+		//Draw the ambience and self illumination data
+		gl.glUseProgram(ambienceShader);
+		gl.glBindVertexArray(ambienceVAO);
+		
+		gl.glDisable(GL.GL_DEPTH_TEST);
+		gl.glEnable(GL.GL_BLEND);
+		gl.glBlendFunc(GL.GL_ONE, GL.GL_ONE);
+		
+		int ambienceIndex = gl.glGetUniformLocation(ambienceShader, "ambientLight");
+		gl.glUniform4fv(ambienceIndex, 1, getAmbientLight().toFloat4Array(), 0);
+		
+		gl.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, 4);
+		
+		gl.glDisable(GL.GL_BLEND);
+		gl.glEnable(GL.GL_DEPTH_TEST);
+		
+		gl.glBindVertexArray(0);
+		gl.glUseProgram(0);
+	}
+	
+	protected void drawSelfIllumination()
+	{
+		//Draw the ambience and self illumination data
+		gl.glUseProgram(selfIlluShader);
+		gl.glBindVertexArray(ambienceVAO);
+		
+		gl.glDisable(GL.GL_DEPTH_TEST);
+		gl.glEnable(GL.GL_BLEND);
+		gl.glBlendFunc(GL.GL_ONE, GL.GL_ONE_MINUS_SRC_ALPHA);
+		
+		int geometrySamplerIndex = gl.glGetUniformLocation(selfIlluShader, "geometrySampler");
+		gl.glUniform1i(geometrySamplerIndex, 0);
+		
+		int selfIlluSamplerIndex = gl.glGetUniformLocation(selfIlluShader, "selfIlluSampler");
+		gl.glUniform1i(selfIlluSamplerIndex, 2);
+		
+		gl.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, 4);
+		
+		gl.glDisable(GL.GL_BLEND);
+		gl.glEnable(GL.GL_DEPTH_TEST);
+		
+		gl.glBindVertexArray(0);
+		gl.glUseProgram(0);
+	}
 	
 	private void drawShadow(float[] shadowVerts)
 	{
