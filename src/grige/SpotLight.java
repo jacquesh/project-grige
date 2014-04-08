@@ -119,11 +119,14 @@ public class SpotLight extends Light
 		int lightLocIndex = gl.glGetUniformLocation(shaderProgram, "lightLoc");
 		gl.glUniform3f(lightLocIndex, transformedLightLoc.x, transformedLightLoc.y, transformedLightLoc.z);
 		
-		int radiusIndex = gl.glGetUniformLocation(shaderProgram, "radius");
-		gl.glUniform1f(radiusIndex, getRadius());
+		int colourIndex = gl.glGetUniformLocation(shaderProgram, "lightColor");
+		gl.glUniform4fv(colourIndex, 1, getColour().toFloat4Array(), 0);
 		
-		int colourIndex = gl.glGetUniformLocation(shaderProgram, "lightColour");
-		gl.glUniform3fv(colourIndex, 1, getColour().toFloat3Array(), 0);
+		int falloffIndex = gl.glGetUniformLocation(shaderProgram, "falloff");
+		gl.glUniform3f(falloffIndex, 0.4f, 3, 20);
+		
+		int ambienceIndex = gl.glGetUniformLocation(shaderProgram, "ambientLight");
+		gl.glUniform4fv(ambienceIndex, 1, cam.getAmbientLight().toFloat4Array(), 0);
 		
 		int objectTransformIndex = gl.glGetUniformLocation(shaderProgram, "objectTransform");
 		gl.glUniformMatrix4fv(objectTransformIndex, 1, false, objectTransformMatrix, 0);
@@ -133,6 +136,15 @@ public class SpotLight extends Light
 		
 		int projMatrixIndex = gl.glGetUniformLocation(shaderProgram, "projectionMatrix");
 		gl.glUniformMatrix4fv(projMatrixIndex, 1, false, cam.getProjectionMatrix(), 0);
+		
+		int geometryIndex = gl.glGetUniformLocation(shaderProgram, "geometrySampler");
+		gl.glUniform1i(geometryIndex, 0);
+		
+		int normalIndex = gl.glGetUniformLocation(shaderProgram, "normalSampler");
+		gl.glUniform1i(normalIndex, 1);
+		
+		int resolutionIndex = gl.glGetUniformLocation(shaderProgram, "resolution");
+		gl.glUniform2f(resolutionIndex, cam.getWidth(), cam.getHeight());
 		
 		gl.glDrawArrays(GL.GL_TRIANGLES, 0, 3);
 		
