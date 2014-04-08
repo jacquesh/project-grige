@@ -3,7 +3,6 @@
 uniform sampler2D geometrySampler;
 uniform sampler2D normalSampler;
 
-uniform vec4 ambientLight;
 uniform vec4 lightColor;
 
 in vec2 texCoordV;
@@ -21,11 +20,8 @@ void main(){
 	//Then perform "N dot L" to determine our diffuse term
 	vec3 diffuse = (lightColor.rgb * lightColor.a) * max(dot(N, L), 0.0);
 	
-	//pre-multiply ambient color with intensity
-	vec3 ambience = ambientLight.rgb * ambientLight.a;
-	
 	//the calculation which brings it all together
-	vec3 intensity = ambience + diffuse;
+	vec3 intensity = diffuse;
 	vec3 finalColor = diffuseColor.rgb * intensity;
 	gl_FragColor = vec4(finalColor, diffuseColor.a);
 }

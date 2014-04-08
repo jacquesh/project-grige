@@ -5,8 +5,6 @@ uniform sampler2D normalSampler;
 
 uniform vec2 resolution;
 
-uniform vec4 ambientLight;
-
 uniform vec3 falloff;
 
 uniform vec3 lightLoc;
@@ -15,7 +13,7 @@ uniform vec4 lightColor;
 in vec2 texCoordV;
 
 void main(){
-	//Get diffuse and normal data
+	//Get input data
 	vec4 diffuseColor = texture2D(geometrySampler, texCoordV);
 	vec3 normalMap = texture2D(normalSampler, texCoordV).rgb;
 	
@@ -33,14 +31,11 @@ void main(){
 	//Then perform "N dot L" to determine our diffuse term
 	vec3 diffuse = (lightColor.rgb * lightColor.a) * max(dot(N, L), 0.0);
 	
-	//pre-multiply ambient color with intensity
-	vec3 ambience = ambientLight.rgb * ambientLight.a;
-	
 	//calculate attenuation
 	float attenuation = 1.0/(falloff.x + (falloff.y*lightOffset) + (falloff.z*lightOffset*lightOffset));
  		
 	//the calculation which brings it all together
-	vec3 intensity = ambience + diffuse * attenuation;
+	vec3 intensity = diffuse * attenuation;
 	vec3 finalColor = diffuseColor.rgb * intensity;
 	gl_FragColor = vec4(finalColor, diffuseColor.a);
 }

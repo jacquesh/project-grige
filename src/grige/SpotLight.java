@@ -125,9 +125,6 @@ public class SpotLight extends Light
 		int falloffIndex = gl.glGetUniformLocation(shaderProgram, "falloff");
 		gl.glUniform3f(falloffIndex, 0.4f, 3, 20);
 		
-		int ambienceIndex = gl.glGetUniformLocation(shaderProgram, "ambientLight");
-		gl.glUniform4fv(ambienceIndex, 1, cam.getAmbientLight().toFloat4Array(), 0);
-		
 		int objectTransformIndex = gl.glGetUniformLocation(shaderProgram, "objectTransform");
 		gl.glUniformMatrix4fv(objectTransformIndex, 1, false, objectTransformMatrix, 0);
 		

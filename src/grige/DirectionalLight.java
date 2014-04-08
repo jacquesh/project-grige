@@ -108,9 +108,6 @@ public class DirectionalLight extends Light
 		int colourIndex = gl.glGetUniformLocation(shaderProgram, "lightColor");
 		gl.glUniform4fv(colourIndex, 1, getColour().toFloat4Array(), 0);
 		
-		int ambienceIndex = gl.glGetUniformLocation(shaderProgram, "ambientLight");
-		gl.glUniform4fv(ambienceIndex, 1, cam.getAmbientLight().toFloat4Array(), 0);
-		
 		int geometrySamplerIndex = gl.glGetUniformLocation(shaderProgram, "geometrySampler");
 		gl.glUniform1i(geometrySamplerIndex, 0);
 		
