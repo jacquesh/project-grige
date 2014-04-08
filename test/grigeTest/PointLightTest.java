@@ -22,7 +22,13 @@ public class PointLightTest extends GameBase
 		int shader = Graphics.loadShader(gl, "SimpleVertexShader.vsh", "SimpleFragmentShader.fsh");
 		int lightingShader = Graphics.loadShader(gl, "Light.vsh", "AttenuatingLight.fsh");
 		
+		Material backgroundMaterial = Material.load(gl, "test/grigeTest/background.png");
 		Material spriteMaterial = Material.load(gl, "test/grigeTest/bluegreengrid.png");
+		
+		SampleObject backgroundSprite = new SampleObject();
+		backgroundSprite.setMaterial(backgroundMaterial);
+		backgroundSprite.setDepth(100);
+		backgroundSprite.setShader(gl, shader);
 		
 		SampleObject testSprite = new SampleObject();
 		testSprite.setMaterial(spriteMaterial);
@@ -32,10 +38,10 @@ public class PointLightTest extends GameBase
 		
 		pl = new PointLight();
 		pl.setRadius(1.5f);
-		pl.setIntensity(20f);
 		pl.setPosition(160,140);
 		pl.setShader(gl, lightingShader);
 		
+		addObject(backgroundSprite);
 		addObject(testSprite);
 		addLight(pl);
 	}
