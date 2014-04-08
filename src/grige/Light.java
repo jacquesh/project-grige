@@ -18,6 +18,11 @@ public abstract class Light extends Drawable
 		colour = new Color(red,green,blue, colour.getAlpha());
 	}
 	
+	public void setColour(float red, float green, float blue, float intensity)
+	{
+		colour = new Color(red,green,blue,intensity);
+	}
+	
 	public void setIntensity(float newIntensity)
 	{
 		colour = new Color(colour.getRed(), colour.getGreen(), colour.getBlue(), newIntensity);
