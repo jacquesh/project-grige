@@ -7,5 +7,6 @@ in vec2 texCoordV;
 
 void main(){
     gl_FragData[0] = texture(textureUnit, texCoordV);
-    gl_FragData[1] = texture(normalUnit, texCoordV);
+    if(normalUnit != -1)
+    	gl_FragData[1] = texture(normalUnit, texCoordV);
 }

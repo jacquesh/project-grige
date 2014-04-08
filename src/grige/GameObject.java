@@ -282,13 +282,6 @@ public abstract class GameObject extends Animatable
 		gl.glEnable(GL.GL_BLEND);
 		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
 		
-		//Texture specification
-		int textureSamplerIndex = gl.glGetUniformLocation(shaderProgram, "textureUnit");
-		gl.glUniform1i(textureSamplerIndex, 0);
-		
-		int normalSamplerIndex = gl.glGetUniformLocation(shaderProgram, "normalUnit");
-		gl.glUniform1i(normalSamplerIndex, 1);
-		
 		//Texture coordinates
 		int texCoordIndex = gl.glGetAttribLocation(shaderProgram, "texCoord");
 		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, texCoordBuffer);
@@ -306,12 +299,27 @@ public abstract class GameObject extends Animatable
 		int geometryObjTransformIndex = gl.glGetUniformLocation(shaderProgram, "objectTransform");
 		gl.glUniformMatrix4fv(geometryObjTransformIndex, 1, false, objectTransformMatrix, 0);
 		
+		//Texture specification
+		//Diffuse Texture
+		int textureSamplerIndex = gl.glGetUniformLocation(shaderProgram, "textureUnit");
+		gl.glUniform1i(textureSamplerIndex, 0);
+		
 		int objTex = getMaterial().getDiffuseMap();
-		int objNormal = getMaterial().getNormalMap();
 		gl.glActiveTexture(GL.GL_TEXTURE0);
 		gl.glBindTexture(GL.GL_TEXTURE_2D, objTex);
-		gl.glActiveTexture(GL.GL_TEXTURE1);
-		gl.glBindTexture(GL.GL_TEXTURE_2D, objNormal);
+		
+		//Normal Texture
+		int normalSamplerIndex = gl.glGetUniformLocation(shaderProgram, "normalUnit");
+		int objNormal = getMaterial().getNormalMap();
+		if(objNormal != 0)
+		{
+			gl.glUniform1i(normalSamplerIndex, 1);
+			
+			gl.glActiveTexture(GL.GL_TEXTURE1);
+			gl.glBindTexture(GL.GL_TEXTURE_2D, objNormal);
+		}
+		else
+			gl.glUniform1i(normalSamplerIndex, -1);
 		
 		gl.glDrawElements(GL.GL_TRIANGLE_STRIP, quadIndices.length, GL.GL_UNSIGNED_INT, 0);
 		

@@ -340,7 +340,9 @@ public class Camera {
 		//Clear the geometry buffer
 		geometryFBO.bind(gl);
 		gl.glClearColor(clearColour.getRed(), clearColour.getGreen(), clearColour.getBlue(), clearColour.getAlpha());
-		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
+		gl.glClearBufferfv(GL2.GL_COLOR, 0, new float[]{0, 0, 0, 1}, 0);
+		gl.glClearBufferfv(GL2.GL_COLOR, 1, new float[]{0.5f, 0.5f, 1, 1}, 0);
+		gl.glClear(GL.GL_DEPTH_BUFFER_BIT);
 		geometryFBO.unbind(gl);
 		
 		//Clear the lighting buffer
