@@ -3,6 +3,8 @@
 uniform sampler2D geometrySampler;
 uniform sampler2D normalSampler;
 
+uniform vec2 resolution;
+
 uniform vec4 ambientLight;
 
 uniform vec3 falloff;
@@ -18,7 +20,7 @@ void main(){
 	vec3 normalMap = texture2D(normalSampler, texCoordV).rgb;
 	
 	//Compute the vector from the light to the current fragment
-	vec3 lightDir = vec3((lightLoc.xy - gl_FragCoord.xy)/320, -lightLoc.z/10);
+	vec3 lightDir = vec3((lightLoc.xy - gl_FragCoord.xy)/resolution.xy, -lightLoc.z/10);
 	
 	//Determine distance (for attenuation) BEFORE we normalize our lightDir
 	float lightOffset = length(lightDir);

@@ -116,6 +116,9 @@ public class PointLight extends Light
 		int normalSamplerIndex = gl.glGetUniformLocation(shaderProgram, "normalSampler");
 		gl.glUniform1i(normalSamplerIndex, 1);
 		
+		int resolutionIndex = gl.glGetUniformLocation(shaderProgram, "resolution");
+		gl.glUniform2f(resolutionIndex, cam.getWidth(), cam.getHeight());
+		
 		int viewMatrixIndex = gl.glGetUniformLocation(shaderProgram, "viewingMatrix");
 		gl.glUniformMatrix4fv(viewMatrixIndex, 1, false, cam.getViewingMatrix(), 0);
 		
