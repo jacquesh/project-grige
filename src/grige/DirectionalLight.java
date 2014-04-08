@@ -70,16 +70,12 @@ public class DirectionalLight extends Light
 	@Override
 	protected void onDraw(GL2 gl, Camera cam)
 	{
-		GameBase.printOpenGLError(gl, true);
 		if(shaderProgram == 0)
 		{
 			log.severe("Attempting to render a shaderless light. Skipping...");
 			return;
 		}
 		
-		//Compute the transformed light location (for lighting)
-		Vector3 transformedLightLoc = cam.worldToScreenLoc(x(), y(), depth());
-
 		float[] lightVertices = {
 				-1.0f, -1.0f, -depth(),
 				-1.0f, 1.0f, -depth(),
@@ -107,16 +103,7 @@ public class DirectionalLight extends Light
 		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, buffer[1]);
 		gl.glBufferData(GL.GL_ARRAY_BUFFER, defaultTextureCoords.length*(Float.SIZE/8), FloatBuffer.wrap(defaultTextureCoords), GL.GL_STATIC_DRAW);
 		gl.glEnableVertexAttribArray(texCoordIndex);
-		GameBase.printOpenGLError(gl, true);
 		gl.glVertexAttribPointer(texCoordIndex, 2, GL.GL_FLOAT, false, 0, 0);
-		
-		GameBase.printOpenGLError(gl, true);
-		
-		int lightLocIndex = gl.glGetUniformLocation(shaderProgram, "lightLoc");
-		gl.glUniform3f(lightLocIndex, transformedLightLoc.x, transformedLightLoc.y, transformedLightLoc.z);
-		
-		int radiusIndex = gl.glGetUniformLocation(shaderProgram, "radius");
-		gl.glUniform1f(radiusIndex, getRadius());
 		
 		int colourIndex = gl.glGetUniformLocation(shaderProgram, "lightColor");
 		gl.glUniform4fv(colourIndex, 1, getColour().toFloat4Array(), 0);
@@ -124,20 +111,11 @@ public class DirectionalLight extends Light
 		int ambienceIndex = gl.glGetUniformLocation(shaderProgram, "ambientLight");
 		gl.glUniform4fv(ambienceIndex, 1, cam.getAmbientLight().toFloat4Array(), 0);
 		
-		int falloffIndex = gl.glGetUniformLocation(shaderProgram, "falloff");
-		gl.glUniform3f(falloffIndex, 0.4f, 3, 20);
-		
 		int geometrySamplerIndex = gl.glGetUniformLocation(shaderProgram, "geometrySampler");
 		gl.glUniform1i(geometrySamplerIndex, 0);
 		
 		int normalSamplerIndex = gl.glGetUniformLocation(shaderProgram, "normalSampler");
 		gl.glUniform1i(normalSamplerIndex, 1);
-		
-		int viewMatrixIndex = gl.glGetUniformLocation(shaderProgram, "viewingMatrix");
-		gl.glUniformMatrix4fv(viewMatrixIndex, 1, false, cam.getViewingMatrix(), 0);
-		
-		int projMatrixIndex = gl.glGetUniformLocation(shaderProgram, "projectionMatrix");
-		gl.glUniformMatrix4fv(projMatrixIndex, 1, false, cam.getProjectionMatrix(), 0);
 		
 		gl.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, 4);
 		

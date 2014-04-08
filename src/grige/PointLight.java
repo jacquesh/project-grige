@@ -98,9 +98,6 @@ public class PointLight extends Light
 		int lightLocIndex = gl.glGetUniformLocation(shaderProgram, "lightLoc");
 		gl.glUniform3f(lightLocIndex, transformedLightLoc.x, transformedLightLoc.y, transformedLightLoc.z);
 		
-		int radiusIndex = gl.glGetUniformLocation(shaderProgram, "radius");
-		gl.glUniform1f(radiusIndex, getRadius());
-		
 		int colourIndex = gl.glGetUniformLocation(shaderProgram, "lightColor");
 		gl.glUniform4fv(colourIndex, 1, getColour().toFloat4Array(), 0);
 		
@@ -118,12 +115,6 @@ public class PointLight extends Light
 		
 		int resolutionIndex = gl.glGetUniformLocation(shaderProgram, "resolution");
 		gl.glUniform2f(resolutionIndex, cam.getWidth(), cam.getHeight());
-		
-		int viewMatrixIndex = gl.glGetUniformLocation(shaderProgram, "viewingMatrix");
-		gl.glUniformMatrix4fv(viewMatrixIndex, 1, false, cam.getViewingMatrix(), 0);
-		
-		int projMatrixIndex = gl.glGetUniformLocation(shaderProgram, "projectionMatrix");
-		gl.glUniformMatrix4fv(projMatrixIndex, 1, false, cam.getProjectionMatrix(), 0);
 		
 		gl.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, 4);
 		
