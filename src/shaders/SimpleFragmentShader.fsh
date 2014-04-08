@@ -12,4 +12,6 @@ void main(){
     
     if(hasNormals == 1)
     	gl_FragData[1] = texture(normalUnit, texCoordV);
+    else
+    	gl_FragData[1] = vec4(0.5, 0.5, 1, 1);
 }
