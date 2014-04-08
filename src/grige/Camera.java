@@ -225,10 +225,11 @@ public class Camera {
 		geometryFBO.reset(gl, size.x, size.y);
 		geometryFBO.attachTexture2D(gl, 0, true);
 		geometryFBO.attachTexture2D(gl, 1, false);
+		geometryFBO.attachTexture2D(gl, 2, true);
 		geometryFBO.attachRenderbuffer(gl, FBObject.Attachment.Type.DEPTH, 6);
 		
-		IntBuffer geometryRenderTargets = IntBuffer.wrap(new int[]{GL.GL_COLOR_ATTACHMENT0, GL.GL_COLOR_ATTACHMENT0+1});
-		gl.glDrawBuffers(2, geometryRenderTargets);
+		IntBuffer geometryRenderTargets = IntBuffer.wrap(new int[]{GL.GL_COLOR_ATTACHMENT0, GL.GL_COLOR_ATTACHMENT0+1, GL.GL_COLOR_ATTACHMENT0+2});
+		gl.glDrawBuffers(3, geometryRenderTargets);
 		geometryFBO.unbind(gl);
 	}
 	
@@ -376,6 +377,10 @@ public class Camera {
 		TextureAttachment normalTexture = (TextureAttachment)geometryFBO.getColorbuffer(1);
 		gl.glActiveTexture(GL.GL_TEXTURE1);
 		gl.glBindTexture(GL.GL_TEXTURE_2D, normalTexture.getName());
+		
+		TextureAttachment selfIlluTexture = (TextureAttachment)geometryFBO.getColorbuffer(2);
+		gl.glActiveTexture(GL.GL_TEXTURE2);
+		gl.glBindTexture(GL.GL_TEXTURE_2D, selfIlluTexture.getName());
 	}
 	public void drawLightingEnd() { lightingFBO.unbind(gl); }
 	public void drawInterfaceStart() { interfaceFBO.bind(gl); }

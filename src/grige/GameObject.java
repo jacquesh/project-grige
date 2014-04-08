@@ -321,6 +321,19 @@ public abstract class GameObject extends Animatable
 		int hasNormalsIndex = gl.glGetUniformLocation(shaderProgram, "hasNormals");
 		gl.glUniform1i(hasNormalsIndex, objNormal != 0 ? 1 : 0);
 		
+		//Self-illumination Texture
+		int objSelfIllu = getMaterial().getSelfIlluminationMap();
+		if(objSelfIllu != 0)
+		{
+			int selfIlluSamplerIndex = gl.glGetUniformLocation(shaderProgram, "selfIlluUnit");
+			gl.glUniform1i(selfIlluSamplerIndex, 2);
+			
+			gl.glActiveTexture(GL.GL_TEXTURE2);
+			gl.glBindTexture(GL.GL_TEXTURE_2D, objSelfIllu);
+		}
+		int hasSelfIlluIndex = gl.glGetUniformLocation(shaderProgram, "hasSelfIllu");
+		gl.glUniform1i(hasSelfIlluIndex, objSelfIllu != 0 ? 1 : 0);
+		
 		gl.glDrawElements(GL.GL_TRIANGLE_STRIP, quadIndices.length, GL.GL_UNSIGNED_INT, 0);
 		
 		gl.glDisable(GL.GL_BLEND);
