@@ -21,6 +21,10 @@ Current TODO
 -----------------------------------
 * Make light rendering more elegant (more DRY, less WET)
 * Let lights shine out from inside objects
+* Add cleanup for all opengl objects
+* Generate texture coord and vertex location buffers only once per object, not every frame
+* Fix the openal startup crash
+* Render sprites back to front
 
 Yet-to-be-(maybe)-implemented Functionality
 -----------------------------------
