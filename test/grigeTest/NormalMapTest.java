@@ -6,12 +6,12 @@ import grige.*;
 
 import javax.media.opengl.GL2;
 
-public class PointLightTest extends GameBase
+public class NormalMapTest extends GameBase
 {
 	
 	private PointLight pl;
 	
-	public PointLightTest()
+	public NormalMapTest()
 	{
 		super();
 	}
@@ -22,7 +22,7 @@ public class PointLightTest extends GameBase
 		int shader = Graphics.loadShader(gl, "SimpleVertexShader.vsh", "SimpleFragmentShader.fsh");
 		int lightingShader = Graphics.loadShader(gl, "Light.vsh", "AttenuatingLight.fsh");
 		
-		Material backgroundMaterial = Material.load(gl, "test/grigeTest/background.png");
+		Material backgroundMaterial = Material.load(gl, "test/grigeTest/background.png", "test/grigeTest/backgroundNormal.png", null);
 		Material spriteMaterial = Material.load(gl, "test/grigeTest/bluegreengrid.png");
 		
 		SampleObject backgroundSprite = new SampleObject();
@@ -69,7 +69,7 @@ public class PointLightTest extends GameBase
 	
 	public static void main(String[] args)
 	{
-		PointLightTest game = new PointLightTest();
+		NormalMapTest game = new NormalMapTest();
 		game.start();
 	}
 

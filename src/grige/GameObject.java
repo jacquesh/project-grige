@@ -276,16 +276,11 @@ public abstract class GameObject extends Animatable
 			return;
 		
 		gl.glUseProgram(shaderProgram);
-		gl.glActiveTexture(GL.GL_TEXTURE0);
 		gl.glBindVertexArray(geometryVAO);
 		gl.glDepthMask(true);
 		
 		gl.glEnable(GL.GL_BLEND);
 		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
-		
-		//Texture specification
-		int textureSamplerIndex = gl.glGetUniformLocation(shaderProgram, "textureUnit");
-		gl.glUniform1i(textureSamplerIndex, 0);
 		
 		//Texture coordinates
 		int texCoordIndex = gl.glGetAttribLocation(shaderProgram, "texCoord");
@@ -304,12 +299,43 @@ public abstract class GameObject extends Animatable
 		int geometryObjTransformIndex = gl.glGetUniformLocation(shaderProgram, "objectTransform");
 		gl.glUniformMatrix4fv(geometryObjTransformIndex, 1, false, objectTransformMatrix, 0);
 		
+		//Texture specification
+		//Diffuse Texture
+		int textureSamplerIndex = gl.glGetUniformLocation(shaderProgram, "textureUnit");
+		gl.glUniform1i(textureSamplerIndex, 0);
+		
 		int objTex = getMaterial().getDiffuseMap();
+		gl.glActiveTexture(GL.GL_TEXTURE0);
 		gl.glBindTexture(GL.GL_TEXTURE_2D, objTex);
+		
+		//Normal Texture
+		int objNormal = getMaterial().getNormalMap();
+		if(objNormal != 0)
+		{
+			int normalSamplerIndex = gl.glGetUniformLocation(shaderProgram, "normalUnit");
+			gl.glUniform1i(normalSamplerIndex, 1);
+			
+			gl.glActiveTexture(GL.GL_TEXTURE1);
+			gl.glBindTexture(GL.GL_TEXTURE_2D, objNormal);
+		}
+		int hasNormalsIndex = gl.glGetUniformLocation(shaderProgram, "hasNormals");
+		gl.glUniform1i(hasNormalsIndex, objNormal != 0 ? 1 : 0);
+		
+		//Self-illumination Texture
+		int objSelfIllu = getMaterial().getSelfIlluminationMap();
+		if(objSelfIllu != 0)
+		{
+			int selfIlluSamplerIndex = gl.glGetUniformLocation(shaderProgram, "selfIlluUnit");
+			gl.glUniform1i(selfIlluSamplerIndex, 2);
+			
+			gl.glActiveTexture(GL.GL_TEXTURE2);
+			gl.glBindTexture(GL.GL_TEXTURE_2D, objSelfIllu);
+		}
+		int hasSelfIlluIndex = gl.glGetUniformLocation(shaderProgram, "hasSelfIllu");
+		gl.glUniform1i(hasSelfIlluIndex, objSelfIllu != 0 ? 1 : 0);
 		
 		gl.glDrawElements(GL.GL_TRIANGLE_STRIP, quadIndices.length, GL.GL_UNSIGNED_INT, 0);
 		
-		gl.glBindTexture(GL.GL_TEXTURE_2D, 0);
 		gl.glDisable(GL.GL_BLEND);
 		
 		gl.glDepthMask(false);

@@ -7,10 +7,8 @@ It is very much a work in progress.
 Currently Supported Functionality
 ---------------------------------
 * Rendering of any reasonable number of textured sprites
-* Basic 2D lighting, with hard shadows (still to be improved, but it works)
-* Directional lights
-* Spotlights
-* Sprite self-illumination maps
+* Full 2D lighting (supporting point, directional, and spot lights) with hard shadows
+* Sprite normal and self-illumination mapping
 * Simultaneous playing of multiple audio sources
 * Keyboard and mouse input polling
 * Easy camera movement
@@ -19,9 +17,18 @@ Currently Supported Functionality
 * Sprite animation (using SpriteSheetPacker)
 * Full, interactive UI support via the Nifty library
 
+Current TODO
+-----------------------------------
+* Make light rendering more elegant (more DRY, less WET)
+* Let lights shine out from inside objects
+* Add cleanup for all opengl objects
+* Generate texture coord and vertex location buffers only once per object, not every frame
+* Fix the openal startup crash
+* Render sprites back to front
+
 Yet-to-be-(maybe)-implemented Functionality
 -----------------------------------
-* Sprite normal mapping (because pretteh lights)
+* Soft shadows
 * Basic particles
 * Pixel-perfect collision detection
 * Basic multiplayer/network support

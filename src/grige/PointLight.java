@@ -11,6 +11,13 @@ public class PointLight extends Light
 {
 	private static final Logger log = Logger.getLogger(PointLight.class.getName());
 	
+	private final float[] defaultTextureCoords = {
+			0.0f, 0.0f,
+			0.0f, 1.0f,
+			1.0f, 0.0f,
+			1.0f, 1.0f,
+	};
+	
 	private int shaderProgram;
 	private int lightingVAO;
 	
@@ -73,8 +80,8 @@ public class PointLight extends Light
 		gl.glEnable(GL.GL_BLEND);
 		gl.glBlendFunc(GL.GL_ONE, GL.GL_ONE);
 		
-		int[] buffer = new int[1];
-		gl.glGenBuffers(1, buffer, 0);
+		int[] buffer = new int[2];
+		gl.glGenBuffers(2, buffer, 0);
 		
 		int positionIndex = gl.glGetAttribLocation(shaderProgram, "position");
 		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, buffer[0]);
@@ -82,23 +89,26 @@ public class PointLight extends Light
 		gl.glEnableVertexAttribArray(positionIndex);
 		gl.glVertexAttribPointer(positionIndex, 3, GL.GL_FLOAT, false, 0, 0);
 		
+		int texCoordIndex = gl.glGetAttribLocation(shaderProgram, "texCoord");
+		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, buffer[1]);
+		gl.glBufferData(GL.GL_ARRAY_BUFFER, defaultTextureCoords.length*(Float.SIZE/8), FloatBuffer.wrap(defaultTextureCoords), GL.GL_STATIC_DRAW);
+		gl.glEnableVertexAttribArray(texCoordIndex);
+		gl.glVertexAttribPointer(texCoordIndex, 2, GL.GL_FLOAT, false, 0, 0);
+		
 		int lightLocIndex = gl.glGetUniformLocation(shaderProgram, "lightLoc");
 		gl.glUniform3f(lightLocIndex, transformedLightLoc.x, transformedLightLoc.y, transformedLightLoc.z);
 		
-		int radiusIndex = gl.glGetUniformLocation(shaderProgram, "radius");
-		gl.glUniform1f(radiusIndex, getRadius());
+		int colourIndex = gl.glGetUniformLocation(shaderProgram, "lightColor");
+		gl.glUniform4fv(colourIndex, 1, getColour().toFloat4Array(), 0);
 		
-		int colourIndex = gl.glGetUniformLocation(shaderProgram, "lightColour");
-		gl.glUniform3fv(colourIndex, 1, getColour().toFloat3Array(), 0);
+		int falloffIndex = gl.glGetUniformLocation(shaderProgram, "falloff");
+		gl.glUniform3f(falloffIndex, 0.4f, 3, 20);
 		
-		int intensityIndex = gl.glGetUniformLocation(shaderProgram, "intensity");
-		gl.glUniform1f(intensityIndex, getIntensity());
+		int normalSamplerIndex = gl.glGetUniformLocation(shaderProgram, "normalSampler");
+		gl.glUniform1i(normalSamplerIndex, 1);
 		
-		int viewMatrixIndex = gl.glGetUniformLocation(shaderProgram, "viewingMatrix");
-		gl.glUniformMatrix4fv(viewMatrixIndex, 1, false, cam.getViewingMatrix(), 0);
-		
-		int projMatrixIndex = gl.glGetUniformLocation(shaderProgram, "projectionMatrix");
-		gl.glUniformMatrix4fv(projMatrixIndex, 1, false, cam.getProjectionMatrix(), 0);
+		int resolutionIndex = gl.glGetUniformLocation(shaderProgram, "resolution");
+		gl.glUniform2f(resolutionIndex, cam.getWidth(), cam.getHeight());
 		
 		gl.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, 4);
 		

@@ -6,12 +6,12 @@ import grige.*;
 
 import javax.media.opengl.GL2;
 
-public class PointLightTest extends GameBase
+public class SelfIlluminationTest extends GameBase
 {
 	
 	private PointLight pl;
 	
-	public PointLightTest()
+	public SelfIlluminationTest()
 	{
 		super();
 	}
@@ -23,7 +23,7 @@ public class PointLightTest extends GameBase
 		int lightingShader = Graphics.loadShader(gl, "Light.vsh", "AttenuatingLight.fsh");
 		
 		Material backgroundMaterial = Material.load(gl, "test/grigeTest/background.png");
-		Material spriteMaterial = Material.load(gl, "test/grigeTest/bluegreengrid.png");
+		Material spriteMaterial = Material.load(gl, "test/grigeTest/bluegreengrid.png", null, "test/grigeTest/bluegreenSelfIllu.png");
 		
 		SampleObject backgroundSprite = new SampleObject();
 		backgroundSprite.setMaterial(backgroundMaterial);
@@ -69,7 +69,7 @@ public class PointLightTest extends GameBase
 	
 	public static void main(String[] args)
 	{
-		PointLightTest game = new PointLightTest();
+		SelfIlluminationTest game = new SelfIlluminationTest();
 		game.start();
 	}
 

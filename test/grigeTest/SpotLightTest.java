@@ -4,8 +4,6 @@ import grige.*;
 
 import com.jogamp.newt.event.KeyEvent;
 
-import com.jogamp.opengl.math.FloatUtil;
-
 import javax.media.opengl.GL2;
 
 public class SpotLightTest extends GameBase
@@ -22,10 +20,15 @@ public class SpotLightTest extends GameBase
 	public void initialize(GL2 gl)
 	{
 		int shader = Graphics.loadShader(gl, "SimpleVertexShader.vsh", "SimpleFragmentShader.fsh");
-		int lightingShader = Graphics.loadShader(gl, "SpotLightVertexShader.vsh", "HyperbolicAttenuatingLight.fsh");
-		camera.setAmbientLightAlpha(0);
+		int lightingShader = Graphics.loadShader(gl, "SpotLight.vsh", "AttenuatingLight.fsh");
 		
+		Material backgroundMaterial = Material.load(gl, "test/grigeTest/background.png");
 		Material spriteMaterial = Material.load(gl, "test/grigeTest/bluegreengrid.png");
+		
+		SampleObject background = new SampleObject();
+		background.setMaterial(backgroundMaterial);
+		background.setDepth(10);
+		background.setShader(gl, shader);
 		
 		SampleObject testSprite = new SampleObject();
 		testSprite.setMaterial(spriteMaterial);
@@ -34,11 +37,10 @@ public class SpotLightTest extends GameBase
 		testSprite.setDepth(2);
 		
 		sl = new SpotLight(90);
-		sl.setRadius(1.5f);
-		sl.setPosition(160,140);
-		sl.setIntensity(20);
+		sl.setPosition(160,160);
 		sl.setShader(gl, lightingShader);
 		
+		addObject(background);
 		addObject(testSprite);
 		addLight(sl);
 	}

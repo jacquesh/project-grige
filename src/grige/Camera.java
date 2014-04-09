@@ -43,7 +43,7 @@ public class Camera {
 	private float depth;
 	
 	private Color clearColour;
-	private float ambientLightAlpha;
+	private Color ambientLight;
 	
 	//Current transformation matrices
 	private float[] projectionMatrix;
@@ -51,7 +51,6 @@ public class Camera {
 	
 	//Vertex Buffers
 	private int screenCanvasVAO;
-	
 	private int shadowVertexBuffer;
 	
 	//Frame Buffers
@@ -75,7 +74,7 @@ public class Camera {
 		size = new Vector2I(startWidth, startHeight);
 		depth = startDepth;
 		
-		ambientLightAlpha = 0;
+		ambientLight = new Color(0,0,0,0);
 		clearColour = new Color(0,0,0,1);
 	}
 	
@@ -112,7 +111,7 @@ public class Camera {
 		setPosition(position.x,position.y); //Update the viewing matrix as well, because the size has changed (so we need to translate (0,0) differently)
 	}
 	
-	public void setAmbientLightAlpha(float newAlpha) { ambientLightAlpha = newAlpha; }
+	public void setAmbientLight(float r, float g, float b, float a) { ambientLight = new Color(r, g, b, a); }
 	public void setClearColor(float r, float g, float b){ clearColour = new Color(r, g, b, 1); }
 	
 	public Vector2 getBottomLeft() { return new Vector2(position.x, position.y); }
@@ -124,7 +123,7 @@ public class Camera {
 	public float getWidth() { return size.x; }
 	public float getHeight() { return size.y; }
 	public float getDepth() { return depth; }
-	public float getAmbientLightAlpha() { return ambientLightAlpha; }
+	public Color getAmbientLight() { return ambientLight; }
 	public Color getClearColor() { return clearColour; }
 	public float[] getProjectionMatrix() { return projectionMatrix; }
 	public float[] getViewingMatrix() { return viewingMatrix; }
@@ -225,7 +224,13 @@ public class Camera {
 		geometryFBO = new FBObject();
 		geometryFBO.reset(gl, size.x, size.y);
 		geometryFBO.attachTexture2D(gl, 0, true);
+		geometryFBO.attachTexture2D(gl, 1, false);
+		geometryFBO.attachTexture2D(gl, 2, true);
 		geometryFBO.attachRenderbuffer(gl, FBObject.Attachment.Type.DEPTH, 6);
+		
+		//Specify all the render targets
+		IntBuffer geometryRenderTargets = IntBuffer.wrap(new int[]{GL.GL_COLOR_ATTACHMENT0, GL.GL_COLOR_ATTACHMENT0+1, GL.GL_COLOR_ATTACHMENT0+2});
+		gl.glDrawBuffers(3, geometryRenderTargets);
 		geometryFBO.unbind(gl);
 	}
 	
@@ -299,13 +304,15 @@ public class Camera {
 		gl.glEnableVertexAttribArray(texCoordIndex);
 		gl.glVertexAttribPointer(texCoordIndex, 2, GL.GL_FLOAT, false, 0, 0);
 		
-		//Assign to the samplers, the textures used by the geometry and lighting respectively
+		//Buffer input textures
 		int geometryTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader, "geometryTextureUnit");
 		gl.glUniform1i(geometryTextureSamplerIndex, 0);
 		int lightingTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader, "lightingTextureUnit");
 		gl.glUniform1i(lightingTextureSamplerIndex, 1);
+		int selfIlluTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader, "selfIlluTextureUnit");
+		gl.glUniform1i(selfIlluTextureSamplerIndex, 2);
 		int interfaceTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader, "interfaceTextureUnit");
-		gl.glUniform1i(interfaceTextureSamplerIndex, 2);
+		gl.glUniform1i(interfaceTextureSamplerIndex, 3);
 		
 		gl.glBindVertexArray(0);
 		gl.glUseProgram(0);
@@ -345,12 +352,15 @@ public class Camera {
 		//Clear the geometry buffer
 		geometryFBO.bind(gl);
 		gl.glClearColor(clearColour.getRed(), clearColour.getGreen(), clearColour.getBlue(), clearColour.getAlpha());
-		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
+		gl.glClearBufferfv(GL2.GL_COLOR, 0, new float[]{0, 0, 0, 1}, 0);
+		gl.glClearBufferfv(GL2.GL_COLOR, 1, new float[]{0.5f, 0.5f, 1, 1}, 0);
+		gl.glClearBufferfv(GL2.GL_COLOR, 2, new float[]{0, 0, 0, 0}, 0);
+		gl.glClear(GL.GL_DEPTH_BUFFER_BIT);
 		geometryFBO.unbind(gl);
 		
 		//Clear the lighting buffer
 		lightingFBO.bind(gl);
-		gl.glClearColor(0, 0, 0, ambientLightAlpha);
+		gl.glClearColor(0, 0, 0, 1);
 		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT | GL.GL_STENCIL_BUFFER_BIT);
 		lightingFBO.unbind(gl);
 		
@@ -368,7 +378,14 @@ public class Camera {
 	
 	public void drawGeometryStart() { geometryFBO.bind(gl); }
 	public void drawGeometryEnd() { geometryFBO.unbind(gl); }
-	public void drawLightingStart() { lightingFBO.bind(gl); }
+	public void drawLightingStart()
+	{
+		lightingFBO.bind(gl);
+		
+		TextureAttachment normalTexture = (TextureAttachment)geometryFBO.getColorbuffer(1);
+		gl.glActiveTexture(GL.GL_TEXTURE1);
+		gl.glBindTexture(GL.GL_TEXTURE_2D, normalTexture.getName());
+	}
 	public void drawLightingEnd() { lightingFBO.unbind(gl); }
 	public void drawInterfaceStart() { interfaceFBO.bind(gl); }
 	public void drawInterfaceEnd() { interfaceFBO.unbind(gl); }
@@ -453,17 +470,24 @@ public class Camera {
 		gl.glBindVertexArray(screenCanvasVAO);
 		
 		//Bind the different buffer textures to the relevant GL textures so we can use it in our canvas shader
-		TextureAttachment geometryTexture = (TextureAttachment)geometryFBO.getColorbuffer(0);
 		gl.glActiveTexture(GL.GL_TEXTURE0);
+		TextureAttachment geometryTexture = (TextureAttachment)geometryFBO.getColorbuffer(0);
 		gl.glBindTexture(GL.GL_TEXTURE_2D, geometryTexture.getName());
 		
-		TextureAttachment lightingTexture = (TextureAttachment)lightingFBO.getColorbuffer(0);
 		gl.glActiveTexture(GL.GL_TEXTURE1);
+		TextureAttachment lightingTexture = (TextureAttachment)lightingFBO.getColorbuffer(0);
 		gl.glBindTexture(GL.GL_TEXTURE_2D, lightingTexture.getName());
 		
-		TextureAttachment interfaceTexture = (TextureAttachment)interfaceFBO.getColorbuffer(0);
 		gl.glActiveTexture(GL.GL_TEXTURE2);
+		TextureAttachment selfIlluTexture = (TextureAttachment)geometryFBO.getColorbuffer(2);
+		gl.glBindTexture(GL.GL_TEXTURE_2D, selfIlluTexture.getName());
+		
+		gl.glActiveTexture(GL.GL_TEXTURE3);
+		TextureAttachment interfaceTexture = (TextureAttachment)interfaceFBO.getColorbuffer(0);
 		gl.glBindTexture(GL.GL_TEXTURE_2D, interfaceTexture.getName());
+		
+		int ambientLightIndex = gl.glGetUniformLocation(screenCanvasShader, "ambientLight");
+		gl.glUniform4fv(ambientLightIndex, 1, ambientLight.toFloat4Array(), 0);
 		
 		gl.glDrawElements(GL.GL_TRIANGLE_STRIP, screenCanvasIndices.length, GL.GL_UNSIGNED_INT, 0);
 		
