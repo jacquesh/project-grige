@@ -304,6 +304,16 @@ public class Camera {
 		gl.glEnableVertexAttribArray(texCoordIndex);
 		gl.glVertexAttribPointer(texCoordIndex, 2, GL.GL_FLOAT, false, 0, 0);
 		
+		//Buffer input textures
+		int geometryTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader, "geometryTextureUnit");
+		gl.glUniform1i(geometryTextureSamplerIndex, 0);
+		int lightingTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader, "lightingTextureUnit");
+		gl.glUniform1i(lightingTextureSamplerIndex, 1);
+		int selfIlluTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader, "selfIlluTextureUnit");
+		gl.glUniform1i(selfIlluTextureSamplerIndex, 2);
+		int interfaceTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader, "interfaceTextureUnit");
+		gl.glUniform1i(interfaceTextureSamplerIndex, 3);
+		
 		gl.glBindVertexArray(0);
 		gl.glUseProgram(0);
 	}
@@ -475,15 +485,6 @@ public class Camera {
 		gl.glActiveTexture(GL.GL_TEXTURE3);
 		TextureAttachment interfaceTexture = (TextureAttachment)interfaceFBO.getColorbuffer(0);
 		gl.glBindTexture(GL.GL_TEXTURE_2D, interfaceTexture.getName());
-		
-		int geometryTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader, "geometryTextureUnit");
-		gl.glUniform1i(geometryTextureSamplerIndex, 0);
-		int lightingTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader, "lightingTextureUnit");
-		gl.glUniform1i(lightingTextureSamplerIndex, 1);
-		int selfIlluTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader, "selfIlluTextureUnit");
-		gl.glUniform1i(selfIlluTextureSamplerIndex, 2);
-		int interfaceTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader, "interfaceTextureUnit");
-		gl.glUniform1i(interfaceTextureSamplerIndex, 3);
 		
 		int ambientLightIndex = gl.glGetUniformLocation(screenCanvasShader, "ambientLight");
 		gl.glUniform4fv(ambientLightIndex, 1, ambientLight.toFloat4Array(), 0);
