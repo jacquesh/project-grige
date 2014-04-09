@@ -511,7 +511,7 @@ public class Camera {
 		renderer.end3DRendering();
 	}
 	
-	protected void commitDraw(boolean lit)
+	protected void commitDraw()
 	{
 		gl.glUseProgram(screenCanvasShader);
 		gl.glBindVertexArray(screenCanvasVAO);
@@ -528,10 +528,6 @@ public class Camera {
 		gl.glActiveTexture(GL.GL_TEXTURE2);
 		TextureAttachment interfaceTexture = (TextureAttachment)interfaceFBO.getColorbuffer(0);
 		gl.glBindTexture(GL.GL_TEXTURE_2D, interfaceTexture.getName());
-		
-		if(lit)
-		{
-		}
 		
 		int geometryTextureSamplerIndex = gl.glGetUniformLocation(screenCanvasShader, "geometryTextureUnit");
 		gl.glUniform1i(geometryTextureSamplerIndex, 0);

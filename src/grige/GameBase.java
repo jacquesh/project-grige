@@ -59,8 +59,6 @@ public abstract class GameBase implements GLEventListener, WindowListener
 	private GLCapabilities glCapabilities;
 	private GLWindow gameWindow;
 	
-	private boolean usesLighting;
-	
 	private Nifty nifty;
 	
 	protected abstract void initialize(GL2 gl);
@@ -137,9 +135,6 @@ public abstract class GameBase implements GLEventListener, WindowListener
 		//Instantiate other structures
 		worldObjects = new ArrayList<GameObject>();
 		worldLights = new ArrayList<Light>();
-		
-		//Set other initial values
-		usesLighting = false;
 	}
 	
 	public final void init(GLAutoDrawable glad)
@@ -222,7 +217,7 @@ public abstract class GameBase implements GLEventListener, WindowListener
 		camera.drawInterfaceEnd();
 		
 		//Commit all drawing thats happened, combining them via their respective framebuffers as needed
-		camera.commitDraw(usesLighting);
+		camera.commitDraw();
 		
 		//To render the UI on top of all of that, we need to set the 0-texture to be active and enable blending
 		gl.glActiveTexture(GL.GL_TEXTURE0);
@@ -282,7 +277,6 @@ public abstract class GameBase implements GLEventListener, WindowListener
 	
 	public void addLight(Light l)
 	{
-		usesLighting = true;
 		worldLights.add(l);
 	}
 	
