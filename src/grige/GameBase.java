@@ -31,7 +31,6 @@ import java.util.logging.LogManager;
 import java.io.InputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.IntBuffer;
 
 public abstract class GameBase implements GLEventListener, WindowListener
 {
