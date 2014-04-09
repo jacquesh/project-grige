@@ -17,6 +17,11 @@ Currently Supported Functionality
 * Sprite animation (using SpriteSheetPacker)
 * Full, interactive UI support via the Nifty library
 
+Current TODO
+-----------------------------------
+* Make light rendering more elegant (more DRY, less WET)
+* Let lights shine out from inside objects
+
 Yet-to-be-(maybe)-implemented Functionality
 -----------------------------------
 * Soft shadows
