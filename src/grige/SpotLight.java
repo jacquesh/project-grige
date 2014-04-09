@@ -134,9 +134,6 @@ public class SpotLight extends Light
 		int projMatrixIndex = gl.glGetUniformLocation(shaderProgram, "projectionMatrix");
 		gl.glUniformMatrix4fv(projMatrixIndex, 1, false, cam.getProjectionMatrix(), 0);
 		
-		int geometryIndex = gl.glGetUniformLocation(shaderProgram, "geometrySampler");
-		gl.glUniform1i(geometryIndex, 0);
-		
 		int normalIndex = gl.glGetUniformLocation(shaderProgram, "normalSampler");
 		gl.glUniform1i(normalIndex, 1);
 		

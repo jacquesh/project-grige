@@ -192,9 +192,6 @@ public abstract class GameBase implements GLEventListener, WindowListener
 		camera.drawGeometryEnd();
 		
 		camera.drawLightingStart();
-		//Draw ambience
-		camera.drawAmbience();
-		
 		//Draw *all* the lights
 		gl.glEnable(GL.GL_STENCIL_TEST); //We need to stencil out bits of light, so enable stencil test while we're drawing lights
 		for(Light l : worldLights)

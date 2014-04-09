@@ -104,9 +104,6 @@ public class PointLight extends Light
 		int falloffIndex = gl.glGetUniformLocation(shaderProgram, "falloff");
 		gl.glUniform3f(falloffIndex, 0.4f, 3, 20);
 		
-		int geometrySamplerIndex = gl.glGetUniformLocation(shaderProgram, "geometrySampler");
-		gl.glUniform1i(geometrySamplerIndex, 0);
-		
 		int normalSamplerIndex = gl.glGetUniformLocation(shaderProgram, "normalSampler");
 		gl.glUniform1i(normalSamplerIndex, 1);
 		
