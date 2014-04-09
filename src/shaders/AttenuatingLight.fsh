@@ -1,6 +1,5 @@
 #version 330 core
 
-uniform sampler2D geometrySampler;
 uniform sampler2D normalSampler;
 
 uniform vec2 resolution;
@@ -14,7 +13,6 @@ in vec2 texCoordV;
 
 void main(){
 	//Get input data
-	vec4 diffuseColor = texture2D(geometrySampler, texCoordV);
 	vec3 normalMap = texture2D(normalSampler, texCoordV).rgb;
 	
 	//Compute the vector from the light to the current fragment
@@ -33,9 +31,6 @@ void main(){
 	
 	//calculate attenuation
 	float attenuation = 1.0/(falloff.x + (falloff.y*lightOffset) + (falloff.z*lightOffset*lightOffset));
- 		
-	//the calculation which brings it all together
-	vec3 intensity = diffuse * attenuation;
-	vec3 finalColor = diffuseColor.rgb * intensity;
-	gl_FragColor = vec4(finalColor, diffuseColor.a);
+	
+	gl_FragColor = vec4(diffuse * attenuation, 1);
 }
