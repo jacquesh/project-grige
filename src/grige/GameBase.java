@@ -230,13 +230,12 @@ public abstract class GameBase implements GLEventListener, WindowListener
 	
 	private void internalUpdate(GL2 gl, float deltaTime)
 	{
-		ArrayList<GameObject> deathList = new ArrayList<GameObject>();
-		
 		//Update input data
 		Input.update();
 		nifty.update();
 		
 		//Run an update on all objects
+		ArrayList<GameObject> deathList = new ArrayList<GameObject>();
 		for(GameObject obj : worldObjects)
 		{
 			if(obj.markedForDeath)
@@ -250,6 +249,18 @@ public abstract class GameBase implements GLEventListener, WindowListener
 		{
 			obj.onDestroy(gl);
 			worldObjects.remove(obj);
+		}
+		
+		//Run through all lights to check for death
+		ArrayList<Light> lightDeathlist = new ArrayList<Light>();
+		for(Light l : worldLights)
+			if(l.markedForDeath)
+				lightDeathlist.add(l);
+		
+		for(Light l : lightDeathlist)
+		{
+			l.onDestroy(gl);
+			worldLights.remove(gl);
 		}
 		
 		//Call the user-defined game update
@@ -279,6 +290,11 @@ public abstract class GameBase implements GLEventListener, WindowListener
 	public void addLight(Light l)
 	{
 		worldLights.add(l);
+	}
+	
+	public void destroy(Drawable obj)
+	{
+		obj.markedForDeath = true;
 	}
 	
 	public GameObject[] getObjectsAtLocation(Vector2 loc)
@@ -392,11 +408,6 @@ public abstract class GameBase implements GLEventListener, WindowListener
 			return new Vector2(p1.x + t*offsetA.x, p1.y +t*offsetA.y);
 		
 		return null;
-	}
-	
-	public void destroy(GameObject obj)
-	{
-		obj.markedForDeath = true;
 	}
 	
 	protected void cleanup()
