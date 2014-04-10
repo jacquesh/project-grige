@@ -195,10 +195,12 @@ public abstract class GameBase implements GLEventListener, WindowListener
 			{
 				//Compute/store the vertices of the shadow of this objected, as a result of the current light
 				float[] vertices = l.generateShadowVertices(obj);
-				vertexArrays.add(vertices);
+				if(vertices != null)
+					vertexArrays.add(vertices);
 			}
 			
-			camera.drawShadowsToStencil(vertexArrays);
+			if(vertexArrays.size() > 0)
+				camera.drawShadowsToStencil(vertexArrays);
 			
 			//Draw lighting (where the stencil is empty)
 			l.onDraw(gl, camera);

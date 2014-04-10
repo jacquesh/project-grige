@@ -66,6 +66,7 @@ public abstract class Light extends Drawable
 	{
 		ArrayList<Float> vertexList = new ArrayList<Float>();
 		int currentVertexIndex = 0;
+		boolean isContained = true;
 		
 		float[] vertices = obj.getVertices();
 		
@@ -76,7 +77,8 @@ public abstract class Light extends Drawable
 		Vector2 currentLightOffsetDir = new Vector2(0,0);
 		
 		Vector2 previousVert = new Vector2(vertices[6], vertices[7]);
-		Vector2 previousLightOffsetDir = new Vector2(position.x-previousVert.x, position.y-previousVert.y);
+		Vector2 previousLightOffsetDir = new Vector2(0,0);
+		getLightOffsetDir(previousVert, previousLightOffsetDir);
 		
 		for(int index=0; index<8; index+=2)
 		{
@@ -129,12 +131,18 @@ public abstract class Light extends Drawable
 				currentVertexIndex += 6;
 			}
 			else
+			{
 				currentVertexIndex = -1;
+				isContained = false;
+			}
 			
 			//Shift our data backwards, so what used to be our "current" data, is now our "previous" data
 			previousVert.set(currentVert);
 			previousLightOffsetDir.set(currentLightOffsetDir);
 		}
+		
+		if(isContained)
+			return null;
 		
 		float[] vertArray = new float[vertexList.size()];
 		for(int i=0; i<vertArray.length; i++)
