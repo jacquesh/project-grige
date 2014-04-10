@@ -13,6 +13,8 @@ public class SpotLight extends Light
 {
 	private static final Logger log = Logger.getLogger(PointLight.class.getName());
 	
+	private int positionBuffer;
+	
 	private float spotAngle;
 	
 	public SpotLight(float angle)
@@ -43,6 +45,17 @@ public class SpotLight extends Light
 		else if(angle < 0)
 			angle = 0;
 		spotAngle = angle;
+	}
+	
+	@Override 
+	public void setShader(GL2 gl, int shader)
+	{
+		super.setShader(gl, shader);
+		
+		int[] buffers = new int[1];
+		gl.glGenBuffers(1, buffers, 0);
+		
+		positionBuffer = buffers[0];
 	}
 	
 	@Override
@@ -86,11 +99,8 @@ public class SpotLight extends Light
 		gl.glEnable(GL.GL_BLEND);
 		gl.glBlendFunc(GL.GL_ONE, GL.GL_ONE);
 		
-		int[] buffer = new int[1];
-		gl.glGenBuffers(1, buffer, 0);
-		
 		int positionIndex = gl.glGetAttribLocation(shaderProgram, "position");
-		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, buffer[0]);
+		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, positionBuffer);
 		gl.glBufferData(GL.GL_ARRAY_BUFFER, lightVertices.length*(Float.SIZE/8), FloatBuffer.wrap(lightVertices), GL.GL_STATIC_DRAW);
 		gl.glEnableVertexAttribArray(positionIndex);
 		gl.glVertexAttribPointer(positionIndex, 3, GL.GL_FLOAT, false, 0, 0);

@@ -19,6 +19,9 @@ public class DirectionalLight extends Light
 			1.0f, 1.0f,
 	};
 	
+	private int positionBuffer;
+	private int texCoordBuffer;
+	
 	private Vector2 direction;
 	
 	public DirectionalLight(Vector2 startDirection)
@@ -46,6 +49,18 @@ public class DirectionalLight extends Light
 		direction = newDirection;
 	}
 	
+	@Override 
+	public void setShader(GL2 gl, int shader)
+	{
+		super.setShader(gl, shader);
+		
+		int[] buffers = new int[2];
+		gl.glGenBuffers(2, buffers, 0);
+		
+		positionBuffer = buffers[0];
+		texCoordBuffer = buffers[1];
+	}
+	
 	@Override
 	protected void onDraw(GL2 gl, Camera cam)
 	{
@@ -69,17 +84,14 @@ public class DirectionalLight extends Light
 		gl.glEnable(GL.GL_BLEND);
 		gl.glBlendFunc(GL.GL_ONE, GL.GL_ONE);
 		
-		int[] buffer = new int[2];
-		gl.glGenBuffers(2, buffer, 0);
-		
 		int positionIndex = gl.glGetAttribLocation(shaderProgram, "position");
-		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, buffer[0]);
+		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, positionBuffer);
 		gl.glBufferData(GL.GL_ARRAY_BUFFER, lightVertices.length*(Float.SIZE/8), FloatBuffer.wrap(lightVertices), GL.GL_STATIC_DRAW);
 		gl.glEnableVertexAttribArray(positionIndex);
 		gl.glVertexAttribPointer(positionIndex, 3, GL.GL_FLOAT, false, 0, 0);
 		
 		int texCoordIndex = gl.glGetAttribLocation(shaderProgram, "texCoord");
-		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, buffer[1]);
+		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, texCoordBuffer);
 		gl.glBufferData(GL.GL_ARRAY_BUFFER, defaultTextureCoords.length*(Float.SIZE/8), FloatBuffer.wrap(defaultTextureCoords), GL.GL_STATIC_DRAW);
 		gl.glEnableVertexAttribArray(texCoordIndex);
 		gl.glVertexAttribPointer(texCoordIndex, 2, GL.GL_FLOAT, false, 0, 0);
