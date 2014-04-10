@@ -8,6 +8,7 @@ import java.io.IOException;
 
 import java.util.ArrayList;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
@@ -101,11 +102,11 @@ public class Animation
 		}
 		catch(FileNotFoundException fnfe)
 		{
-			fnfe.printStackTrace();
+			log.log(Level.WARNING, "", fnfe);
 		}
 		catch(IOException ioe)
 		{
-			ioe.printStackTrace();
+			log.log(Level.WARNING, "", ioe);
 		}
 		
 		return null;
