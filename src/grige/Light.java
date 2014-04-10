@@ -52,6 +52,13 @@ public abstract class Light extends Drawable
 	public float getRadius() { return scale(); }
 	
 	
+	protected void getLightOffsetDir(Vector2 vertex, Vector2 result)
+	{
+		result.x = position.x - vertex.x;
+		result.y = position.y - vertex.y;
+		result.normalise(); //We can normalise here because the magnitude has no effect on the sign of any dot products
+	}
+	
 	/*
 	 * Compute the vertices for the shadow cast by the given GameObject when lit by this light
 	 */
@@ -75,10 +82,7 @@ public abstract class Light extends Drawable
 		{
 			currentVert.x = vertices[index];
 			currentVert.y = vertices[index+1];
-			
-			currentLightOffsetDir.x = position.x - currentVert.x;
-			currentLightOffsetDir.y = position.y - currentVert.y;
-			currentLightOffsetDir.normalise(); //We can normalise here because the magnitude has no effect on the sign of any dot products
+			getLightOffsetDir(currentVert, currentLightOffsetDir);
 			
 			//Because we know we're traversing vertices in a counter-clockwise order
 			//we know that the normal for an edge is (dy, -dx)
