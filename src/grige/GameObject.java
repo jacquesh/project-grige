@@ -40,12 +40,18 @@ public abstract class GameObject extends Animatable
 	//GL buffers
 	private int texCoordBuffer;
 	
+	private boolean castsShadow;
+	
 	public abstract void update(float deltaTime);
 	
 	public GameObject()
 	{
 		super();
+		castsShadow = true;
 	}
+	
+	public boolean getCastsShadow(){ return castsShadow; }
+	public void setCastsShadow(boolean casts) { castsShadow = casts; }
 	
 	public void setMaterial(Material newMaterial)
 	{

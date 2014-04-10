@@ -19,7 +19,7 @@ Currently Supported Functionality
 
 Current TODO
 -----------------------------------
-* Let lights shine out from inside objects
+* Fix objects casting shadows even if they're hidden (e.g if they get rendered behind a larger object)
 * Add cleanup for all opengl objects
 * Fix the openal startup crash
 * Render sprites back to front

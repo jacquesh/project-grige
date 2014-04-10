@@ -193,10 +193,13 @@ public abstract class GameBase implements GLEventListener, WindowListener
 			ArrayList<float[]> vertexArrays = new ArrayList<float[]>();
 			for(GameObject obj : worldObjects)
 			{
-				//Compute/store the vertices of the shadow of this objected, as a result of the current light
-				float[] vertices = l.generateShadowVertices(obj);
-				if(vertices != null)
-					vertexArrays.add(vertices);
+				if(obj.getCastsShadow())
+				{
+					//Compute/store the vertices of the shadow of this objected, as a result of the current light
+					float[] vertices = l.generateShadowVertices(obj);
+					if(vertices != null)
+						vertexArrays.add(vertices);
+				}
 			}
 			
 			if(vertexArrays.size() > 0)
