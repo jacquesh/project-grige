@@ -38,6 +38,8 @@ public abstract class GameObject extends Animatable
 	private int shaderProgram;
 	
 	//GL buffers
+	private int indexBuffer;
+	private int vertexBuffer;
 	private int texCoordBuffer;
 	
 	private boolean castsShadow;
@@ -201,23 +203,19 @@ public abstract class GameObject extends Animatable
 		shaderProgram = shader;
 		gl.glUseProgram(shader);
 		
-		int[] buffers = new int[3];
-		
-		//Create the vertex array
-		gl.glGenVertexArrays(1, buffers, 0);
-		geometryVAO = buffers[0];
-		gl.glBindVertexArray(geometryVAO);
-		
-		//Generate and store the required buffers
-		gl.glGenBuffers(2, buffers,0);
-		int indexBuffer = buffers[0];
-		int vertexBuffer = buffers[1];
-		
-		//Generate and store the buffers that we may have generated previously
-		if(texCoordBuffer == 0)
+		//Check if we've run this initialization before, if we have then dont generate obejcts
+		if(geometryVAO == 0)
 		{
-			gl.glGenBuffers(1, buffers, 0);
-			texCoordBuffer = buffers[0];
+			int[] buffers = new int[3];
+			
+			gl.glGenVertexArrays(1, buffers, 0);
+			geometryVAO = buffers[0];
+			gl.glBindVertexArray(geometryVAO);
+			
+			gl.glGenBuffers(3, buffers,0);
+			indexBuffer = buffers[0];
+			vertexBuffer = buffers[1];
+			texCoordBuffer = buffers[2];
 		}
 		
 		//Buffer the vertex indices
@@ -426,8 +424,9 @@ public abstract class GameObject extends Animatable
 	}
 	
 	@Override
-	protected void onDestroy()
+	protected void onDestroy(GL2 gl)
 	{
-		
+		gl.glDeleteVertexArrays(1, new int[]{geometryVAO}, 0);
+		gl.glDeleteBuffers(1, new int[]{indexBuffer, vertexBuffer, texCoordBuffer}, 0);
 	}
 }

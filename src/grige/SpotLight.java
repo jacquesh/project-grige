@@ -52,10 +52,14 @@ public class SpotLight extends Light
 	{
 		super.setShader(gl, shader);
 		
-		int[] buffers = new int[1];
-		gl.glGenBuffers(1, buffers, 0);
-		
-		positionBuffer = buffers[0];
+		//Check if we've run this initialization before, if we have then dont generate obejcts
+		if(positionBuffer == 0)
+		{
+			int[] buffers = new int[1];
+			gl.glGenBuffers(1, buffers, 0);
+			
+			positionBuffer = buffers[0];
+		}
 	}
 	
 	@Override
@@ -138,8 +142,9 @@ public class SpotLight extends Light
 	}
 	
 	@Override
-	protected void onDestroy()
+	protected void onDestroy(GL2 gl)
 	{
-		
+		gl.glDeleteBuffers(1, new int[]{positionBuffer}, 0);
+		super.onDestroy(gl);
 	}
 }

@@ -168,7 +168,7 @@ public abstract class GameBase implements GLEventListener, WindowListener
 		lastFrameTime = currentTime;
 		
 		//Update game state
-		internalUpdate(currentDeltaTime);
+		internalUpdate(gl, currentDeltaTime);
 		
 		//Render the game state
 		internalDraw(gl);
@@ -228,7 +228,7 @@ public abstract class GameBase implements GLEventListener, WindowListener
 		gl.glDisable(GL.GL_BLEND);
 	}
 	
-	private void internalUpdate(float deltaTime)
+	private void internalUpdate(GL2 gl, float deltaTime)
 	{
 		ArrayList<GameObject> deathList = new ArrayList<GameObject>();
 		
@@ -248,7 +248,7 @@ public abstract class GameBase implements GLEventListener, WindowListener
 		//Remove all objects that are marked for death
 		for(GameObject obj : deathList)
 		{
-			obj.onDestroy();
+			obj.onDestroy(gl);
 			worldObjects.remove(obj);
 		}
 		

@@ -41,11 +41,15 @@ public class PointLight extends Light
 	{
 		super.setShader(gl, shader);
 		
-		int[] buffers = new int[2];
-		gl.glGenBuffers(2, buffers, 0);
-		
-		positionBuffer = buffers[0];
-		texCoordBuffer = buffers[1];
+		//Check if we've run this initialization before, if we have then dont generate obejcts
+		if(positionBuffer == 0)
+		{
+			int[] buffers = new int[2];
+			gl.glGenBuffers(2, buffers, 0);
+			
+			positionBuffer = buffers[0];
+			texCoordBuffer = buffers[1];
+		}
 		
 		gl.glBindVertexArray(lightingVAO);
 		
@@ -115,8 +119,9 @@ public class PointLight extends Light
 	}
 	
 	@Override
-	protected void onDestroy()
+	protected void onDestroy(GL2 gl)
 	{
-		
+		gl.glDeleteBuffers(2, new int[]{positionBuffer, texCoordBuffer}, 0);
+		super.onDestroy(gl);
 	}
 }

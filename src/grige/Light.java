@@ -23,10 +23,14 @@ public abstract class Light extends Drawable
 	{
 		shaderProgram = shader;
 		
-		int[] buffers = new int[1];
-		//Create the vertex array
-		gl.glGenVertexArrays(1, buffers, 0);
-		lightingVAO = buffers[0];
+		//Check if we've run this initialization before, if we have then dont generate obejcts
+		if(lightingVAO == 0)
+		{
+			int[] buffers = new int[1];
+			//Create the vertex array
+			gl.glGenVertexArrays(1, buffers, 0);
+			lightingVAO = buffers[0];
+		}
 	}
 	
 	public void setColour(float red, float green, float blue)
@@ -146,5 +150,11 @@ public abstract class Light extends Drawable
 			vertArray[i] = vertexList.get(i);
 		
 		return vertArray;
+	}
+	
+	@Override
+	protected void onDestroy(GL2 gl)
+	{
+		gl.glDeleteVertexArrays(1, new int[]{lightingVAO}, 0);
 	}
 }

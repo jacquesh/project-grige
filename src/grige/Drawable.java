@@ -14,7 +14,7 @@ public abstract class Drawable
 	
 	public abstract void setShader(GL2 gl, int shader);
 	protected abstract void onDraw(GL2 gl, Camera cam);
-	protected abstract void onDestroy();
+	protected abstract void onDestroy(GL2 gl);
 	
 	public abstract float width();
 	public abstract float height();
