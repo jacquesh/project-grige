@@ -47,11 +47,15 @@ public class PointLight extends Light
 		positionBuffer = buffers[0];
 		texCoordBuffer = buffers[1];
 		
+		gl.glBindVertexArray(lightingVAO);
+		
 		int texCoordIndex = gl.glGetAttribLocation(shaderProgram, "texCoord");
 		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, texCoordBuffer);
 		gl.glBufferData(GL.GL_ARRAY_BUFFER, defaultTextureCoords.length*(Float.SIZE/8), FloatBuffer.wrap(defaultTextureCoords), GL.GL_STATIC_DRAW);
 		gl.glEnableVertexAttribArray(texCoordIndex);
 		gl.glVertexAttribPointer(texCoordIndex, 2, GL.GL_FLOAT, false, 0, 0);
+		
+		gl.glBindVertexArray(0);
 	}
 	
 	

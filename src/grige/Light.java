@@ -27,9 +27,6 @@ public abstract class Light extends Drawable
 		//Create the vertex array
 		gl.glGenVertexArrays(1, buffers, 0);
 		lightingVAO = buffers[0];
-		gl.glBindVertexArray(lightingVAO);
-		
-		gl.glBindVertexArray(0);
 	}
 	
 	public void setColour(float red, float green, float blue)
