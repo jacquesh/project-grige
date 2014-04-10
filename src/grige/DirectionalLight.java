@@ -59,6 +59,12 @@ public class DirectionalLight extends Light
 		
 		positionBuffer = buffers[0];
 		texCoordBuffer = buffers[1];
+		
+		int texCoordIndex = gl.glGetAttribLocation(shaderProgram, "texCoord");
+		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, texCoordBuffer);
+		gl.glBufferData(GL.GL_ARRAY_BUFFER, defaultTextureCoords.length*(Float.SIZE/8), FloatBuffer.wrap(defaultTextureCoords), GL.GL_STATIC_DRAW);
+		gl.glEnableVertexAttribArray(texCoordIndex);
+		gl.glVertexAttribPointer(texCoordIndex, 2, GL.GL_FLOAT, false, 0, 0);
 	}
 	
 	@Override
@@ -89,12 +95,6 @@ public class DirectionalLight extends Light
 		gl.glBufferData(GL.GL_ARRAY_BUFFER, lightVertices.length*(Float.SIZE/8), FloatBuffer.wrap(lightVertices), GL.GL_STATIC_DRAW);
 		gl.glEnableVertexAttribArray(positionIndex);
 		gl.glVertexAttribPointer(positionIndex, 3, GL.GL_FLOAT, false, 0, 0);
-		
-		int texCoordIndex = gl.glGetAttribLocation(shaderProgram, "texCoord");
-		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, texCoordBuffer);
-		gl.glBufferData(GL.GL_ARRAY_BUFFER, defaultTextureCoords.length*(Float.SIZE/8), FloatBuffer.wrap(defaultTextureCoords), GL.GL_STATIC_DRAW);
-		gl.glEnableVertexAttribArray(texCoordIndex);
-		gl.glVertexAttribPointer(texCoordIndex, 2, GL.GL_FLOAT, false, 0, 0);
 		
 		int colourIndex = gl.glGetUniformLocation(shaderProgram, "lightColor");
 		gl.glUniform4fv(colourIndex, 1, getColour().toFloat4Array(), 0);
