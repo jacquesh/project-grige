@@ -87,6 +87,9 @@ public abstract class GameBase implements GLEventListener, WindowListener
 		GameBase.instance = this;
 	}
 	
+	/**
+	 * Start the game, there is no game until this method is called, and it blocks until the game stops running
+	 */
 	public final void start()
 	{
 		try{
@@ -174,7 +177,7 @@ public abstract class GameBase implements GLEventListener, WindowListener
 		internalDraw(gl);
 	}
 	
-	protected void internalDraw(GL2 gl)
+	private void internalDraw(GL2 gl)
 	{
 		//Reset the camera for this draw call
 		camera.refresh(gl);
@@ -267,6 +270,20 @@ public abstract class GameBase implements GLEventListener, WindowListener
 		update(deltaTime);
 	}
 	
+	protected void cleanup()
+	{
+		if(gameWindow != null)
+			gameWindow.destroy();
+		
+		Audio.cleanup();
+		GLProfile.shutdown();
+	}
+	
+	public float getFrameTime()
+	{
+		return currentDeltaTime;
+	}
+	
 	public float getFPS()
 	{
 		return 1f/currentDeltaTime;
@@ -297,6 +314,10 @@ public abstract class GameBase implements GLEventListener, WindowListener
 		obj.markedForDeath = true;
 	}
 	
+	/**
+	 * @param loc The position at which to look for objects
+	 * @return An array (in no particular order) of all GameObjects that occupy the given location
+	 */
 	public GameObject[] getObjectsAtLocation(Vector2 loc)
 	{
 		ArrayList<GameObject> objList = new ArrayList<GameObject>();
@@ -362,8 +383,8 @@ public abstract class GameBase implements GLEventListener, WindowListener
 		return null;
 	}
 	
-	/*
-	 * Returns the point of intersection of the lines (p1, p2) and (p3, p4)
+	/**
+	 * @return The point of intersection of the lines (p1, p2) and (p3, p4)
 	 */
 	public Vector2 linelineIntersectionPoint(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4)
 	{
@@ -389,8 +410,8 @@ public abstract class GameBase implements GLEventListener, WindowListener
 		return null;
 	}
 	
-	/*
-	 * Returns the point of intersection of the lines (p1, p2) and (p3, p4)
+	/**
+	 * @return The point of intersection of the lines (p1, p2) and the ray from rayOrigin in direction rayDirection
 	 */
 	public Vector2 raylineIntersectionPoint(Vector2 p1, Vector2 p2, Vector2 rayOrigin, Vector2 rayDirection)
 	{
@@ -408,15 +429,6 @@ public abstract class GameBase implements GLEventListener, WindowListener
 			return new Vector2(p1.x + t*offsetA.x, p1.y +t*offsetA.y);
 		
 		return null;
-	}
-	
-	protected void cleanup()
-	{
-		if(gameWindow != null)
-			gameWindow.destroy();
-		
-		Audio.cleanup();
-		GLProfile.shutdown();
 	}
 	
 	//Window utility functions
