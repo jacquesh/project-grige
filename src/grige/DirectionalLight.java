@@ -21,9 +21,6 @@ public class DirectionalLight extends Light
 	
 	private Vector2 direction;
 	
-	private int shaderProgram;
-	private int lightingVAO;
-	
 	public DirectionalLight(Vector2 startDirection)
 	{
 		super();
@@ -47,24 +44,6 @@ public class DirectionalLight extends Light
 	public void setDirection(Vector2 newDirection)
 	{
 		direction = newDirection;
-	}
-	
-	@Override
-	public void setShader(GL2 gl, int shader)
-	{
-		shaderProgram = shader;
-		
-		//Load and bind the shader
-		gl.glUseProgram(shaderProgram);
-		
-		int[] buffers = new int[1];
-		//Create the vertex array
-		gl.glGenVertexArrays(1, buffers, 0);
-		lightingVAO = buffers[0];
-		gl.glBindVertexArray(lightingVAO);
-		
-		gl.glBindVertexArray(0);
-		gl.glUseProgram(shaderProgram);
 	}
 	
 	@Override

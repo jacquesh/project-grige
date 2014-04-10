@@ -2,15 +2,34 @@ package grige;
 
 import java.util.ArrayList;
 
+import javax.media.opengl.GL2;
+
 public abstract class Light extends Drawable
 {
 	private Color colour;
+	
+	protected int shaderProgram;
+	protected int lightingVAO;
 	
 	public Light()
 	{
 		super();
 		
 		colour = new Color(1,1,1,1);
+	}
+	
+	@Override
+	public void setShader(GL2 gl, int shader)
+	{
+		shaderProgram = shader;
+		
+		int[] buffers = new int[1];
+		//Create the vertex array
+		gl.glGenVertexArrays(1, buffers, 0);
+		lightingVAO = buffers[0];
+		gl.glBindVertexArray(lightingVAO);
+		
+		gl.glBindVertexArray(0);
 	}
 	
 	public void setColour(float red, float green, float blue)

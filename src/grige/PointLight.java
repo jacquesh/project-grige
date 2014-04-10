@@ -18,9 +18,6 @@ public class PointLight extends Light
 			1.0f, 1.0f,
 	};
 	
-	private int shaderProgram;
-	private int lightingVAO;
-	
 	public PointLight()
 	{
 		super();
@@ -34,24 +31,6 @@ public class PointLight extends Light
 	public float height()
 	{
 		return 0;
-	}
-	
-	@Override
-	public void setShader(GL2 gl, int shader)
-	{
-		shaderProgram = shader;
-		
-		//Load and bind the shader
-		gl.glUseProgram(shaderProgram);
-		
-		int[] buffers = new int[1];
-		//Create the vertex array
-		gl.glGenVertexArrays(1, buffers, 0);
-		lightingVAO = buffers[0];
-		gl.glBindVertexArray(lightingVAO);
-		
-		gl.glBindVertexArray(0);
-		gl.glUseProgram(shaderProgram);
 	}
 	
 	@Override

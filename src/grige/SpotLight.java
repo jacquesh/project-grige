@@ -13,9 +13,6 @@ public class SpotLight extends Light
 {
 	private static final Logger log = Logger.getLogger(PointLight.class.getName());
 	
-	private int shaderProgram;
-	private int lightingVAO;
-	
 	private float spotAngle;
 	
 	public SpotLight(float angle)
@@ -46,24 +43,6 @@ public class SpotLight extends Light
 		else if(angle < 0)
 			angle = 0;
 		spotAngle = angle;
-	}
-	
-	@Override
-	public void setShader(GL2 gl, int shader)
-	{
-		shaderProgram = shader;
-		
-		//Load and bind the shader
-		gl.glUseProgram(shaderProgram);
-		
-		int[] buffers = new int[1];
-		//Create the vertex array
-		gl.glGenVertexArrays(1, buffers, 0);
-		lightingVAO = buffers[0];
-		gl.glBindVertexArray(lightingVAO);
-
-		gl.glBindVertexArray(0);
-		gl.glUseProgram(shaderProgram);
 	}
 	
 	@Override
