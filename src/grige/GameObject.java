@@ -40,12 +40,18 @@ public abstract class GameObject extends Animatable
 	//GL buffers
 	private int texCoordBuffer;
 	
+	private boolean castsShadow;
+	
 	public abstract void update(float deltaTime);
 	
 	public GameObject()
 	{
 		super();
+		castsShadow = true;
 	}
+	
+	public boolean getCastsShadow(){ return castsShadow; }
+	public void setCastsShadow(boolean casts) { castsShadow = casts; }
 	
 	public void setMaterial(Material newMaterial)
 	{
@@ -276,16 +282,11 @@ public abstract class GameObject extends Animatable
 			return;
 		
 		gl.glUseProgram(shaderProgram);
-		gl.glActiveTexture(GL.GL_TEXTURE0);
 		gl.glBindVertexArray(geometryVAO);
 		gl.glDepthMask(true);
 		
 		gl.glEnable(GL.GL_BLEND);
 		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
-		
-		//Texture specification
-		int textureSamplerIndex = gl.glGetUniformLocation(shaderProgram, "textureUnit");
-		gl.glUniform1i(textureSamplerIndex, 0);
 		
 		//Texture coordinates
 		int texCoordIndex = gl.glGetAttribLocation(shaderProgram, "texCoord");
@@ -304,12 +305,119 @@ public abstract class GameObject extends Animatable
 		int geometryObjTransformIndex = gl.glGetUniformLocation(shaderProgram, "objectTransform");
 		gl.glUniformMatrix4fv(geometryObjTransformIndex, 1, false, objectTransformMatrix, 0);
 		
+		//Texture specification
+		//Diffuse Texture
+		int textureSamplerIndex = gl.glGetUniformLocation(shaderProgram, "textureUnit");
+		gl.glUniform1i(textureSamplerIndex, 0);
+		
 		int objTex = getMaterial().getDiffuseMap();
+		gl.glActiveTexture(GL.GL_TEXTURE0);
 		gl.glBindTexture(GL.GL_TEXTURE_2D, objTex);
+		
+		//Normal Texture
+		int objNormal = getMaterial().getNormalMap();
+		if(objNormal != 0)
+		{
+			int normalSamplerIndex = gl.glGetUniformLocation(shaderProgram, "normalUnit");
+			gl.glUniform1i(normalSamplerIndex, 1);
+			
+			gl.glActiveTexture(GL.GL_TEXTURE1);
+			gl.glBindTexture(GL.GL_TEXTURE_2D, objNormal);
+		}
+		int hasNormalsIndex = gl.glGetUniformLocation(shaderProgram, "hasNormals");
+		gl.glUniform1i(hasNormalsIndex, objNormal != 0 ? 1 : 0);
+		
+		//Self-illumination Texture
+		int objSelfIllu = getMaterial().getSelfIlluminationMap();
+		if(objSelfIllu != 0)
+		{
+			int selfIlluSamplerIndex = gl.glGetUniformLocation(shaderProgram, "selfIlluUnit");
+			gl.glUniform1i(selfIlluSamplerIndex, 2);
+			
+			gl.glActiveTexture(GL.GL_TEXTURE2);
+			gl.glBindTexture(GL.GL_TEXTURE_2D, objSelfIllu);
+		}
+		int hasSelfIlluIndex = gl.glGetUniformLocation(shaderProgram, "hasSelfIllu");
+		gl.glUniform1i(hasSelfIlluIndex, objSelfIllu != 0 ? 1 : 0);
 		
 		gl.glDrawElements(GL.GL_TRIANGLE_STRIP, quadIndices.length, GL.GL_UNSIGNED_INT, 0);
 		
-		gl.glBindTexture(GL.GL_TEXTURE_2D, 0);
+		gl.glDisable(GL.GL_BLEND);
+		
+		gl.glDepthMask(false);
+		gl.glBindVertexArray(0);
+		gl.glUseProgram(0);
+	}
+	
+	protected void onDrawToLighting(GL2 gl, Camera cam)
+	{
+		if(shaderProgram == 0)
+		{
+			log.severe("Attempting to render a shaderless object. Skipping...");
+			return;
+		}
+		
+		//Compute the object transform matrix
+		float objWidth = width();
+		float objHeight = height();
+		float rotationSin = FloatUtil.sin(FloatUtil.PI/180 * rotation);
+		float rotationCos = FloatUtil.cos(FloatUtil.PI/180 * rotation);
+		
+		float[] objectTransformMatrix = new float[]{
+				 objWidth*rotationCos, objHeight*rotationSin,0,0,
+				-objWidth*rotationSin, objHeight*rotationCos,0,0,
+				0,0,1,0,
+				x(), y(), -depth(), 1
+		};
+		
+		//Draw geometry
+		if(getMaterial() == null)
+			return;
+		
+		gl.glUseProgram(shaderProgram);
+		gl.glBindVertexArray(geometryVAO);
+		gl.glDepthMask(true);
+		
+		gl.glEnable(GL.GL_BLEND);
+		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
+		
+		//Transforms
+		int projMatrixIndex = gl.glGetUniformLocation(shaderProgram, "projectionMatrix");
+		gl.glUniformMatrix4fv(projMatrixIndex, 1, false, cam.getProjectionMatrix(), 0);
+		
+		int viewMatrixIndex = gl.glGetUniformLocation(shaderProgram, "viewingMatrix");
+		gl.glUniformMatrix4fv(viewMatrixIndex, 1, false, cam.getViewingMatrix(), 0);
+		
+		int geometryObjTransformIndex = gl.glGetUniformLocation(shaderProgram, "objectTransform");
+		gl.glUniformMatrix4fv(geometryObjTransformIndex, 1, false, objectTransformMatrix, 0);
+		
+		//Texture specification
+		int objTex = getMaterial().getSelfIlluminationMap();
+		if(objTex > 0)
+		{
+			int textureSamplerIndex = gl.glGetUniformLocation(shaderProgram, "textureUnit");
+			gl.glUniform1i(textureSamplerIndex, 0);
+			gl.glActiveTexture(GL.GL_TEXTURE0);
+			gl.glBindTexture(GL.GL_TEXTURE_2D, objTex);
+			
+			//Texture coordinates
+			int texCoordIndex = gl.glGetAttribLocation(shaderProgram, "texCoord");
+			gl.glBindBuffer(GL.GL_ARRAY_BUFFER, texCoordBuffer);
+			gl.glBufferData(GL.GL_ARRAY_BUFFER, defaultTextureCoords.length*(Float.SIZE/8), FloatBuffer.wrap(defaultTextureCoords), GL.GL_STATIC_DRAW);
+			gl.glEnableVertexAttribArray(texCoordIndex);
+			gl.glVertexAttribPointer(texCoordIndex, 2, GL.GL_FLOAT, false, 0, 0);
+			
+			gl.glDrawElements(GL.GL_TRIANGLE_STRIP, quadIndices.length, GL.GL_UNSIGNED_INT, 0);
+			
+			gl.glBindTexture(GL.GL_TEXTURE_2D, 0);
+		}
+		else
+		{
+			gl.glColorMask(false, false, false, false);
+			gl.glDrawElements(GL.GL_TRIANGLE_STRIP, quadIndices.length, GL.GL_UNSIGNED_INT, 0);
+			gl.glColorMask(false, false, false, true);
+		}
+		
 		gl.glDisable(GL.GL_BLEND);
 		
 		gl.glDepthMask(false);

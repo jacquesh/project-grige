@@ -132,8 +132,10 @@ public final class Input implements KeyListener, MouseListener, InputSystem
 	{
 		return !currentMouseButtons[buttonID] && previousMouseButtons[buttonID];
 	}
-	
-	
+	public static Vector2I getMouseLoc()
+	{
+		return new Vector2I(mouseLoc.x, mouseLoc.y);
+	}
 	public static int getMouseWheel()
 	{
 		return currentMouseWheel;
@@ -186,6 +188,8 @@ public final class Input implements KeyListener, MouseListener, InputSystem
 	{
 		log.info("SET MOUSE LOC TO: "+x+";"+y);
 		window.warpPointer(x, Input.screenHeight - y); //Transform the origin from bottom-left to top-left
+		Input.mouseLoc.x = x;
+		Input.mouseLoc.y = y;
 	}
 	
 	@Override

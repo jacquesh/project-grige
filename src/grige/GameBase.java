@@ -69,7 +69,7 @@ public abstract class GameBase implements GLEventListener, WindowListener
 		//Load the Log configuration file
 		try
 		{
-			InputStream is = GameBase.class.getResourceAsStream("../config/logging.properties");
+			InputStream is = GameBase.class.getResourceAsStream("/config/logging.properties");
 			LogManager.getLogManager().readConfiguration(is);
 		}
 		catch(FileNotFoundException fnfe)
@@ -179,17 +179,13 @@ public abstract class GameBase implements GLEventListener, WindowListener
 		//Reset the camera for this draw call
 		camera.refresh(gl);
 		
-		camera.drawLightingStart();
-		//Draw all our objects into the depth buffer so that our shadows can get depth-tested correctly against objects at the same depth
+		//Draw all the objects to the Geometry Buffer
+		camera.drawGeometryStart();
 		for(GameObject obj : worldObjects)
-		{
-			gl.glDepthMask(true);
-			gl.glColorMask(false, false, false, false);
 			obj.onDraw(gl, camera);
-			gl.glColorMask(true, true, true, true);
-			gl.glDepthMask(false);
-		}
+		camera.drawGeometryEnd();
 		
+		camera.drawLightingStart();
 		//Draw *all* the lights
 		gl.glEnable(GL.GL_STENCIL_TEST); //We need to stencil out bits of light, so enable stencil test while we're drawing lights
 		for(Light l : worldLights)
@@ -197,12 +193,17 @@ public abstract class GameBase implements GLEventListener, WindowListener
 			ArrayList<float[]> vertexArrays = new ArrayList<float[]>();
 			for(GameObject obj : worldObjects)
 			{
-				//Compute/store the vertices of the shadow of this objected, as a result of the current light
-				float[] vertices = camera.generateShadowVertices(l, obj);
-				vertexArrays.add(vertices);
+				if(obj.getCastsShadow())
+				{
+					//Compute/store the vertices of the shadow of this objected, as a result of the current light
+					float[] vertices = l.generateShadowVertices(obj);
+					if(vertices != null)
+						vertexArrays.add(vertices);
+				}
 			}
 			
-			camera.drawShadowsToStencil(vertexArrays);
+			if(vertexArrays.size() > 0)
+				camera.drawShadowsToStencil(vertexArrays);
 			
 			//Draw lighting (where the stencil is empty)
 			l.onDraw(gl, camera);
@@ -210,12 +211,6 @@ public abstract class GameBase implements GLEventListener, WindowListener
 		}
 		gl.glDisable(GL.GL_STENCIL_TEST); //We only use stencil test for rendering lights
 		camera.drawLightingEnd();
-		
-		camera.drawGeometryStart();
-		//Draw all the objects now that we've finalized our lighting
-		for(GameObject obj : worldObjects)
-			obj.onDraw(gl, camera);
-		camera.drawGeometryEnd();
 		
 		//Let the child game class draw any required UI
 		camera.drawInterfaceStart();
@@ -324,6 +319,79 @@ public abstract class GameBase implements GLEventListener, WindowListener
 		}
 		
 		return false;
+	}
+	
+	public Vector2 raycastToScreenBorder(Vector2 origin, Vector2 direction)
+	{
+		if(direction.sqrMagnitude() == 0)
+			throw new IllegalArgumentException("Cannot cast a ray with 0 direction");
+		
+		Vector2 intersectionPoint = null;
+		intersectionPoint = raylineIntersectionPoint(camera.getBottomLeft(), camera.getTopLeft(), origin, direction);
+		if(intersectionPoint != null)
+				return intersectionPoint;
+		
+		intersectionPoint = raylineIntersectionPoint(camera.getTopLeft(), camera.getTopRight(), origin, direction);
+		if(intersectionPoint != null)
+				return intersectionPoint;
+		
+		intersectionPoint = raylineIntersectionPoint(camera.getTopRight(), camera.getBottomRight(), origin, direction);
+		if(intersectionPoint != null)
+				return intersectionPoint;
+		
+		intersectionPoint = raylineIntersectionPoint(camera.getBottomRight(), camera.getBottomLeft(), origin, direction);
+		if(intersectionPoint != null)
+				return intersectionPoint;
+		
+		return null;
+	}
+	
+	/*
+	 * Returns the point of intersection of the lines (p1, p2) and (p3, p4)
+	 */
+	public Vector2 linelineIntersectionPoint(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4)
+	{
+		//Line 1 = p1 + t*offsetA
+		//Line 2 = p3 + u*offsetB
+		Vector2 offsetA = Vector2.subtract(p2,p1);
+		Vector2 offsetB = Vector2.subtract(p4,p3);
+		float offsetCross = Vector2.cross(offsetA, offsetB);
+		
+		if(offsetCross == 0)
+			return null; //offsetA x offsetB = 0 => they're parallel => No collision
+		Vector2 startOffset = Vector2.subtract(p3, p1);
+		
+		//If they intersect then p1 + t*offset1 = p3 + u*offset2
+		//=> (p1 + t*o1) x o2 = (p3 + u*o2) x o2
+		//=> t*(o1 x o2) = (p3 - p1) x o2
+		float t = Vector2.cross(startOffset,offsetB)/offsetCross;
+		float u = Vector2.cross(startOffset,offsetA)/offsetCross;
+		
+		if(t >= 0 && t <= 1 && u >= 0 && u <= 1) //Check that the intersection falls between the endpoints of both lines
+			return new Vector2(p1.x + t*offsetA.x, p1.y +t*offsetA.y);
+		
+		return null;
+	}
+	
+	/*
+	 * Returns the point of intersection of the lines (p1, p2) and (p3, p4)
+	 */
+	public Vector2 raylineIntersectionPoint(Vector2 p1, Vector2 p2, Vector2 rayOrigin, Vector2 rayDirection)
+	{
+		Vector2 offsetA = Vector2.subtract(p2,p1);
+		float offsetCross = Vector2.cross(offsetA, rayDirection);
+		
+		if(offsetCross == 0)
+			return null; //offsetA x offsetB = 0 => they're parallel => No collision
+		Vector2 startOffset = Vector2.subtract(rayOrigin, p1);
+		
+		float t = Vector2.cross(startOffset,rayDirection)/offsetCross;
+		float u = Vector2.cross(startOffset,offsetA)/offsetCross;
+		
+		if(t >= 0 && t <= 1 && u >= 0) //Check that the intersection falls on the line and after the start of the ray
+			return new Vector2(p1.x + t*offsetA.x, p1.y +t*offsetA.y);
+		
+		return null;
 	}
 	
 	public void destroy(GameObject obj)

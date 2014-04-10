@@ -1,6 +1,7 @@
 package grige;
 
 import java.util.logging.Logger;
+import java.util.logging.Level;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,6 +39,16 @@ public class Material
 		
 		width = textureWidth;
 		height = textureHeight;
+	}
+	
+	private void addNormalMap(int normal)
+	{
+		normalMap = normal;
+	}
+	
+	private void addSelfIlluMap(int selfIllu)
+	{
+		selfIlluminationMap = selfIllu;
 	}
 	
 	public int getWidth()
@@ -89,6 +100,9 @@ public class Material
 		gl.glBindTexture(GL.GL_TEXTURE_2D, 0);
 	}
 	
+	//Static Material loader methods
+	//==============================
+	
 	public static Material createPixel(GL2 gl)
 	{
 		int[] tex = new int[1];
@@ -106,7 +120,37 @@ public class Material
 		return mat;
 	}
 	
-	public static Material load(GL2 gl, String filepath)
+	public static Material load(GL2 gl, String diffusePath)
+	{
+		return load(gl, diffusePath, null, null);
+	}
+	
+	public static Material load(GL2 gl, String diffusePath, String normalPath, String selfIlluPath)
+	{
+		Texture diffuseObj = createTextureFromFile(gl, diffusePath);
+		if(diffuseObj != null)
+		{
+			Material mat = new Material(diffuseObj.getWidth(), diffuseObj.getHeight(), diffuseObj.getTextureObject(gl));
+			mat.computeSolidityMap(gl);
+			
+			if(normalPath != null)
+			{
+				Texture normalObj = createTextureFromFile(gl, normalPath);
+				mat.addNormalMap(normalObj.getTextureObject(gl));
+			}
+			
+			if(selfIlluPath != null)
+			{
+				Texture selfIlluObj = createTextureFromFile(gl, selfIlluPath);
+				mat.addSelfIlluMap(selfIlluObj.getTextureObject(gl));
+			}
+			return mat;
+		}
+		
+		return null;
+	}
+	
+	private static Texture createTextureFromFile(GL2 gl, String filepath)
 	{
 		File sourceFile = new File(filepath);
 		
@@ -122,13 +166,12 @@ public class Material
 			TextureData data = TextureIO.newTextureData(gl.getGLProfile(), sourceFile, false, TextureIO.PNG);
 			Texture result = new Texture(gl, data);
 			
-			Material mat = new Material(result.getWidth(), result.getHeight(), result.getTextureObject(gl));
-			mat.computeSolidityMap(gl);
-			return mat;
+			return result;
 			
-		}catch(IOException ioe)
+		}
+		catch(IOException ioe)
 		{
-			ioe.printStackTrace();
+			log.log(Level.WARNING, "", ioe);
 			System.exit(1);
 		}
 		

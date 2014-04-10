@@ -7,9 +7,9 @@ import java.nio.FloatBuffer;
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 
-public class PointLight extends Light
+public class DirectionalLight extends Light
 {
-	private static final Logger log = Logger.getLogger(PointLight.class.getName());
+	private static final Logger log = Logger.getLogger(DirectionalLight.class.getName());
 	
 	private final float[] defaultTextureCoords = {
 			0.0f, 0.0f,
@@ -21,9 +21,12 @@ public class PointLight extends Light
 	private int positionBuffer;
 	private int texCoordBuffer;
 	
-	public PointLight()
+	private Vector2 direction;
+	
+	public DirectionalLight(Vector2 startDirection)
 	{
 		super();
+		setDirection(startDirection);
 		setDepth(1);
 	}
 	
@@ -34,6 +37,16 @@ public class PointLight extends Light
 	public float height()
 	{
 		return 0;
+	}
+	
+	public Vector2 getDirection()
+	{
+		return direction;
+	}
+	public void setDirection(Vector2 newDirection)
+	{
+		direction = newDirection;
+		direction.normalise();
 	}
 	
 	@Override 
@@ -58,7 +71,6 @@ public class PointLight extends Light
 		gl.glBindVertexArray(0);
 	}
 	
-	
 	@Override
 	protected void onDraw(GL2 gl, Camera cam)
 	{
@@ -68,9 +80,6 @@ public class PointLight extends Light
 			return;
 		}
 		
-		//Compute the transformed light location (for lighting)
-		Vector3 transformedLightLoc = cam.worldToScreenLoc(x(), y(), depth());
-
 		float[] lightVertices = {
 				-1.0f, -1.0f, -depth(),
 				-1.0f, 1.0f, -depth(),
@@ -91,20 +100,11 @@ public class PointLight extends Light
 		gl.glEnableVertexAttribArray(positionIndex);
 		gl.glVertexAttribPointer(positionIndex, 3, GL.GL_FLOAT, false, 0, 0);
 		
-		int lightLocIndex = gl.glGetUniformLocation(shaderProgram, "lightLoc");
-		gl.glUniform3f(lightLocIndex, transformedLightLoc.x, transformedLightLoc.y, transformedLightLoc.z);
-		
 		int colourIndex = gl.glGetUniformLocation(shaderProgram, "lightColor");
 		gl.glUniform4fv(colourIndex, 1, getColour().toFloat4Array(), 0);
 		
-		int falloffIndex = gl.glGetUniformLocation(shaderProgram, "falloff");
-		gl.glUniform3f(falloffIndex, 0.4f, 3, 20);
-		
 		int normalSamplerIndex = gl.glGetUniformLocation(shaderProgram, "normalSampler");
 		gl.glUniform1i(normalSamplerIndex, 1);
-		
-		int resolutionIndex = gl.glGetUniformLocation(shaderProgram, "resolution");
-		gl.glUniform2f(resolutionIndex, cam.getWidth(), cam.getHeight());
 		
 		gl.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, 4);
 		
@@ -118,5 +118,12 @@ public class PointLight extends Light
 	protected void onDestroy()
 	{
 		
+	}
+	
+	@Override
+	protected void getLightOffsetDir(Vector2 vertex, Vector2 result)
+	{
+		result.x = -direction.x;
+		result.y = -direction.y;
 	}
 }
