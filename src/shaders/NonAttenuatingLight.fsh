@@ -18,5 +18,5 @@ void main(){
 	//Then perform "N dot L" to determine our diffuse term
 	vec3 diffuse = (lightColor.rgb * lightColor.a) * max(dot(N, L), 0.0);
 	
-	gl_FragColor = vec4(diffuse);
+	gl_FragColor = vec4(diffuse,1);
 }
