@@ -13,6 +13,7 @@ import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.GLAutoDrawable;
+import javax.media.opengl.GLException;
 
 import de.lessvoid.nifty.Nifty;
 import de.lessvoid.nifty.nulldevice.NullSoundDevice;
@@ -490,27 +491,27 @@ public abstract class GameBase implements GLEventListener, WindowListener
 			break;
 		
 		case(GL.GL_INVALID_ENUM):
-			log.warning("OpenGL Error: Invalid Enum");
+			log.log(Level.WARNING, "OpenGL Error:", new GLException("Invalid Enum"));
 			break;
 		
 		case(GL.GL_INVALID_VALUE):
-			log.warning("OpenGL Error: Invalid Value");
+			log.log(Level.WARNING, "OpenGL Error:", new GLException("Invalid Value"));
 			break;
 			
 		case(GL.GL_INVALID_OPERATION):
-			log.warning("OpenGL Error: Invalid Operation");
+			log.log(Level.WARNING, "OpenGL Error:", new GLException("Invalid Operation"));
 			break;
 			
 		case(GL.GL_INVALID_FRAMEBUFFER_OPERATION):
-			log.warning("OpenGL Error: Invalid Framebuffer Operation");
+			log.log(Level.WARNING, "OpenGL Error:", new GLException("Invalid Framebuffer Operation"));
 			break;
 			
 		case(GL.GL_OUT_OF_MEMORY):
-			log.warning("OpenGL Error: Out of Memory");
+			log.log(Level.WARNING, "OpenGL Error:", new GLException("Out of Memory"));
 			break;
 			
 		default:
-			log.warning("UNKNOWN OPENGL ERROR: "+error);
+			log.log(Level.WARNING, "OpenGL Error:", new GLException("Unrecognised OpenGL Error: "+error));
 		}
 	}
 }

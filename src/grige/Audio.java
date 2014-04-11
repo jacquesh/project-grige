@@ -5,6 +5,7 @@ import com.jogamp.openal.ALC;
 import com.jogamp.openal.ALCdevice;
 import com.jogamp.openal.ALCcontext;
 import com.jogamp.openal.ALFactory;
+import com.jogamp.openal.ALException;
 
 import java.util.logging.Logger;
 import java.util.logging.Level;
@@ -221,5 +222,39 @@ public class Audio
 		}
 		
 		return null;
+	}
+	
+	public static void printOpenALError(AL gl, boolean displayNoError)
+	{
+		int error = al.alGetError();
+		switch(error)
+		{
+		case(AL.AL_NO_ERROR):
+			if(displayNoError)
+				log.info("No OpenAL Error");
+			break;
+		
+		case(AL.AL_INVALID_NAME):
+			log.log(Level.WARNING, "OpenAL Error:", new ALException("Invalid Name"));
+			
+		case(AL.AL_INVALID_ENUM):
+			log.log(Level.WARNING, "OpenAL Error:", new ALException("Invalid Enum"));
+			break;
+		
+		case(AL.AL_INVALID_VALUE):
+			log.log(Level.WARNING, "OpenAL Error:", new ALException("Invalid Value"));
+			break;
+			
+		case(AL.AL_INVALID_OPERATION):
+			log.log(Level.WARNING, "OpenAL Error:", new ALException("Invalid Operation"));
+			break;
+			
+		case(AL.AL_OUT_OF_MEMORY):
+			log.log(Level.WARNING, "OpenAL Error:", new ALException("Out of Memory"));
+			break;
+			
+		default:
+			log.log(Level.WARNING, "OpenAL Error:", new ALException("Unrecognised OpenGL Error: "+error));
+		}
 	}
 }
