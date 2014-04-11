@@ -41,19 +41,19 @@ public class Audio
 	
 	static void initialize()
 	{
+		al = ALFactory.getAL();
+		
 		alc = ALFactory.getALC();
 		device = alc.alcOpenDevice(null);
-		printOpenALError(al, false);
-		
 		context = alc.alcCreateContext(device, null);
 		alc.alcMakeContextCurrent(context);
+		printOpenALError(al, false);
 		
 		String[] s = alc.alcGetDeviceSpecifiers();
 		for(int i=0; i<s.length; i++)
 			System.out.println(s[i]);
 		System.out.println(alc.alcGetString(device, ALC.ALC_DEVICE_SPECIFIER));
 		
-		al = ALFactory.getAL();
 		al.alListenerfv(AL.AL_POSITION, listenerLoc, 0);
 		al.alListenerfv(AL.AL_VELOCITY, listenerVelocity, 0);
 		al.alListenerfv(AL.AL_ORIENTATION, listenerOrientation, 0);
