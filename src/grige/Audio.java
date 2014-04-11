@@ -43,6 +43,8 @@ public class Audio
 	{
 		alc = ALFactory.getALC();
 		device = alc.alcOpenDevice(null);
+		printOpenALError(al, false);
+		
 		context = alc.alcCreateContext(device, null);
 		alc.alcMakeContextCurrent(context);
 		
@@ -61,6 +63,8 @@ public class Audio
 	{
 		//Generate a new audio source
 		al.alGenSources(1, sourceStorage, 0);
+		printOpenALError(al, false);
+		
 		AudioSource source = new AudioSource(sourceStorage[0]);
 		
 		al.alSourcef(source.getID(), AL.AL_PITCH, 1f);
@@ -87,12 +91,16 @@ public class Audio
 	{
 		sourceStorage[0] = source.getID();
 		al.alDeleteSources(1, sourceStorage, 0);
+		
+		printOpenALError(al, false);
 	}
 	
 	public static void destroyClip(AudioClip clip)
 	{
 		bufferStorage[0] = clip.getID();
 		al.alDeleteBuffers(1, bufferStorage, 0);
+		
+		printOpenALError(al, false);
 	}
 	
 	public static void play(AudioSource source, AudioClip clip, boolean loop)
@@ -100,6 +108,8 @@ public class Audio
 		al.alSourcei(source.getID(), AL.AL_LOOPING, loop ? AL.AL_TRUE : AL.AL_FALSE);
 		al.alSourcei(source.getID(), AL.AL_BUFFER, clip.getID());
 		al.alSourcePlay(source.getID());
+		
+		printOpenALError(al, false);
 	}
 	
 	public static void pause(AudioSource source)
@@ -204,7 +214,10 @@ public class Audio
 			inStream.read(audioData);
 			
 			al.alGenBuffers(1, bufferStorage, 0);
+			printOpenALError(al, false);
+			
 			al.alBufferData(bufferStorage[0], format, ByteBuffer.wrap(audioData), subChunk2Size, sampleRate);
+			printOpenALError(al, false);
 			
 			AudioClip clip = new AudioClip(bufferStorage[0]);
 			

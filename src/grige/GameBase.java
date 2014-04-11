@@ -189,6 +189,8 @@ public abstract class GameBase implements GLEventListener, WindowListener
 			obj.onDraw(gl, camera);
 		camera.drawGeometryEnd();
 		
+		printOpenGLError(gl, false);
+		
 		camera.drawLightingStart();
 		//Draw *all* the lights
 		gl.glEnable(GL.GL_STENCIL_TEST); //We need to stencil out bits of light, so enable stencil test while we're drawing lights
@@ -216,6 +218,8 @@ public abstract class GameBase implements GLEventListener, WindowListener
 		gl.glDisable(GL.GL_STENCIL_TEST); //We only use stencil test for rendering lights
 		camera.drawLightingEnd();
 		
+		printOpenGLError(gl, false);
+		
 		//Let the child game class draw any required UI
 		camera.drawInterfaceStart();
 		display();
@@ -230,6 +234,8 @@ public abstract class GameBase implements GLEventListener, WindowListener
 		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
 		nifty.render(false);
 		gl.glDisable(GL.GL_BLEND);
+		
+		printOpenGLError(gl, false);
 	}
 	
 	private void internalUpdate(GL2 gl, float deltaTime)

@@ -20,12 +20,12 @@ Currently Supported Functionality
 Current TODO
 -----------------------------------
 * Fix objects casting shadows even if they're hidden (e.g if they get rendered behind a larger object)
-* Fix the openal startup crash
 * Render sprites back to front
 * Disconnect updating and rendering
 
 Yet-to-be-(maybe)-implemented Functionality
 -----------------------------------
+* Ogg streaming/playing
 * Soft shadows
 * Basic particles
 * Pixel-perfect collision detection
