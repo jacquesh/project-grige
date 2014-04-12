@@ -105,6 +105,8 @@ public class Audio
 	
 	public static void play(AudioSource source, AudioClip clip, boolean loop)
 	{
+		stop(source);
+		
 		al.alSourcei(source.getID(), AL.AL_LOOPING, loop ? AL.AL_TRUE : AL.AL_FALSE);
 		al.alSourcei(source.getID(), AL.AL_BUFFER, clip.getID());
 		al.alSourcePlay(source.getID());
